@@ -32,7 +32,8 @@ func (r *UserRepository) ensureSchema(ctx context.Context) error {
 			id UUID PRIMARY KEY,
 			email TEXT NOT NULL UNIQUE,
 			password_hash TEXT NOT NULL,
-			created_at TIMESTAMPTZ NOT NULL
+			created_at TIMESTAMPTZ NOT NULL,
+			is_admin BOOLEAN NOT NULL DEFAULT FALSE
 		);
 	`)
 	return err
@@ -40,9 +41,9 @@ func (r *UserRepository) ensureSchema(ctx context.Context) error {
 
 func (r *UserRepository) Create(ctx context.Context, user auth.User) error {
 	_, err := r.pool.Exec(ctx, `
-		INSERT INTO users (id, email, password_hash, created_at)
-		VALUES ($1, $2, $3, $4)
-	`, user.ID, strings.ToLower(user.Email), user.PasswordHash, user.CreatedAt)
+		INSERT INTO users (id, email, password_hash, created_at, is_admin)
+		VALUES ($1, $2, $3, $4, $5)
+	`, user.ID, strings.ToLower(user.Email), user.PasswordHash, user.CreatedAt, user.IsAdmin)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" { // unique_violation
@@ -55,12 +56,12 @@ func (r *UserRepository) Create(ctx context.Context, user auth.User) error {
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (auth.User, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, email, password_hash, created_at
+		SELECT id, email, password_hash, created_at, is_admin
 		FROM users WHERE email = $1
 	`, strings.ToLower(email))
 	var user auth.User
 	var createdAt time.Time
-	if err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &createdAt); err != nil {
+	if err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &createdAt, &user.IsAdmin); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return auth.User{}, auth.ErrNotFound
 		}

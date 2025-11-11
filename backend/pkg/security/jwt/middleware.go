@@ -33,7 +33,7 @@ func NewAuthMiddleware(secret, expectedIssuer string) fiber.Handler {
 		if tokenStr == "" {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "empty token"})
 		}
-		token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (any, error) {
+		token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fiber.ErrUnauthorized
 			}
@@ -42,14 +42,17 @@ func NewAuthMiddleware(secret, expectedIssuer string) fiber.Handler {
 		if err != nil || !token.Valid {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "invalid or expired token"})
 		}
-		claims, ok := token.Claims.(*jwt.RegisteredClaims)
+		claims, ok := token.Claims.(*Claims)
 		if !ok {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "invalid token claims"})
 		}
-		if expectedIssuer != "" && claims.Issuer != expectedIssuer {
+		if expectedIssuer != "" && claims.RegisteredClaims.Issuer != expectedIssuer {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"message": "invalid token issuer"})
 		}
-		c.Locals("userId", claims.Subject)
+		c.Locals("userId", claims.RegisteredClaims.Subject)
+		if claims.IsAdmin {
+			c.Locals("isAdmin", true)
+		}
 		return c.Next()
 	}
 }

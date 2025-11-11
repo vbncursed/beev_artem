@@ -10,9 +10,12 @@ import (
 // UseCase инкапсулирует приложение для работы с вакансиями.
 type UseCase interface {
 	Create(ctx context.Context, v Vacancy) (Vacancy, error)
-	GetByID(ctx context.Context, id uuid.UUID) (Vacancy, error)
-	List(ctx context.Context, limit, offset int) ([]Vacancy, error)
-	UpdateSkills(ctx context.Context, id uuid.UUID, skills []SkillWeight) error
+	GetByID(ctx context.Context, ownerID uuid.UUID, id uuid.UUID) (Vacancy, error)
+	List(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Vacancy, error)
+	UpdateSkills(ctx context.Context, ownerID uuid.UUID, id uuid.UUID, skills []SkillWeight) error
+	// Admin
+	GetByIDAdmin(ctx context.Context, id uuid.UUID) (Vacancy, error)
+	ListAdmin(ctx context.Context, limit, offset int) ([]Vacancy, error)
 }
 
 type service struct {
@@ -32,16 +35,16 @@ func (s *service) Create(ctx context.Context, v Vacancy) (Vacancy, error) {
 	return v, nil
 }
 
-func (s *service) GetByID(ctx context.Context, id uuid.UUID) (Vacancy, error) {
-	return s.repo.GetByID(ctx, id)
+func (s *service) GetByID(ctx context.Context, ownerID uuid.UUID, id uuid.UUID) (Vacancy, error) {
+	return s.repo.GetByIDForOwner(ctx, ownerID, id)
 }
 
-func (s *service) List(ctx context.Context, limit, offset int) ([]Vacancy, error) {
-	return s.repo.List(ctx, limit, offset)
+func (s *service) List(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Vacancy, error) {
+	return s.repo.ListByOwner(ctx, ownerID, limit, offset)
 }
 
-func (s *service) UpdateSkills(ctx context.Context, id uuid.UUID, skills []SkillWeight) error {
-	return s.repo.UpdateSkills(ctx, id, skills)
+func (s *service) UpdateSkills(ctx context.Context, ownerID uuid.UUID, id uuid.UUID, skills []SkillWeight) error {
+	return s.repo.UpdateSkillsForOwner(ctx, ownerID, id, skills)
 }
 
 // ErrValidation простая ошибка валидации.
@@ -50,3 +53,12 @@ type ErrValidation string
 func (e ErrValidation) Error() string { return string(e) }
 
 // Простой use-case без дополнительных зависимостей; валидирует вход и делегирует репозиторию.
+
+func (s *service) GetByIDAdmin(ctx context.Context, id uuid.UUID) (Vacancy, error) {
+	// fallback: админ читает без ограничений владельца
+	return s.repo.GetByIDForOwner(ctx, uuid.Nil, id)
+}
+
+func (s *service) ListAdmin(ctx context.Context, limit, offset int) ([]Vacancy, error) {
+	return s.repo.ListAll(ctx, limit, offset)
+}

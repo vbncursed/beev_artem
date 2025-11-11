@@ -10,6 +10,7 @@ import (
 // Vacancy описывает вакансию и эталонные навыки с весами.
 type Vacancy struct {
 	ID          uuid.UUID
+	OwnerID     uuid.UUID
 	Title       string
 	Description string
 	CreatedAt   time.Time
@@ -25,9 +26,11 @@ type SkillWeight struct {
 // Repository — порт для работы с вакансиями.
 type Repository interface {
 	Create(ctx context.Context, v Vacancy) error
-	GetByID(ctx context.Context, id uuid.UUID) (Vacancy, error)
-	List(ctx context.Context, limit, offset int) ([]Vacancy, error)
-	UpdateSkills(ctx context.Context, id uuid.UUID, skills []SkillWeight) error
+	// Возвращают только данные владельца
+	GetByIDForOwner(ctx context.Context, ownerID, id uuid.UUID) (Vacancy, error)
+	ListByOwner(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Vacancy, error)
+	UpdateSkillsForOwner(ctx context.Context, ownerID, id uuid.UUID, skills []SkillWeight) error
+	// Админ-доступ без фильтра владельца
+	GetByIDAny(ctx context.Context, id uuid.UUID) (Vacancy, error)
+	ListAll(ctx context.Context, limit, offset int) ([]Vacancy, error)
 }
-
-

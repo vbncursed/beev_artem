@@ -43,6 +43,11 @@ func (h *VacancyHandler) Create(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return presenter.Error(c, http.StatusBadRequest, "невалидный JSON")
 	}
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	if strings.TrimSpace(req.Title) == "" || strings.TrimSpace(req.Description) == "" {
 		return presenter.Error(c, http.StatusBadRequest, "title и description обязательны")
 	}
@@ -52,11 +57,12 @@ func (h *VacancyHandler) Create(c *fiber.Ctx) error {
 	}
 	v := vacancy.Vacancy{
 		ID:          uuid.New(),
+		OwnerID:     uid,
 		Title:       req.Title,
 		Description: req.Description,
 		Skills:      sw,
 	}
-	v, err := h.uc.Create(c.Context(), v)
+	v, err = h.uc.Create(c.Context(), v)
 	if err != nil {
 		return presenter.Error(c, http.StatusBadRequest, err.Error())
 	}
@@ -75,11 +81,22 @@ func (h *VacancyHandler) Create(c *fiber.Ctx) error {
 // @Failure 404 {object} presenter.ErrorResponse
 // @Router  /vacancies/{id} [get]
 func (h *VacancyHandler) GetByID(c *fiber.Ctx) error {
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
+	isAdmin, _ := c.Locals("isAdmin").(bool)
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return presenter.Error(c, http.StatusBadRequest, "невалидный UUID")
 	}
-	v, err := h.uc.GetByID(c.Context(), id)
+	var v vacancy.Vacancy
+	if isAdmin {
+		v, err = h.uc.GetByIDAdmin(c.Context(), id)
+	} else {
+		v, err = h.uc.GetByID(c.Context(), uid, id)
+	}
 	if err != nil {
 		return presenter.Error(c, http.StatusNotFound, "вакансия не найдена")
 	}
@@ -92,7 +109,18 @@ func (h *VacancyHandler) GetByID(c *fiber.Ctx) error {
 // @Security BearerAuth
 // @Router  /vacancies [get]
 func (h *VacancyHandler) List(c *fiber.Ctx) error {
-	vs, err := h.uc.List(c.Context(), 50, 0)
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
+	isAdmin, _ := c.Locals("isAdmin").(bool)
+	var vs []vacancy.Vacancy
+	if isAdmin {
+		vs, err = h.uc.ListAdmin(c.Context(), 50, 0)
+	} else {
+		vs, err = h.uc.List(c.Context(), uid, 50, 0)
+	}
 	if err != nil {
 		return presenter.Error(c, http.StatusInternalServerError, "не удалось получить список")
 	}
@@ -115,6 +143,11 @@ type updateSkillsRequest struct {
 // @Failure 404 {object} presenter.ErrorResponse
 // @Router  /vacancies/{id}/skills [put]
 func (h *VacancyHandler) UpdateSkills(c *fiber.Ctx) error {
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
 		return presenter.Error(c, http.StatusBadRequest, "невалидный UUID")
@@ -127,7 +160,7 @@ func (h *VacancyHandler) UpdateSkills(c *fiber.Ctx) error {
 	for _, s := range req.Skills {
 		sw = append(sw, vacancy.SkillWeight{Skill: s.Skill, Weight: s.Weight})
 	}
-	if err := h.uc.UpdateSkills(c.Context(), id, sw); err != nil {
+	if err := h.uc.UpdateSkills(c.Context(), uid, id, sw); err != nil {
 		return presenter.Error(c, http.StatusNotFound, "вакансия не найдена")
 	}
 	return c.SendStatus(http.StatusNoContent)
