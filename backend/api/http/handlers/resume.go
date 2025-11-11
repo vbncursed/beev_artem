@@ -34,6 +34,7 @@ func NewResumeHandler(svc resume.AnalysisService, llm *openrouter.Client) *Resum
 // @Accept  multipart/form-data
 // @Produce json
 // @Param   file formData file true "Файл резюме (PDF или DOCX)"
+// @Security BearerAuth
 // @Success 200 {object} map[string]any "Успех: рекомендации и служебная информация"
 // @Failure 400 {object} presenter.ErrorResponse "Ошибка валидации или чтения файла"
 // @Failure 500 {object} presenter.ErrorResponse "Внутренняя ошибка сервиса"

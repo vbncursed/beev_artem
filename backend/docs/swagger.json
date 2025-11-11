@@ -159,6 +159,11 @@
         },
         "/resume/analyze": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Принимает файл резюме в формате PDF или DOCX, извлекает текст и запрашивает у LLM рекомендации.",
                 "consumes": [
                     "multipart/form-data"
@@ -201,9 +206,180 @@
                     }
                 }
             }
+        },
+        "/vacancies": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Вакансии"
+                ],
+                "summary": "Список вакансий",
+                "responses": {}
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Создаёт вакансию с эталонными навыками и их весами.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Вакансии"
+                ],
+                "summary": "Создать вакансию",
+                "parameters": [
+                    {
+                        "description": "Данные вакансии",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.createVacancyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vacancies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Вакансии"
+                ],
+                "summary": "Получить вакансию по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID вакансии (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/vacancy.Vacancy"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/vacancies/{id}/skills": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Вакансии"
+                ],
+                "summary": "Обновить навыки и веса вакансии",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID вакансии (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Список навыков с весами",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.updateSkillsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "handlers.createVacancyRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "skills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.skillDTO"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.loginRequest": {
             "type": "object",
             "properties": {
@@ -226,6 +402,28 @@
                 }
             }
         },
+        "handlers.skillDTO": {
+            "type": "object",
+            "properties": {
+                "skill": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "handlers.updateSkillsRequest": {
+            "type": "object",
+            "properties": {
+                "skills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.skillDTO"
+                    }
+                }
+            }
+        },
         "presenter.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -233,6 +431,49 @@
                     "type": "string"
                 }
             }
+        },
+        "vacancy.SkillWeight": {
+            "type": "object",
+            "properties": {
+                "skill": {
+                    "type": "string"
+                },
+                "weight": {
+                    "type": "number",
+                    "format": "float32"
+                }
+            }
+        },
+        "vacancy.Vacancy": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "skills": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/vacancy.SkillWeight"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Токен авторизации. Поддерживаются форматы: \"Bearer \u003cJWT\u003e\" или \"\u003cJWT\u003e\".",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

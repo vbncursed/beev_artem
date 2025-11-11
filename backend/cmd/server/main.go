@@ -4,6 +4,10 @@
 // @BasePath      /api/v1
 // @schemes       http
 // @host          localhost:8080
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Токен авторизации. Поддерживаются форматы: "Bearer <JWT>" или "<JWT>".
 package main
 
 import (
@@ -27,6 +31,7 @@ import (
 	"github.com/artem13815/hr/pkg/resume"
 	"github.com/artem13815/hr/pkg/security/jwt"
 	"github.com/artem13815/hr/pkg/storage/postgres"
+	"github.com/artem13815/hr/pkg/vacancy"
 )
 
 func main() {
@@ -51,6 +56,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("init user repo: %v", err)
 	}
+	// Initialize domain repositories (also ensures DB schema for each domain).
+	vacancyRepo, err := pgrepo.NewVacancyRepository(pool)
+	if err != nil {
+		log.Fatalf("init vacancy repo: %v", err)
+	}
+	resumeRepoDB, err := pgrepo.NewResumeRepository(pool)
+	if err != nil {
+		log.Fatalf("init resume repo: %v", err)
+	}
+	analysisRepo, err := pgrepo.NewAnalysisRepository(pool)
+	if err != nil {
+		log.Fatalf("init analysis repo: %v", err)
+	}
 	// Token generator
 	jwtGen := jwt.NewGenerator(cfg.JWTSecret, cfg.JWTIssuer, time.Duration(cfg.JWTTTLMinutes)*time.Minute)
 
@@ -69,11 +87,19 @@ func main() {
 		cfg.OpenRouterAppTitle,
 		cfg.OpenRouterReferer,
 	)
+	_ = vacancyRepo
+	_ = resumeRepoDB
+	_ = analysisRepo
 	resumeSvc := resume.NewAnalysisService(llmClient)
 	resumeHandler := handlers.NewResumeHandler(resumeSvc, llmClient)
+	vacancyUC := vacancy.NewService(vacancyRepo)
+	vacancyHandler := handlers.NewVacancyHandler(vacancyUC)
+
+	// JWT auth middleware for protected routes
+	authMW := jwt.NewAuthMiddleware(cfg.JWTSecret, cfg.JWTIssuer)
 
 	// Register routes
-	http.Register(app, authHandler, healthHandler, resumeHandler)
+	http.Register(app, authHandler, healthHandler, resumeHandler, vacancyHandler, authMW)
 
 	// Swagger UI
 	app.Get("/swagger/*", swagger.HandlerDefault)

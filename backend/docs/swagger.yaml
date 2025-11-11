@@ -1,5 +1,16 @@
 basePath: /api/v1
 definitions:
+  handlers.createVacancyRequest:
+    properties:
+      description:
+        type: string
+      skills:
+        items:
+          $ref: '#/definitions/handlers.skillDTO'
+        type: array
+      title:
+        type: string
+    type: object
   handlers.loginRequest:
     properties:
       email:
@@ -14,9 +25,46 @@ definitions:
       password:
         type: string
     type: object
+  handlers.skillDTO:
+    properties:
+      skill:
+        type: string
+      weight:
+        type: number
+    type: object
+  handlers.updateSkillsRequest:
+    properties:
+      skills:
+        items:
+          $ref: '#/definitions/handlers.skillDTO'
+        type: array
+    type: object
   presenter.ErrorResponse:
     properties:
       message:
+        type: string
+    type: object
+  vacancy.SkillWeight:
+    properties:
+      skill:
+        type: string
+      weight:
+        format: float32
+        type: number
+    type: object
+  vacancy.Vacancy:
+    properties:
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      skills:
+        items:
+          $ref: '#/definitions/vacancy.SkillWeight'
+        type: array
+      title:
         type: string
     type: object
 host: localhost:8080
@@ -149,9 +197,113 @@ paths:
           description: Внутренняя ошибка сервиса
           schema:
             $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Анализ резюме и рекомендации по улучшению
       tags:
       - Резюме
+  /vacancies:
+    get:
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Список вакансий
+      tags:
+      - Вакансии
+    post:
+      consumes:
+      - application/json
+      description: Создаёт вакансию с эталонными навыками и их весами.
+      parameters:
+      - description: Данные вакансии
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createVacancyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать вакансию
+      tags:
+      - Вакансии
+  /vacancies/{id}:
+    get:
+      parameters:
+      - description: ID вакансии (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vacancy.Vacancy'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить вакансию по ID
+      tags:
+      - Вакансии
+  /vacancies/{id}/skills:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID вакансии (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Список навыков с весами
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.updateSkillsRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить навыки и веса вакансии
+      tags:
+      - Вакансии
 schemes:
 - http
+securityDefinitions:
+  BearerAuth:
+    description: 'Токен авторизации. Поддерживаются форматы: "Bearer <JWT>" или "<JWT>".'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
