@@ -8,11 +8,16 @@ import (
 )
 
 type Config struct {
-	Port          string
-	DatabaseURL   string
-	JWTSecret     string
-	JWTIssuer     string
-	JWTTTLMinutes int
+	Port               string
+	DatabaseURL        string
+	JWTSecret          string
+	JWTIssuer          string
+	JWTTTLMinutes      int
+	OpenRouterAPIKey   string
+	OpenRouterBase     string
+	OpenRouterModel    string
+	OpenRouterReferer  string
+	OpenRouterAppTitle string
 }
 
 // Load reads environment variables, optionally from a .env file if present.
@@ -21,11 +26,16 @@ func Load() Config {
 	_ = godotenv.Load()
 
 	cfg := Config{
-		Port:          getEnv("PORT", "8080"),
-		DatabaseURL:   os.Getenv("DATABASE_URL"),
-		JWTSecret:     getEnv("JWT_SECRET", "dev-secret-change"),
-		JWTIssuer:     getEnv("JWT_ISSUER", "hr-service"),
-		JWTTTLMinutes: getEnvInt("JWT_TTL_MINUTES", 60),
+		Port:               getEnv("PORT", "8080"),
+		DatabaseURL:        os.Getenv("DATABASE_URL"),
+		JWTSecret:          getEnv("JWT_SECRET", "dev-secret-change"),
+		JWTIssuer:          getEnv("JWT_ISSUER", "hr-service"),
+		JWTTTLMinutes:      getEnvInt("JWT_TTL_MINUTES", 60),
+		OpenRouterAPIKey:   os.Getenv("OPENROUTER_API_KEY"),
+		OpenRouterBase:     getEnv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"),
+		OpenRouterModel:    getEnv("OPENROUTER_MODEL", "qwen/qwen2.5-32b-instruct"),
+		OpenRouterReferer:  getEnv("OPENROUTER_HTTP_REFERER", ""),
+		OpenRouterAppTitle: getEnv("OPENROUTER_APP_TITLE", "hr-service"),
 	}
 	return cfg
 }

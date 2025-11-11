@@ -22,7 +22,9 @@ import (
 	"github.com/artem13815/hr/pkg/config"
 	"github.com/artem13815/hr/pkg/health"
 	healthpg "github.com/artem13815/hr/pkg/health/checkers"
+	"github.com/artem13815/hr/pkg/llm/openrouter"
 	pgrepo "github.com/artem13815/hr/pkg/repository/postgres"
+	"github.com/artem13815/hr/pkg/resume"
 	"github.com/artem13815/hr/pkg/security/jwt"
 	"github.com/artem13815/hr/pkg/storage/postgres"
 )
@@ -59,8 +61,19 @@ func main() {
 	readiness := health.NewService(healthpg.NewPostgresChecker(pool))
 	healthHandler := handlers.NewHealthHandler(readiness)
 
+	// OpenRouter client and resume handler
+	llmClient := openrouter.New(
+		cfg.OpenRouterAPIKey,
+		cfg.OpenRouterBase,
+		cfg.OpenRouterModel,
+		cfg.OpenRouterAppTitle,
+		cfg.OpenRouterReferer,
+	)
+	resumeSvc := resume.NewAnalysisService(llmClient)
+	resumeHandler := handlers.NewResumeHandler(resumeSvc, llmClient)
+
 	// Register routes
-	http.Register(app, authHandler, healthHandler)
+	http.Register(app, authHandler, healthHandler, resumeHandler)
 
 	// Swagger UI
 	app.Get("/swagger/*", swagger.HandlerDefault)

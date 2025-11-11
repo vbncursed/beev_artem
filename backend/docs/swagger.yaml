@@ -121,6 +121,37 @@ paths:
       summary: Readiness probe
       tags:
       - health
+  /resume/analyze:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Принимает файл резюме в формате PDF или DOCX, извлекает текст и
+        запрашивает у LLM рекомендации.
+      parameters:
+      - description: Файл резюме (PDF или DOCX)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Успех: рекомендации и служебная информация'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Ошибка валидации или чтения файла
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервиса
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      summary: Анализ резюме и рекомендации по улучшению
+      tags:
+      - Резюме
 schemes:
 - http
 swagger: "2.0"
