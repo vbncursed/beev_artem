@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+
+# General
+.env
+.env.*
+*.log
+logs/
+tmp/
+dist/
+build/
+coverage/
+
+# Node / Frontend (future)
+node_modules/
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.parcel-cache/
+yarn.lock
+pnpm-lock.yaml
+package-lock.json
+.turbo/
+.vercel/
+.cache/
+
+# Go / Backend
+/bin/
+/out/
+/tmp/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.txt
+vendor/
+
+# IDEs & Editors
+.idea/
+.vscode/
+*.iml
+
+# OS / Misc
+Thumbs.db
+.DS_Store?
+
+
