@@ -10,6 +10,7 @@ import (
 // Resume хранит метаданные загруженного файла.
 type Resume struct {
 	ID         uuid.UUID
+	OwnerID    uuid.UUID
 	Filename   string
 	MimeType   string
 	Size       int64
@@ -28,6 +29,12 @@ type Repository interface {
 	Create(ctx context.Context, r Resume) error
 	SaveParsed(ctx context.Context, p Parsed) error
 	GetParsed(ctx context.Context, resumeID uuid.UUID) (Parsed, error)
+	// meta
+	GetMetaForOwner(ctx context.Context, ownerID, id uuid.UUID) (Resume, error)
+	ListByOwner(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Resume, error)
+	// admin
+	GetMetaAny(ctx context.Context, id uuid.UUID) (Resume, error)
+	ListAll(ctx context.Context, limit, offset int) ([]Resume, error)
 }
 
 // ParsedResume — извлечённый чистый текст из резюме.

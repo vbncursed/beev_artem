@@ -91,15 +91,16 @@ func main() {
 	_ = resumeRepoDB
 	_ = analysisRepo
 	resumeSvc := resume.NewAnalysisService(llmClient)
-	resumeHandler := handlers.NewResumeHandler(resumeSvc, llmClient)
+	resumeHandler := handlers.NewResumeHandler(resumeSvc, llmClient, resumeRepoDB)
 	vacancyUC := vacancy.NewService(vacancyRepo)
 	vacancyHandler := handlers.NewVacancyHandler(vacancyUC)
+	resumesHandler := handlers.NewResumesHandler(resumeRepoDB)
 
 	// JWT auth middleware for protected routes
 	authMW := jwt.NewAuthMiddleware(cfg.JWTSecret, cfg.JWTIssuer)
 
 	// Register routes
-	http.Register(app, authHandler, healthHandler, resumeHandler, vacancyHandler, authMW)
+	http.Register(app, authHandler, healthHandler, resumeHandler, vacancyHandler, authMW, resumesHandler)
 
 	// Swagger UI
 	app.Get("/swagger/*", swagger.HandlerDefault)

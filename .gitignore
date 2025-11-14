@@ -10,6 +10,7 @@ tmp/
 dist/
 build/
 coverage/
+uploads/
 
 # Node / Frontend (future)
 node_modules/

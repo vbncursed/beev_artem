@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS vacancy_skills (
 	weight REAL NOT NULL CHECK (weight >= 0 AND weight <= 1),
 	PRIMARY KEY (vacancy_id, skill)
 );
+-- backfill for older schemas
+ALTER TABLE vacancies ADD COLUMN IF NOT EXISTS owner_id UUID;
+CREATE INDEX IF NOT EXISTS idx_vacancies_owner ON vacancies(owner_id);
 `)
 	return err
 }

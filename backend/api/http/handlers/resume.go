@@ -5,10 +5,12 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 
 	"github.com/artem13815/hr/api/http/presenter"
 	"github.com/artem13815/hr/pkg/llm/openrouter"
@@ -16,14 +18,16 @@ import (
 )
 
 type ResumeHandler struct {
-	svc resume.AnalysisService
-	llm *openrouter.Client // kept for exposing model name in response only
+	svc  resume.AnalysisService
+	llm  *openrouter.Client // kept for exposing model name in response only
+	repo resume.Repository
 	// Limit uploaded file size read into memory (bytes)
 	maxBytes int64
+	baseDir  string
 }
 
-func NewResumeHandler(svc resume.AnalysisService, llm *openrouter.Client) *ResumeHandler {
-	return &ResumeHandler{svc: svc, llm: llm, maxBytes: 15 << 20} // 15MB
+func NewResumeHandler(svc resume.AnalysisService, llm *openrouter.Client, repo resume.Repository) *ResumeHandler {
+	return &ResumeHandler{svc: svc, llm: llm, repo: repo, maxBytes: 15 << 20, baseDir: "uploads"} // 15MB
 }
 
 // Analyze обрабатывает загруженное резюме (PDF/DOCX), извлекает текст
@@ -62,6 +66,43 @@ func (h *ResumeHandler) Analyze(c *fiber.Ctx) error {
 	if err != nil {
 		return presenter.Error(c, http.StatusBadRequest, fmt.Sprintf("analysis failed: %v", err))
 	}
+	// Persist only after successful analysis
+	var savedResumeID string
+	if h.repo != nil {
+		// Parse text for storage
+		text, err := resume.ParseResumeText(fh.Filename, data)
+		if err != nil {
+			return presenter.Error(c, http.StatusBadRequest, fmt.Sprintf("failed to read resume: %v", err))
+		}
+		if len(text) == 0 {
+			return presenter.Error(c, http.StatusBadRequest, "empty resume content")
+		}
+		if err := os.MkdirAll(h.baseDir, 0o755); err != nil {
+			return presenter.Error(c, http.StatusInternalServerError, "failed to prepare storage")
+		}
+		resumeID := uuid.New()
+		dst := filepath.Join(h.baseDir, resumeID.String()+ext)
+		if err := os.WriteFile(dst, data, 0o644); err != nil {
+			return presenter.Error(c, http.StatusInternalServerError, "failed to store file")
+		}
+		ownerIDStr, _ := c.Locals("userId").(string)
+		ownerID, _ := uuid.Parse(ownerIDStr)
+		meta := resume.Resume{
+			ID:         resumeID,
+			OwnerID:    ownerID,
+			Filename:   fh.Filename,
+			MimeType:   fh.Header.Get("Content-Type"),
+			Size:       fh.Size,
+			StorageURI: dst,
+		}
+		if err := h.repo.Create(c.Context(), meta); err != nil {
+			return presenter.Error(c, http.StatusInternalServerError, "failed to save metadata")
+		}
+		if err := h.repo.SaveParsed(c.Context(), resume.Parsed{ResumeID: resumeID, Text: text}); err != nil {
+			return presenter.Error(c, http.StatusInternalServerError, "failed to save parsed text")
+		}
+		savedResumeID = resumeID.String()
+	}
 	return presenter.JSON(c, http.StatusOK, fiber.Map{
 		"model":     h.llm.Model,
 		"result":    result.Answer,
@@ -69,6 +110,7 @@ func (h *ResumeHandler) Analyze(c *fiber.Ctx) error {
 		"filename":  result.Filename,
 		"charsUsed": result.CharsUsed,
 		"excerpted": result.Excerpted,
+		"resumeId":  savedResumeID,
 	})
 }
 

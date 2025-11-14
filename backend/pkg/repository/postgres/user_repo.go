@@ -35,6 +35,8 @@ func (r *UserRepository) ensureSchema(ctx context.Context) error {
 			created_at TIMESTAMPTZ NOT NULL,
 			is_admin BOOLEAN NOT NULL DEFAULT FALSE
 		);
+		-- backfill for older schemas
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
 	`)
 	return err
 }

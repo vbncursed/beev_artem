@@ -44,6 +44,24 @@ definitions:
       message:
         type: string
     type: object
+  resume.Resume:
+    properties:
+      createdAt:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      mimeType:
+        type: string
+      ownerID:
+        type: string
+      size:
+        format: int64
+        type: integer
+      storageURI:
+        type: string
+    type: object
   vacancy.SkillWeight:
     properties:
       skill:
@@ -59,6 +77,8 @@ definitions:
       description:
         type: string
       id:
+        type: string
+      ownerID:
         type: string
       skills:
         items:
@@ -200,6 +220,123 @@ paths:
       security:
       - BearerAuth: []
       summary: Анализ резюме и рекомендации по улучшению
+      tags:
+      - Резюме
+  /resumes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/resume.Resume'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список резюме
+      tags:
+      - Резюме
+    post:
+      consumes:
+      - multipart/form-data
+      description: Принимает PDF/DOCX, сохраняет файл и извлекает текст для дальнейшего
+        анализа.
+      parameters:
+      - description: Файл резюме (PDF/DOCX)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Загрузить резюме
+      tags:
+      - Резюме
+  /resumes/{id}:
+    get:
+      parameters:
+      - description: ID резюме (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить резюме
+      tags:
+      - Резюме
+  /resumes/{id}/file:
+    get:
+      parameters:
+      - description: ID резюме (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Скачать файл резюме
       tags:
       - Резюме
   /vacancies:

@@ -210,6 +210,190 @@ const docTemplate = `{
                 }
             }
         },
+        "/resumes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Резюме"
+                ],
+                "summary": "Список резюме",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/resume.Resume"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Принимает PDF/DOCX, сохраняет файл и извлекает текст для дальнейшего анализа.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Резюме"
+                ],
+                "summary": "Загрузить резюме",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Файл резюме (PDF/DOCX)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/resumes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Резюме"
+                ],
+                "summary": "Получить резюме",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID резюме (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/resumes/{id}/file": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Резюме"
+                ],
+                "summary": "Скачать файл резюме",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID резюме (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/vacancies": {
             "get": {
                 "security": [
@@ -435,6 +619,33 @@ const docTemplate = `{
                 }
             }
         },
+        "resume.Resume": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "ownerID": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "storageURI": {
+                    "type": "string"
+                }
+            }
+        },
         "vacancy.SkillWeight": {
             "type": "object",
             "properties": {
@@ -457,6 +668,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "ownerID": {
                     "type": "string"
                 },
                 "skills": {
