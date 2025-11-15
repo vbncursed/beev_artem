@@ -249,3 +249,25 @@ LIMIT $1 OFFSET $2
 	}
 	return res, nil
 }
+
+func (r *VacancyRepository) DeleteForOwner(ctx context.Context, ownerID, id uuid.UUID) error {
+	cmd, err := r.pool.Exec(ctx, `DELETE FROM vacancies WHERE id = $1 AND owner_id = $2`, id, ownerID)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+	return nil
+}
+
+func (r *VacancyRepository) DeleteAny(ctx context.Context, id uuid.UUID) error {
+	cmd, err := r.pool.Exec(ctx, `DELETE FROM vacancies WHERE id = $1`, id)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+	return nil
+}

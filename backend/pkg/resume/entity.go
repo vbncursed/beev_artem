@@ -35,6 +35,9 @@ type Repository interface {
 	// admin
 	GetMetaAny(ctx context.Context, id uuid.UUID) (Resume, error)
 	ListAll(ctx context.Context, limit, offset int) ([]Resume, error)
+	// delete (returns deleted meta for file cleanup)
+	DeleteForOwner(ctx context.Context, ownerID, id uuid.UUID) (Resume, error)
+	DeleteAny(ctx context.Context, id uuid.UUID) (Resume, error)
 }
 
 // ParsedResume — извлечённый чистый текст из резюме.

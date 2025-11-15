@@ -33,4 +33,6 @@ type Repository interface {
 	// Админ-доступ без фильтра владельца
 	GetByIDAny(ctx context.Context, id uuid.UUID) (Vacancy, error)
 	ListAll(ctx context.Context, limit, offset int) ([]Vacancy, error)
+	DeleteForOwner(ctx context.Context, ownerID, id uuid.UUID) error
+	DeleteAny(ctx context.Context, id uuid.UUID) error
 }

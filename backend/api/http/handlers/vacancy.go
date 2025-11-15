@@ -165,3 +165,34 @@ func (h *VacancyHandler) UpdateSkills(c *fiber.Ctx) error {
 	}
 	return c.SendStatus(http.StatusNoContent)
 }
+
+// @Summary Удалить вакансию
+// @Tags    Вакансии
+// @Produce json
+// @Param   id path string true "ID вакансии (UUID)"
+// @Security BearerAuth
+// @Success 204 {object} nil
+// @Failure 401 {object} presenter.ErrorResponse
+// @Failure 404 {object} presenter.ErrorResponse
+// @Router  /vacancies/{id} [delete]
+func (h *VacancyHandler) Delete(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return presenter.Error(c, http.StatusBadRequest, "невалидный UUID")
+	}
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
+	isAdmin, _ := c.Locals("isAdmin").(bool)
+	if isAdmin {
+		err = h.uc.DeleteAdmin(c.Context(), id)
+	} else {
+		err = h.uc.Delete(c.Context(), uid, id)
+	}
+	if err != nil {
+		return presenter.Error(c, http.StatusNotFound, "вакансия не найдена")
+	}
+	return c.SendStatus(http.StatusNoContent)
+}

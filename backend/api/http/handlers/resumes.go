@@ -185,3 +185,33 @@ func (h *ResumesHandler) Download(c *fiber.Ctx) error {
 	}
 	return c.Download(meta.StorageURI, meta.Filename)
 }
+
+// Delete удаляет резюме и сопутствующие данные, а также файл на диске.
+// @Summary Удалить резюме
+// @Tags    Резюме
+// @Param   id path string true "ID резюме (UUID)"
+// @Security BearerAuth
+// @Success 204 {object} nil
+// @Failure 401 {object} presenter.ErrorResponse
+// @Failure 404 {object} presenter.ErrorResponse
+// @Router  /resumes/{id} [delete]
+func (h *ResumesHandler) Delete(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return presenter.Error(c, http.StatusBadRequest, "invalid id")
+	}
+	isAdmin, _ := c.Locals("isAdmin").(bool)
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, _ := uuid.Parse(userIDStr)
+	var meta resume.Resume
+	if isAdmin {
+		meta, err = h.repo.DeleteAny(c.Context(), id)
+	} else {
+		meta, err = h.repo.DeleteForOwner(c.Context(), uid, id)
+	}
+	if err != nil {
+		return presenter.Error(c, http.StatusNotFound, "resume not found")
+	}
+	_ = os.Remove(meta.StorageURI)
+	return c.SendStatus(http.StatusNoContent)
+}

@@ -16,6 +16,8 @@ type UseCase interface {
 	// Admin
 	GetByIDAdmin(ctx context.Context, id uuid.UUID) (Vacancy, error)
 	ListAdmin(ctx context.Context, limit, offset int) ([]Vacancy, error)
+	Delete(ctx context.Context, ownerID, id uuid.UUID) error
+	DeleteAdmin(ctx context.Context, id uuid.UUID) error
 }
 
 type service struct {
@@ -61,4 +63,12 @@ func (s *service) GetByIDAdmin(ctx context.Context, id uuid.UUID) (Vacancy, erro
 
 func (s *service) ListAdmin(ctx context.Context, limit, offset int) ([]Vacancy, error) {
 	return s.repo.ListAll(ctx, limit, offset)
+}
+
+func (s *service) Delete(ctx context.Context, ownerID, id uuid.UUID) error {
+	return s.repo.DeleteForOwner(ctx, ownerID, id)
+}
+
+func (s *service) DeleteAdmin(ctx context.Context, id uuid.UUID) error {
+	return s.repo.DeleteAny(ctx, id)
 }

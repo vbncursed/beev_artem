@@ -170,3 +170,57 @@ LIMIT $1 OFFSET $2
 	}
 	return res, nil
 }
+
+func (r *ResumeRepository) deleteInternal(ctx context.Context, q pgx.Tx, id uuid.UUID) (resume.Resume, error) {
+	row := q.QueryRow(ctx, `
+SELECT id, owner_id, filename, mime_type, size_bytes, storage_uri, created_at
+FROM resumes WHERE id = $1
+`, id)
+	var m resume.Resume
+	var created time.Time
+	if err := row.Scan(&m.ID, &m.OwnerID, &m.Filename, &m.MimeType, &m.Size, &m.StorageURI, &created); err != nil {
+		return resume.Resume{}, err
+	}
+	m.CreatedAt = created.UTC()
+	if _, err := q.Exec(ctx, `DELETE FROM parsed_resumes WHERE resume_id = $1`, id); err != nil {
+		return resume.Resume{}, err
+	}
+	if _, err := q.Exec(ctx, `DELETE FROM resumes WHERE id = $1`, id); err != nil {
+		return resume.Resume{}, err
+	}
+	return m, nil
+}
+
+func (r *ResumeRepository) DeleteForOwner(ctx context.Context, ownerID, id uuid.UUID) (resume.Resume, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return resume.Resume{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	// ownership check
+	var exists bool
+	if err := tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM resumes WHERE id=$1 AND owner_id=$2)`, id, ownerID).Scan(&exists); err != nil {
+		return resume.Resume{}, err
+	}
+	if !exists {
+		return resume.Resume{}, pgx.ErrNoRows
+	}
+	meta, err := r.deleteInternal(ctx, tx, id)
+	if err != nil {
+		return resume.Resume{}, err
+	}
+	return meta, tx.Commit(ctx)
+}
+
+func (r *ResumeRepository) DeleteAny(ctx context.Context, id uuid.UUID) (resume.Resume, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return resume.Resume{}, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	meta, err := r.deleteInternal(ctx, tx, id)
+	if err != nil {
+		return resume.Resume{}, err
+	}
+	return meta, tx.Commit(ctx)
+}

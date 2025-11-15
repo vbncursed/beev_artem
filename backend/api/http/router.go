@@ -29,6 +29,7 @@ func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.Healt
 	rs.Get("/", resumes.List)
 	rs.Get("/:id", resumes.Get)
 	rs.Get("/:id/file", resumes.Download)
+	rs.Delete("/:id", resumes.Delete)
 
 	// Vacancies
 	vg := v1.Group("/vacancies", authRequired)
@@ -36,4 +37,5 @@ func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.Healt
 	vg.Get("/", vacancy.List)
 	vg.Get("/:id", vacancy.GetByID)
 	vg.Put("/:id/skills", vacancy.UpdateSkills)
+	vg.Delete("/:id", vacancy.Delete)
 }
