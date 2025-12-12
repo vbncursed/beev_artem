@@ -7,7 +7,7 @@ import (
 )
 
 // Register wires all HTTP routes onto given Fiber app.
-func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.HealthHandler, resume *handlers.ResumeHandler, vacancy *handlers.VacancyHandler, authRequired fiber.Handler, resumes *handlers.ResumesHandler) {
+func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.HealthHandler, resume *handlers.ResumeHandler, vacancy *handlers.VacancyHandler, authRequired fiber.Handler, resumes *handlers.ResumesHandler, analyses *handlers.AnalysisHandler) {
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 
@@ -31,6 +31,13 @@ func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.Healt
 	rs.Get("/:id/file", resumes.Download)
 	rs.Delete("/:id", resumes.Delete)
 
+	// Analyses
+	ag := v1.Group("/analyses", authRequired)
+	ag.Post("/", analyses.Create)
+	ag.Get("/", analyses.List)
+	ag.Get("/:id", analyses.Get)
+	ag.Delete("/:id", analyses.Delete)
+
 	// Vacancies
 	vg := v1.Group("/vacancies", authRequired)
 	vg.Post("/", vacancy.Create)
@@ -38,4 +45,5 @@ func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.Healt
 	vg.Get("/:id", vacancy.GetByID)
 	vg.Put("/:id/skills", vacancy.UpdateSkills)
 	vg.Delete("/:id", vacancy.Delete)
+	vg.Get("/:id/analyses", analyses.ListByVacancy)
 }

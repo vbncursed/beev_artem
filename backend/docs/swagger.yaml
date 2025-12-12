@@ -1,5 +1,52 @@
 basePath: /api/v1
 definitions:
+  analysis.Analysis:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      model:
+        type: string
+      report:
+        $ref: '#/definitions/analysis.Report'
+      resumeId:
+        type: string
+      score:
+        type: number
+      vacancyId:
+        type: string
+    type: object
+  analysis.Report:
+    properties:
+      aiRecommendationForCandidate:
+        items:
+          type: string
+        type: array
+      aiRecommendationForHR:
+        type: string
+      candidateSummary:
+        type: string
+      matchedSkills:
+        items:
+          type: string
+        type: array
+      missingSkills:
+        items:
+          type: string
+        type: array
+      uniqueStrengths:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.createAnalysisRequest:
+    properties:
+      resumeId:
+        type: string
+      vacancyId:
+        type: string
+    type: object
   handlers.createVacancyRequest:
     properties:
       description:
@@ -95,6 +142,115 @@ info:
   title: hr-service API
   version: "1.0"
 paths:
+  /analyses:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/analysis.Analysis'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список анализов
+      tags:
+      - Анализ
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Пара resumeId + vacancyId
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.createAnalysisRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/analysis.Analysis'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать анализ резюме по вакансии
+      tags:
+      - Анализ
+  /analyses/{id}:
+    delete:
+      parameters:
+      - description: ID анализа (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удалить анализ
+      tags:
+      - Анализ
+    get:
+      parameters:
+      - description: ID анализа (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analysis.Analysis'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить анализ
+      tags:
+      - Анализ
   /auth/login:
     post:
       consumes:
@@ -449,6 +605,36 @@ paths:
       summary: Получить вакансию по ID
       tags:
       - Вакансии
+  /vacancies/{id}/analyses:
+    get:
+      parameters:
+      - description: ID вакансии (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/analysis.Analysis'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список анализов по вакансии
+      tags:
+      - Анализ
   /vacancies/{id}/skills:
     put:
       consumes:

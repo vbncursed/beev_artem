@@ -22,6 +22,7 @@ import (
 	// internal imports
 	"github.com/artem13815/hr/api/http"
 	"github.com/artem13815/hr/api/http/handlers"
+	"github.com/artem13815/hr/pkg/analysis"
 	"github.com/artem13815/hr/pkg/auth"
 	"github.com/artem13815/hr/pkg/config"
 	"github.com/artem13815/hr/pkg/health"
@@ -87,20 +88,20 @@ func main() {
 		cfg.OpenRouterAppTitle,
 		cfg.OpenRouterReferer,
 	)
-	_ = vacancyRepo
-	_ = resumeRepoDB
-	_ = analysisRepo
+
 	resumeSvc := resume.NewAnalysisService(llmClient)
 	resumeHandler := handlers.NewResumeHandler(resumeSvc, llmClient, resumeRepoDB)
 	vacancyUC := vacancy.NewService(vacancyRepo)
 	vacancyHandler := handlers.NewVacancyHandler(vacancyUC)
 	resumesHandler := handlers.NewResumesHandler(resumeRepoDB)
+	analysisUC := analysis.NewService(analysisRepo, resumeRepoDB, vacancyRepo, llmClient, cfg.OpenRouterModel)
+	analysisHandler := handlers.NewAnalysisHandler(analysisUC)
 
 	// JWT auth middleware for protected routes
 	authMW := jwt.NewAuthMiddleware(cfg.JWTSecret, cfg.JWTIssuer)
 
 	// Register routes
-	http.Register(app, authHandler, healthHandler, resumeHandler, vacancyHandler, authMW, resumesHandler)
+	http.Register(app, authHandler, healthHandler, resumeHandler, vacancyHandler, authMW, resumesHandler, analysisHandler)
 
 	// Swagger UI
 	app.Get("/swagger/*", swagger.HandlerDefault)

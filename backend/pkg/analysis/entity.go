@@ -19,17 +19,25 @@ type Report struct {
 
 // Analysis хранит связи и численный скор.
 type Analysis struct {
-	ID        uuid.UUID
-	ResumeID  uuid.UUID
-	VacancyID uuid.UUID
-	Score     float32
-	Model     string
-	Report    Report
-	CreatedAt time.Time
+	ID        uuid.UUID `json:"id"`
+	ResumeID  uuid.UUID `json:"resumeId"`
+	VacancyID uuid.UUID `json:"vacancyId"`
+	Score     float32   `json:"score"`
+	Model     string    `json:"model"`
+	Report    Report    `json:"report"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // Repository — порт для сохранения/чтения анализов.
 type Repository interface {
-	Create(ctx context.Context, a Analysis) error
+	Create(ctx context.Context, a Analysis) (Analysis, error)
 	GetByID(ctx context.Context, id uuid.UUID) (Analysis, error)
+	// owner/admin views
+	GetByIDForOwner(ctx context.Context, ownerID, id uuid.UUID) (Analysis, error)
+	ListByOwner(ctx context.Context, ownerID uuid.UUID, limit, offset int) ([]Analysis, error)
+	ListByVacancyForOwner(ctx context.Context, ownerID, vacancyID uuid.UUID, limit, offset int) ([]Analysis, error)
+	ListAll(ctx context.Context, limit, offset int) ([]Analysis, error)
+	ListByVacancyAny(ctx context.Context, vacancyID uuid.UUID, limit, offset int) ([]Analysis, error)
+	DeleteForOwner(ctx context.Context, ownerID, id uuid.UUID) error
+	DeleteAny(ctx context.Context, id uuid.UUID) error
 }
