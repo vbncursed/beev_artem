@@ -232,6 +232,17 @@ info:
 paths:
   /analyses:
     get:
+      parameters:
+      - default: 50
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -472,6 +483,17 @@ paths:
       - Резюме
   /resumes:
     get:
+      parameters:
+      - default: 50
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
@@ -672,6 +694,17 @@ paths:
       - Резюме
   /vacancies:
     get:
+      parameters:
+      - default: 50
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses: {}
@@ -765,6 +798,16 @@ paths:
         name: id
         required: true
         type: string
+      - default: 50
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
