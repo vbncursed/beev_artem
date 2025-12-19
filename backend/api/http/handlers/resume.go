@@ -86,7 +86,10 @@ func (h *ResumeHandler) Analyze(c *fiber.Ctx) error {
 			return presenter.Error(c, http.StatusInternalServerError, "failed to store file")
 		}
 		ownerIDStr, _ := c.Locals("userId").(string)
-		ownerID, _ := uuid.Parse(ownerIDStr)
+		ownerID, err := uuid.Parse(ownerIDStr)
+		if err != nil {
+			return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+		}
 		meta := resume.Resume{
 			ID:         resumeID,
 			OwnerID:    ownerID,

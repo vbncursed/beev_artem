@@ -87,7 +87,14 @@ func (s *service) Create(ctx context.Context, actorID uuid.UUID, isAdmin bool, r
 		profRec, err = s.resumes.GetProfileForOwner(ctx, actorID, resumeID)
 	}
 	if err != nil {
-		return Analysis{}, err
+		// Профиль мог не быть построен (например, резюме загружено через /resume/analyze).
+		// Пытаемся построить профиль на лету из parsed text и сохранить.
+		built, buildErr := s.buildProfileFromParsed(ctx, resumeID)
+		if buildErr != nil {
+			// Не удалось построить профиль автоматически — возвращаем причину.
+			return Analysis{}, buildErr
+		}
+		profRec = built
 	}
 	if profRec.Status != resume.ProfileStatusOK {
 		return Analysis{}, ErrProfileNotReady{Status: profRec.Status}

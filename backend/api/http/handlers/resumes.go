@@ -76,7 +76,10 @@ func (h *ResumesHandler) Upload(c *fiber.Ctx) error {
 		return presenter.Error(c, http.StatusBadRequest, fmt.Sprintf("failed to parse resume: %v", err))
 	}
 	ownerIDStr, _ := c.Locals("userId").(string)
-	ownerID, _ := uuid.Parse(ownerIDStr)
+	ownerID, err := uuid.Parse(ownerIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	meta := resume.Resume{
 		ID:         id,
 		OwnerID:    ownerID,
@@ -119,10 +122,12 @@ func (h *ResumesHandler) Upload(c *fiber.Ctx) error {
 func (h *ResumesHandler) List(c *fiber.Ctx) error {
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
-	uid, _ := uuid.Parse(userIDStr)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	limit, offset := parseLimitOffset(c, 50)
 	var items []resume.Resume
-	var err error
 	if isAdmin {
 		items, err = h.repo.ListAll(c.Context(), limit, offset)
 	} else {
@@ -151,7 +156,10 @@ func (h *ResumesHandler) Get(c *fiber.Ctx) error {
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
-	uid, _ := uuid.Parse(userIDStr)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	var meta resume.Resume
 	if isAdmin {
 		meta, err = h.repo.GetMetaAny(c.Context(), id)
@@ -185,7 +193,10 @@ func (h *ResumesHandler) Profile(c *fiber.Ctx) error {
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
-	uid, _ := uuid.Parse(userIDStr)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	var rec resume.ProfileRecord
 	if isAdmin {
 		rec, err = h.repo.GetProfileAny(c.Context(), id)
@@ -219,7 +230,10 @@ func (h *ResumesHandler) RebuildProfile(c *fiber.Ctx) error {
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
-	uid, _ := uuid.Parse(userIDStr)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	// Access check via meta
 	if isAdmin {
 		_, err = h.repo.GetMetaAny(c.Context(), id)
@@ -254,7 +268,10 @@ func (h *ResumesHandler) Download(c *fiber.Ctx) error {
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
-	uid, _ := uuid.Parse(userIDStr)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	var meta resume.Resume
 	if isAdmin {
 		meta, err = h.repo.GetMetaAny(c.Context(), id)
@@ -283,7 +300,10 @@ func (h *ResumesHandler) Delete(c *fiber.Ctx) error {
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
-	uid, _ := uuid.Parse(userIDStr)
+	uid, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
+	}
 	var meta resume.Resume
 	if isAdmin {
 		meta, err = h.repo.DeleteAny(c.Context(), id)

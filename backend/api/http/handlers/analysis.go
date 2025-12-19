@@ -10,6 +10,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/artem13815/hr/api/http/presenter"
 	"github.com/artem13815/hr/pkg/analysis"
@@ -71,8 +72,11 @@ func (h *AnalysisHandler) Create(c *fiber.Ctx) error {
 		if errors.As(err, &notReady) {
 			return presenter.Error(c, http.StatusConflict, notReady.Error())
 		}
-		// упрощённо: если не нашли/нет доступа — 404
-		return presenter.Error(c, http.StatusNotFound, err.Error())
+		// Не светим внутренние детали БД.
+		if errors.Is(err, pgx.ErrNoRows) {
+			return presenter.Error(c, http.StatusNotFound, "не найдено или нет доступа")
+		}
+		return presenter.Error(c, http.StatusInternalServerError, "не удалось создать анализ")
 	}
 	return presenter.JSON(c, http.StatusCreated, out)
 }
