@@ -16,13 +16,15 @@ import (
 
 type ResumesHandler struct {
 	repo     resume.Repository
+	profiles resume.ProfileUseCase
 	maxBytes int64
 	baseDir  string
 }
 
-func NewResumesHandler(repo resume.Repository) *ResumesHandler {
+func NewResumesHandler(repo resume.Repository, profiles resume.ProfileUseCase) *ResumesHandler {
 	return &ResumesHandler{
 		repo:     repo,
+		profiles: profiles,
 		maxBytes: 15 << 20, // 15MB
 		baseDir:  "uploads",
 	}
@@ -89,10 +91,17 @@ func (h *ResumesHandler) Upload(c *fiber.Ctx) error {
 	if err := h.repo.SaveParsed(c.Context(), resume.Parsed{ResumeID: id, Text: txt}); err != nil {
 		return presenter.Error(c, http.StatusInternalServerError, "failed to save parsed text")
 	}
+	// Build and store structured profile (best-effort)
+	var profileStatus any
+	if h.profiles != nil {
+		rec := h.profiles.BuildAndSave(c.Context(), id, txt)
+		profileStatus = rec.Status
+	}
 	return presenter.JSON(c, http.StatusCreated, fiber.Map{
-		"id":       id.String(),
-		"filename": fh.Filename,
-		"sizeB":    fh.Size,
+		"id":            id.String(),
+		"filename":      fh.Filename,
+		"sizeB":         fh.Size,
+		"profileStatus": profileStatus,
 	})
 }
 
@@ -154,6 +163,75 @@ func (h *ResumesHandler) Get(c *fiber.Ctx) error {
 		"meta":   meta,
 		"parsed": parsed.Text,
 	})
+}
+
+// Profile возвращает структурированный профиль резюме (skills/experience/education).
+// @Summary Получить профиль резюме (структура)
+// @Tags    Резюме
+// @Produce json
+// @Param   id path string true "ID резюме (UUID)"
+// @Security BearerAuth
+// @Success 200 {object} resume.ProfileRecord
+// @Failure 401 {object} presenter.ErrorResponse
+// @Failure 404 {object} presenter.ErrorResponse
+// @Router  /resumes/{id}/profile [get]
+func (h *ResumesHandler) Profile(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return presenter.Error(c, http.StatusBadRequest, "invalid id")
+	}
+	isAdmin, _ := c.Locals("isAdmin").(bool)
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, _ := uuid.Parse(userIDStr)
+	var rec resume.ProfileRecord
+	if isAdmin {
+		rec, err = h.repo.GetProfileAny(c.Context(), id)
+	} else {
+		rec, err = h.repo.GetProfileForOwner(c.Context(), uid, id)
+	}
+	if err != nil {
+		return presenter.Error(c, http.StatusNotFound, "profile not found")
+	}
+	return presenter.JSON(c, http.StatusOK, rec)
+}
+
+// RebuildProfile принудительно переизвлекает профиль резюме (например после 429/failed).
+// @Summary Переизвлечь профиль резюме
+// @Tags    Резюме
+// @Produce json
+// @Param   id path string true "ID резюме (UUID)"
+// @Security BearerAuth
+// @Success 200 {object} resume.ProfileRecord
+// @Failure 401 {object} presenter.ErrorResponse
+// @Failure 404 {object} presenter.ErrorResponse
+// @Failure 500 {object} presenter.ErrorResponse
+// @Router  /resumes/{id}/profile/rebuild [post]
+func (h *ResumesHandler) RebuildProfile(c *fiber.Ctx) error {
+	if h.profiles == nil {
+		return presenter.Error(c, http.StatusInternalServerError, "profile extractor is not configured")
+	}
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return presenter.Error(c, http.StatusBadRequest, "invalid id")
+	}
+	isAdmin, _ := c.Locals("isAdmin").(bool)
+	userIDStr, _ := c.Locals("userId").(string)
+	uid, _ := uuid.Parse(userIDStr)
+	// Access check via meta
+	if isAdmin {
+		_, err = h.repo.GetMetaAny(c.Context(), id)
+	} else {
+		_, err = h.repo.GetMetaForOwner(c.Context(), uid, id)
+	}
+	if err != nil {
+		return presenter.Error(c, http.StatusNotFound, "resume not found")
+	}
+	parsed, err := h.repo.GetParsed(c.Context(), id)
+	if err != nil {
+		return presenter.Error(c, http.StatusNotFound, "parsed text not found")
+	}
+	rec := h.profiles.BuildAndSave(c.Context(), id, parsed.Text)
+	return presenter.JSON(c, http.StatusOK, rec)
 }
 
 // Download скачивает исходный файл резюме.

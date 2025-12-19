@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -39,6 +40,14 @@ CREATE TABLE IF NOT EXISTS resumes (
 CREATE TABLE IF NOT EXISTS parsed_resumes (
 	resume_id UUID PRIMARY KEY REFERENCES resumes(id) ON DELETE CASCADE,
 	text TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS resume_profiles (
+	resume_id UUID PRIMARY KEY REFERENCES resumes(id) ON DELETE CASCADE,
+	status TEXT NOT NULL,
+	model TEXT NOT NULL,
+	error TEXT NOT NULL,
+	profile JSONB NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
 );
 -- backfill for older schemas
 ALTER TABLE resumes ADD COLUMN IF NOT EXISTS owner_id UUID;
@@ -223,4 +232,75 @@ func (r *ResumeRepository) DeleteAny(ctx context.Context, id uuid.UUID) (resume.
 		return resume.Resume{}, err
 	}
 	return meta, tx.Commit(ctx)
+}
+
+func (r *ResumeRepository) UpsertProfile(ctx context.Context, rec resume.ProfileRecord) error {
+	if rec.UpdatedAt.IsZero() {
+		rec.UpdatedAt = time.Now().UTC()
+	}
+	profileJSON, err := json.Marshal(rec.Profile)
+	if err != nil {
+		return err
+	}
+	_, err = r.pool.Exec(ctx, `
+INSERT INTO resume_profiles (resume_id, status, model, error, profile, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (resume_id) DO UPDATE SET
+	status = EXCLUDED.status,
+	model = EXCLUDED.model,
+	error = EXCLUDED.error,
+	profile = EXCLUDED.profile,
+	updated_at = EXCLUDED.updated_at
+`, rec.ResumeID, string(rec.Status), rec.Model, rec.Error, profileJSON, rec.UpdatedAt)
+	return err
+}
+
+func (r *ResumeRepository) GetProfileForOwner(ctx context.Context, ownerID, resumeID uuid.UUID) (resume.ProfileRecord, error) {
+	row := r.pool.QueryRow(ctx, `
+SELECT rp.resume_id, rp.status, rp.model, rp.error, rp.profile, rp.updated_at
+FROM resume_profiles rp
+JOIN resumes r ON r.id = rp.resume_id
+WHERE rp.resume_id = $1 AND r.owner_id = $2
+`, resumeID, ownerID)
+	return scanProfile(row)
+}
+
+func (r *ResumeRepository) GetProfileAny(ctx context.Context, resumeID uuid.UUID) (resume.ProfileRecord, error) {
+	row := r.pool.QueryRow(ctx, `
+SELECT resume_id, status, model, error, profile, updated_at
+FROM resume_profiles
+WHERE resume_id = $1
+`, resumeID)
+	return scanProfile(row)
+}
+
+type profileRow interface {
+	Scan(dest ...any) error
+}
+
+func scanProfile(row profileRow) (resume.ProfileRecord, error) {
+	var rec resume.ProfileRecord
+	var status string
+	var profileBytes []byte
+	var updated time.Time
+	if err := row.Scan(&rec.ResumeID, &status, &rec.Model, &rec.Error, &profileBytes, &updated); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return resume.ProfileRecord{}, pgx.ErrNoRows
+		}
+		return resume.ProfileRecord{}, err
+	}
+	rec.Status = resume.ProfileStatus(status)
+	rec.UpdatedAt = updated.UTC()
+	_ = json.Unmarshal(profileBytes, &rec.Profile)
+	// normalize nil slices
+	if rec.Profile.Skills == nil {
+		rec.Profile.Skills = []string{}
+	}
+	if rec.Profile.Experience == nil {
+		rec.Profile.Experience = []resume.ExperienceItem{}
+	}
+	if rec.Profile.Education == nil {
+		rec.Profile.Education = []resume.EducationItem{}
+	}
+	return rec, nil
 }

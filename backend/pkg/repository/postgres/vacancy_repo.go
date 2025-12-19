@@ -144,6 +144,9 @@ SELECT skill, weight FROM vacancy_skills WHERE vacancy_id = $1
 	}
 	// stable order
 	sort.Slice(v.Skills, func(i, j int) bool { return v.Skills[i].Skill < v.Skills[j].Skill })
+	if v.Skills == nil {
+		v.Skills = []vacancy.SkillWeight{}
+	}
 	return v, nil
 }
 
@@ -211,6 +214,9 @@ SELECT id, owner_id, title, description, created_at FROM vacancies WHERE id = $1
 		v.Skills = append(v.Skills, sw)
 	}
 	sort.Slice(v.Skills, func(i, j int) bool { return v.Skills[i].Skill < v.Skills[j].Skill })
+	if v.Skills == nil {
+		v.Skills = []vacancy.SkillWeight{}
+	}
 	return v, nil
 }
 

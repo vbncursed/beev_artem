@@ -40,6 +40,28 @@ definitions:
           type: string
         type: array
     type: object
+  handlers.candidateItem:
+    properties:
+      analysisId:
+        type: string
+      createdAt:
+        type: string
+      report:
+        $ref: '#/definitions/analysis.Report'
+      resumeId:
+        type: string
+      score:
+        type: number
+    type: object
+  handlers.candidatesResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.candidateItem'
+        type: array
+      total:
+        type: integer
+    type: object
   handlers.createAnalysisRequest:
     properties:
       resumeId:
@@ -91,6 +113,74 @@ definitions:
       message:
         type: string
     type: object
+  resume.EducationItem:
+    properties:
+      degree:
+        type: string
+      end:
+        type: string
+      institution:
+        type: string
+      start:
+        type: string
+    type: object
+  resume.ExperienceItem:
+    properties:
+      company:
+        type: string
+      description:
+        type: string
+      end:
+        description: YYYY-MM or "present"
+        type: string
+      role:
+        type: string
+      start:
+        description: YYYY-MM or free text
+        type: string
+    type: object
+  resume.Profile:
+    properties:
+      education:
+        items:
+          $ref: '#/definitions/resume.EducationItem'
+        type: array
+      experience:
+        items:
+          $ref: '#/definitions/resume.ExperienceItem'
+        type: array
+      skills:
+        items:
+          type: string
+        type: array
+      summary:
+        type: string
+    type: object
+  resume.ProfileRecord:
+    properties:
+      error:
+        type: string
+      model:
+        type: string
+      profile:
+        $ref: '#/definitions/resume.Profile'
+      resumeId:
+        type: string
+      status:
+        $ref: '#/definitions/resume.ProfileStatus'
+      updatedAt:
+        type: string
+    type: object
+  resume.ProfileStatus:
+    enum:
+    - pending
+    - ok
+    - failed
+    type: string
+    x-enum-varnames:
+    - ProfileStatusPending
+    - ProfileStatusOK
+    - ProfileStatusFailed
   resume.Resume:
     properties:
       createdAt:
@@ -101,12 +191,11 @@ definitions:
         type: string
       mimeType:
         type: string
-      ownerID:
+      ownerId:
         type: string
       size:
-        format: int64
         type: integer
-      storageURI:
+      storageUri:
         type: string
     type: object
   vacancy.SkillWeight:
@@ -114,7 +203,6 @@ definitions:
       skill:
         type: string
       weight:
-        format: float32
         type: number
     type: object
   vacancy.Vacancy:
@@ -125,7 +213,7 @@ definitions:
         type: string
       id:
         type: string
-      ownerID:
+      ownerId:
         type: string
       skills:
         items:
@@ -189,6 +277,10 @@ paths:
             $ref: '#/definitions/presenter.ErrorResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/presenter.ErrorResponse'
         "500":
@@ -518,6 +610,66 @@ paths:
       summary: Скачать файл резюме
       tags:
       - Резюме
+  /resumes/{id}/profile:
+    get:
+      parameters:
+      - description: ID резюме (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resume.ProfileRecord'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить профиль резюме (структура)
+      tags:
+      - Резюме
+  /resumes/{id}/profile/rebuild:
+    post:
+      parameters:
+      - description: ID резюме (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resume.ProfileRecord'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Переизвлечь профиль резюме
+      tags:
+      - Резюме
   /vacancies:
     get:
       produces:
@@ -633,6 +785,60 @@ paths:
       security:
       - BearerAuth: []
       summary: Список анализов по вакансии
+      tags:
+      - Анализ
+  /vacancies/{id}/candidates:
+    get:
+      description: Возвращает список анализов по вакансии с фильтрацией по score и
+        навыку, сортировкой и пагинацией.
+      parameters:
+      - description: ID вакансии (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Минимальный score (0..1)
+        in: query
+        name: minScore
+        type: number
+      - description: Навык (фильтр по resume profile skills; если профиля нет — fallback
+          на report.matchedSkills)
+        in: query
+        name: skill
+        type: string
+      - default: score_desc
+        description: 'Сортировка: score_desc|score_asc|created_desc|created_asc'
+        in: query
+        name: sort
+        type: string
+      - default: 50
+        description: Лимит
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.candidatesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/presenter.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Кандидаты по вакансии (фильтр/сортировка)
       tags:
       - Анализ
   /vacancies/{id}/skills:

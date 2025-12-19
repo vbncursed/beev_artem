@@ -28,6 +28,8 @@ func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.Healt
 	rs.Post("/", resumes.Upload)
 	rs.Get("/", resumes.List)
 	rs.Get("/:id", resumes.Get)
+	rs.Get("/:id/profile", resumes.Profile)
+	rs.Post("/:id/profile/rebuild", resumes.RebuildProfile)
 	rs.Get("/:id/file", resumes.Download)
 	rs.Delete("/:id", resumes.Delete)
 
@@ -46,4 +48,5 @@ func Register(app *fiber.App, auth *handlers.AuthHandler, health *handlers.Healt
 	vg.Put("/:id/skills", vacancy.UpdateSkills)
 	vg.Delete("/:id", vacancy.Delete)
 	vg.Get("/:id/analyses", analyses.ListByVacancy)
+	vg.Get("/:id/candidates", analyses.CandidatesByVacancy)
 }

@@ -93,9 +93,10 @@ func main() {
 	resumeHandler := handlers.NewResumeHandler(resumeSvc, llmClient, resumeRepoDB)
 	vacancyUC := vacancy.NewService(vacancyRepo)
 	vacancyHandler := handlers.NewVacancyHandler(vacancyUC)
-	resumesHandler := handlers.NewResumesHandler(resumeRepoDB)
 	analysisUC := analysis.NewService(analysisRepo, resumeRepoDB, vacancyRepo, llmClient, cfg.OpenRouterModel)
-	analysisHandler := handlers.NewAnalysisHandler(analysisUC)
+	analysisHandler := handlers.NewAnalysisHandler(analysisUC, resumeRepoDB)
+	profileUC := resume.NewProfileService(resumeRepoDB, llmClient, cfg.OpenRouterModel)
+	resumesHandler := handlers.NewResumesHandler(resumeRepoDB, profileUC)
 
 	// JWT auth middleware for protected routes
 	authMW := jwt.NewAuthMiddleware(cfg.JWTSecret, cfg.JWTIssuer)

@@ -9,18 +9,18 @@ import (
 
 // Vacancy описывает вакансию и эталонные навыки с весами.
 type Vacancy struct {
-	ID          uuid.UUID
-	OwnerID     uuid.UUID
-	Title       string
-	Description string
-	CreatedAt   time.Time
-	Skills      []SkillWeight
+	ID          uuid.UUID `json:"id"`
+	OwnerID     uuid.UUID `json:"ownerId,omitempty"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"createdAt"`
+	Skills      []SkillWeight `json:"skills"`
 }
 
 // SkillWeight — весовой коэффициент важности навыка в диапазоне [0,1].
 type SkillWeight struct {
-	Skill  string
-	Weight float32
+	Skill  string  `json:"skill"`
+	Weight float32 `json:"weight"`
 }
 
 // Repository — порт для работы с вакансиями.

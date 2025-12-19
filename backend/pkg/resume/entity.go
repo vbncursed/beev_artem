@@ -9,13 +9,13 @@ import (
 
 // Resume хранит метаданные загруженного файла.
 type Resume struct {
-	ID         uuid.UUID
-	OwnerID    uuid.UUID
-	Filename   string
-	MimeType   string
-	Size       int64
-	StorageURI string
-	CreatedAt  time.Time
+	ID         uuid.UUID `json:"id"`
+	OwnerID    uuid.UUID `json:"ownerId,omitempty"`
+	Filename   string    `json:"filename"`
+	MimeType   string    `json:"mimeType"`
+	Size       int64     `json:"size"`
+	StorageURI string    `json:"storageUri,omitempty"`
+	CreatedAt  time.Time `json:"createdAt"`
 }
 
 // Parsed хранит извлечённый из резюме текст.
@@ -38,6 +38,10 @@ type Repository interface {
 	// delete (returns deleted meta for file cleanup)
 	DeleteForOwner(ctx context.Context, ownerID, id uuid.UUID) (Resume, error)
 	DeleteAny(ctx context.Context, id uuid.UUID) (Resume, error)
+	// profile
+	UpsertProfile(ctx context.Context, rec ProfileRecord) error
+	GetProfileForOwner(ctx context.Context, ownerID, resumeID uuid.UUID) (ProfileRecord, error)
+	GetProfileAny(ctx context.Context, resumeID uuid.UUID) (ProfileRecord, error)
 }
 
 // ParsedResume — извлечённый чистый текст из резюме.

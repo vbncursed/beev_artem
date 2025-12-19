@@ -96,6 +96,12 @@
                             "$ref": "#/definitions/presenter.ErrorResponse"
                         }
                     },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -603,6 +609,102 @@
                 }
             }
         },
+        "/resumes/{id}/profile": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Резюме"
+                ],
+                "summary": "Получить профиль резюме (структура)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID резюме (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/resume.ProfileRecord"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/resumes/{id}/profile/rebuild": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Резюме"
+                ],
+                "summary": "Переизвлечь профиль резюме",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID резюме (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/resume.ProfileRecord"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/vacancies": {
             "get": {
                 "security": [
@@ -791,6 +893,85 @@
                 }
             }
         },
+        "/vacancies/{id}/candidates": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает список анализов по вакансии с фильтрацией по score и навыку, сортировкой и пагинацией.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Анализ"
+                ],
+                "summary": "Кандидаты по вакансии (фильтр/сортировка)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID вакансии (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Минимальный score (0..1)",
+                        "name": "minScore",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Навык (фильтр по resume profile skills; если профиля нет — fallback на report.matchedSkills)",
+                        "name": "skill",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "score_desc",
+                        "description": "Сортировка: score_desc|score_asc|created_desc|created_asc",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Лимит",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Смещение",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.candidatesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/presenter.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/vacancies/{id}/skills": {
             "put": {
                 "security": [
@@ -908,6 +1089,40 @@
                 }
             }
         },
+        "handlers.candidateItem": {
+            "type": "object",
+            "properties": {
+                "analysisId": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "report": {
+                    "$ref": "#/definitions/analysis.Report"
+                },
+                "resumeId": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                }
+            }
+        },
+        "handlers.candidatesResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.candidateItem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.createAnalysisRequest": {
             "type": "object",
             "properties": {
@@ -988,6 +1203,107 @@
                 }
             }
         },
+        "resume.EducationItem": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "institution": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "resume.ExperienceItem": {
+            "type": "object",
+            "properties": {
+                "company": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end": {
+                    "description": "YYYY-MM or \"present\"",
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "start": {
+                    "description": "YYYY-MM or free text",
+                    "type": "string"
+                }
+            }
+        },
+        "resume.Profile": {
+            "type": "object",
+            "properties": {
+                "education": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/resume.EducationItem"
+                    }
+                },
+                "experience": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/resume.ExperienceItem"
+                    }
+                },
+                "skills": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "summary": {
+                    "type": "string"
+                }
+            }
+        },
+        "resume.ProfileRecord": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "profile": {
+                    "$ref": "#/definitions/resume.Profile"
+                },
+                "resumeId": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/resume.ProfileStatus"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "resume.ProfileStatus": {
+            "type": "string",
+            "enum": [
+                "pending",
+                "ok",
+                "failed"
+            ],
+            "x-enum-varnames": [
+                "ProfileStatusPending",
+                "ProfileStatusOK",
+                "ProfileStatusFailed"
+            ]
+        },
         "resume.Resume": {
             "type": "object",
             "properties": {
@@ -1003,14 +1319,13 @@
                 "mimeType": {
                     "type": "string"
                 },
-                "ownerID": {
+                "ownerId": {
                     "type": "string"
                 },
                 "size": {
-                    "type": "integer",
-                    "format": "int64"
+                    "type": "integer"
                 },
-                "storageURI": {
+                "storageUri": {
                     "type": "string"
                 }
             }
@@ -1022,8 +1337,7 @@
                     "type": "string"
                 },
                 "weight": {
-                    "type": "number",
-                    "format": "float32"
+                    "type": "number"
                 }
             }
         },
@@ -1039,7 +1353,7 @@
                 "id": {
                     "type": "string"
                 },
-                "ownerID": {
+                "ownerId": {
                     "type": "string"
                 },
                 "skills": {
