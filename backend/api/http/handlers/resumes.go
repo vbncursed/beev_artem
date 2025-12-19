@@ -109,6 +109,8 @@ func (h *ResumesHandler) Upload(c *fiber.Ctx) error {
 // @Summary Список резюме
 // @Tags    Резюме
 // @Produce json
+// @Param   limit query int false "Лимит" default(50)
+// @Param   offset query int false "Смещение" default(0)
 // @Security BearerAuth
 // @Success 200 {array} resume.Resume
 // @Failure 401 {object} presenter.ErrorResponse
@@ -118,12 +120,13 @@ func (h *ResumesHandler) List(c *fiber.Ctx) error {
 	isAdmin, _ := c.Locals("isAdmin").(bool)
 	userIDStr, _ := c.Locals("userId").(string)
 	uid, _ := uuid.Parse(userIDStr)
+	limit, offset := parseLimitOffset(c, 50)
 	var items []resume.Resume
 	var err error
 	if isAdmin {
-		items, err = h.repo.ListAll(c.Context(), 50, 0)
+		items, err = h.repo.ListAll(c.Context(), limit, offset)
 	} else {
-		items, err = h.repo.ListByOwner(c.Context(), uid, 50, 0)
+		items, err = h.repo.ListByOwner(c.Context(), uid, limit, offset)
 	}
 	if err != nil {
 		return presenter.Error(c, http.StatusInternalServerError, "failed to list resumes")

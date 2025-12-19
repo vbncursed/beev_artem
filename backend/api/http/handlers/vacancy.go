@@ -107,6 +107,8 @@ func (h *VacancyHandler) GetByID(c *fiber.Ctx) error {
 // @Tags    Вакансии
 // @Produce json
 // @Security BearerAuth
+// @Param   limit query int false "Лимит" default(50)
+// @Param   offset query int false "Смещение" default(0)
 // @Router  /vacancies [get]
 func (h *VacancyHandler) List(c *fiber.Ctx) error {
 	userIDStr, _ := c.Locals("userId").(string)
@@ -115,11 +117,12 @@ func (h *VacancyHandler) List(c *fiber.Ctx) error {
 		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
+	limit, offset := parseLimitOffset(c, 50)
 	var vs []vacancy.Vacancy
 	if isAdmin {
-		vs, err = h.uc.ListAdmin(c.Context(), 50, 0)
+		vs, err = h.uc.ListAdmin(c.Context(), limit, offset)
 	} else {
-		vs, err = h.uc.List(c.Context(), uid, 50, 0)
+		vs, err = h.uc.List(c.Context(), uid, limit, offset)
 	}
 	if err != nil {
 		return presenter.Error(c, http.StatusInternalServerError, "не удалось получить список")

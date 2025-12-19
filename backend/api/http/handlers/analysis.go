@@ -110,6 +110,8 @@ func (h *AnalysisHandler) Get(c *fiber.Ctx) error {
 // @Tags    Анализ
 // @Produce json
 // @Security BearerAuth
+// @Param   limit query int false "Лимит" default(50)
+// @Param   offset query int false "Смещение" default(0)
 // @Success 200 {array} analysis.Analysis
 // @Failure 401 {object} presenter.ErrorResponse
 // @Router  /analyses [get]
@@ -120,7 +122,8 @@ func (h *AnalysisHandler) List(c *fiber.Ctx) error {
 		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
-	items, err := h.uc.List(c.Context(), actorID, isAdmin, 50, 0)
+	limit, offset := parseLimitOffset(c, 50)
+	items, err := h.uc.List(c.Context(), actorID, isAdmin, limit, offset)
 	if err != nil {
 		return presenter.Error(c, http.StatusInternalServerError, "не удалось получить список")
 	}
@@ -133,6 +136,8 @@ func (h *AnalysisHandler) List(c *fiber.Ctx) error {
 // @Produce json
 // @Param   id path string true "ID вакансии (UUID)"
 // @Security BearerAuth
+// @Param   limit query int false "Лимит" default(50)
+// @Param   offset query int false "Смещение" default(0)
 // @Success 200 {array} analysis.Analysis
 // @Failure 401 {object} presenter.ErrorResponse
 // @Failure 404 {object} presenter.ErrorResponse
@@ -148,7 +153,8 @@ func (h *AnalysisHandler) ListByVacancy(c *fiber.Ctx) error {
 		return presenter.Error(c, http.StatusUnauthorized, "не удалось определить пользователя")
 	}
 	isAdmin, _ := c.Locals("isAdmin").(bool)
-	items, err := h.uc.ListByVacancy(c.Context(), actorID, isAdmin, vacancyID, 50, 0)
+	limit, offset := parseLimitOffset(c, 50)
+	items, err := h.uc.ListByVacancy(c.Context(), actorID, isAdmin, vacancyID, limit, offset)
 	if err != nil {
 		return presenter.Error(c, http.StatusNotFound, "анализы не найдены")
 	}
