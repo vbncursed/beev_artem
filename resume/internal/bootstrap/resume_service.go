@@ -1,10 +1,12 @@
 package bootstrap
 
 import (
-	"github.com/artem13815/hr/resume/internal/services/resume_service"
-	"github.com/artem13815/hr/resume/internal/storage/resume_storage"
+	"github.com/artem13815/hr/resume/internal/infrastructure/extractor"
+	"github.com/artem13815/hr/resume/internal/infrastructure/persistence"
+	"github.com/artem13815/hr/resume/internal/infrastructure/profile"
+	"github.com/artem13815/hr/resume/internal/usecase"
 )
 
-func InitResumeService(storage *resume_storage.ResumeStorage) *resume_service.ResumeService {
-	return resume_service.NewResumeService(storage)
+func InitResumeService(storage *persistence.ResumeStorage) *usecase.ResumeService {
+	return usecase.NewResumeService(storage, extractor.New(), profile.New())
 }

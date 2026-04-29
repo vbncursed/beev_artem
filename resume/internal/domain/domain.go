@@ -63,6 +63,16 @@ type CreateCandidateFromResumeInput struct {
 	FileData      []byte
 }
 
+// NewResumeData carries the resume file payload without an owning CandidateID.
+// Used by storage's CreateCandidateWithResume where the candidate ID is
+// generated inside the same transaction.
+type NewResumeData struct {
+	FileName      string
+	FileType      string
+	ExtractedText string
+	Data          []byte
+}
+
 type CandidateResumeResult struct {
 	Candidate *Candidate
 	Resume    *Resume

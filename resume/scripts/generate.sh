@@ -11,7 +11,7 @@ protoc -I ./api \
   -I "${GATEWAY_PATH}" \
   --go_out=./internal/pb --go_opt=paths=source_relative \
   --go-grpc_out=./internal/pb --go-grpc_opt=paths=source_relative \
-  ./api/models/resume_model.proto ./api/resume_api/resume.proto
+  ./api/models/resume_model.proto ./api/resume_api/resume.proto ./api/auth_api/auth.proto
 
 protoc -I ./api \
   -I ./api/google/api \
