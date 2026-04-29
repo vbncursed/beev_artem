@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package auth.models.v1;
+
+option go_package = "github.com/artem13815/hr/auth/internal/pb/models";
+
+// RegisterRequest - запрос на регистрацию пользователя
+message RegisterRequest {
+  string email = 1; // Email пользователя
+  string password = 2; // Пароль пользователя
+}
+
+// LoginRequest - запрос на вход в систему
+message LoginRequest {
+  string email = 1; // Email пользователя
+  string password = 2; // Пароль пользователя
+}
+
+// RefreshRequest - запрос на обновление токенов
+message RefreshRequest {
+  string refresh_token = 1; // Refresh token для обновления
+}
+
+// LogoutRequest - запрос на выход из сессии
+message LogoutRequest {
+  string refresh_token = 1; // Refresh token сессии для отзыва
+}
+
+// LogoutAllRequest - запрос на выход со всех устройств
+message LogoutAllRequest {
+  string refresh_token = 1; // Refresh token одной из сессий
+}
+
+// MeRequest - запрос данных текущего пользователя
+message MeRequest {}
+
+// MeResponse - данные текущего пользователя
+message MeResponse {
+  uint64 user_id = 1; // ID пользователя
+  string email = 2; // Email пользователя
+  string role = 3; // Роль пользователя
+}
+
+// ValidateAccessTokenRequest - запрос валидации access token
+message ValidateAccessTokenRequest {
+  string access_token = 1; // JWT access token
+}
+
+// ValidateAccessTokenResponse - результат валидации access token
+message ValidateAccessTokenResponse {
+  bool valid = 1; // Флаг валидности токена
+  uint64 user_id = 2; // ID пользователя
+  string email = 3; // Email пользователя
+  string role = 4; // Роль пользователя
+}
+
+// AuthResponse - ответ с токенами доступа
+message AuthResponse {
+  uint64 user_id = 1; // ID пользователя
+  string access_token = 2; // JWT access token
+  string refresh_token = 3; // Opaque refresh token
+}
+
+// LogoutResponse - ответ на запросы выхода из сессии
+message LogoutResponse {
+  bool success = 1; // Флаг успешного выполнения операции
+  string message = 2; // Сообщение о результате операции
+}
+
+// UpdateUserRoleRequest - запрос на изменение роли пользователя
+message UpdateUserRoleRequest {
+  uint64 user_id = 1; // ID пользователя, роль которого нужно изменить
+  string role = 2; // Новая роль (user или admin)
+}
+
+// UpdateUserRoleResponse - ответ на запрос изменения роли пользователя
+message UpdateUserRoleResponse {
+  bool success = 1; // Флаг успешного выполнения операции
+  string message = 2; // Сообщение о результате операции
+}

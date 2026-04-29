@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package analysis.models.v1;
+
+option go_package = "github.com/artem13815/hr/analysis/internal/pb/models";
+
+import "common/common.proto";
+import "google/protobuf/timestamp.proto";
+
+enum AnalysisStatus {
+  ANALYSIS_STATUS_UNSPECIFIED = 0;
+  ANALYSIS_STATUS_QUEUED = 1;
+  ANALYSIS_STATUS_RUNNING = 2;
+  ANALYSIS_STATUS_DONE = 3;
+  ANALYSIS_STATUS_FAILED = 4;
+}
+
+message CandidateProfile {
+  repeated string skills = 1;
+  float years_experience = 2;
+  repeated string positions = 3;
+  repeated string technologies = 4;
+  repeated string education = 5;
+  string summary = 6;
+}
+
+message ScoreBreakdown {
+  repeated string matched_skills = 1;
+  repeated string missing_skills = 2;
+  repeated string extra_skills = 3;
+  float base_score = 4;
+  float must_have_penalty = 5;
+  float nice_to_have_bonus = 6;
+  string explanation = 7;
+}
+
+message AgentResult {
+  string agent_name = 1;
+  string summary = 2;
+  string structured_json = 3;
+  float confidence = 4;
+}
+
+message AIDecision {
+  string hr_recommendation = 1;
+  float confidence = 2;
+  string hr_rationale = 3;
+  string candidate_feedback = 4;
+  string soft_skills_notes = 5;
+  repeated AgentResult agent_results = 6;
+  string raw_trace = 7;
+}
+
+message Analysis {
+  string id = 1;
+  string vacancy_id = 2;
+  string candidate_id = 3;
+  string resume_id = 4;
+  uint32 vacancy_version = 5;
+  AnalysisStatus status = 6;
+  float match_score = 7;
+  CandidateProfile profile = 8;
+  ScoreBreakdown breakdown = 9;
+  AIDecision ai = 10;
+  string error_message = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+}
+
+message StartAnalysisRequest {
+  string resume_id = 1;
+  string vacancy_id = 2;
+  bool use_llm = 3;
+}
+
+message StartAnalysisResponse {
+  string analysis_id = 1;
+  AnalysisStatus status = 2;
+}
+
+message GetAnalysisRequest {
+  string analysis_id = 1;
+}
+
+message AnalysisResponse {
+  Analysis analysis = 1;
+}
+
+message ListCandidatesByVacancyRequest {
+  string vacancy_id = 1;
+  common.v1.PageRequest page = 2;
+  float min_score = 3;
+  string required_skill = 4;
+  common.v1.SortOrder score_order = 5;
+}
+
+message CandidateWithAnalysis {
+  string candidate_id = 1;
+  string full_name = 2;
+  string email = 3;
+  string phone = 4;
+  float match_score = 5;
+  string analysis_id = 6;
+  AnalysisStatus analysis_status = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message ListCandidatesByVacancyResponse {
+  repeated CandidateWithAnalysis candidates = 1;
+  common.v1.PageResponse page = 2;
+}

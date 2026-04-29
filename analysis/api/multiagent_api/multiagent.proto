@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package multiagent.service.v1;
+
+option go_package = "github.com/artem13815/hr/analysis/internal/pb/multiagent_api";
+
+import "google/protobuf/timestamp.proto";
+
+service MultiAgentService {
+  rpc GenerateDecision(GenerateDecisionRequest) returns (GenerateDecisionResponse);
+}
+
+enum AgentMode {
+  AGENT_MODE_UNSPECIFIED = 0;
+  AGENT_MODE_FAST = 1;
+  AGENT_MODE_BALANCED = 2;
+  AGENT_MODE_STRICT = 3;
+}
+
+message GenerateDecisionRequest {
+  string model = 1;
+  AgentMode mode = 2;
+  string vacancy_title = 3;
+  string vacancy_description = 4;
+  repeated string vacancy_must_have = 5;
+  repeated string vacancy_nice_to_have = 6;
+  repeated string candidate_skills = 7;
+  repeated string missing_skills = 8;
+  string candidate_summary = 9;
+  string score_explanation = 10;
+  float match_score = 11;
+  string resume_text = 12;
+}
+
+message AgentResult {
+  string agent_name = 1;
+  string summary = 2;
+  string structured_json = 3;
+  float confidence = 4;
+}
+
+message GenerateDecisionResponse {
+  string hr_recommendation = 1;
+  float confidence = 2;
+  string hr_rationale = 3;
+  string candidate_feedback = 4;
+  string soft_skills_notes = 5;
+  repeated AgentResult agent_results = 6;
+  string raw_trace = 7;
+  google.protobuf.Timestamp created_at = 8;
+}

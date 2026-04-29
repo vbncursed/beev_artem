@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package auth.models.v1;
+
+option go_package = "github.com/artem13815/hr/gateway/internal/pb/models";
+
+message RegisterRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message LogoutRequest {
+  string refresh_token = 1;
+}
+
+message LogoutAllRequest {
+  string refresh_token = 1;
+}
+
+message MeRequest {}
+
+message MeResponse {
+  uint64 user_id = 1;
+  string email = 2;
+  string role = 3;
+}
+
+message ValidateAccessTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateAccessTokenResponse {
+  bool valid = 1;
+  uint64 user_id = 2;
+  string email = 3;
+  string role = 4;
+}
+
+message AuthResponse {
+  uint64 user_id = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}

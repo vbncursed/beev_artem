@@ -1,0 +1,24 @@
+database:
+  host: "prod-postgres.example.internal"
+  port: 5432
+  username: "prod_user"
+  password: ""        # set via AUTH_DB_PASSWORD env var (secret manager / k8s secret)
+  name: "hr"
+  ssl_mode: "require"
+
+redis:
+  host: "prod-redis.example.internal"
+  port: 6379
+  password: ""        # set via AUTH_REDIS_PASSWORD env var
+  db: 0
+
+auth:
+  jwt_secret: ""      # MUST be provided via AUTH_JWT_SECRET env var (>=32 bytes, not the placeholder)
+  access_ttl_seconds: 3600
+  refresh_ttl_seconds: 2592000
+  rate_limit_login_per_minute: 10
+  rate_limit_register_per_minute: 5
+  rate_limit_refresh_per_minute: 30
+
+server:
+  grpc_addr: ":50050"

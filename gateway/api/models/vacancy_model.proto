@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package vacancy.models.v1;
+
+option go_package = "github.com/artem13815/hr/gateway/internal/pb/models";
+
+import "common/common.proto";
+import "google/protobuf/timestamp.proto";
+
+enum VacancyStatus {
+  VACANCY_STATUS_UNSPECIFIED = 0;
+  VACANCY_STATUS_ACTIVE = 1;
+  VACANCY_STATUS_ARCHIVED = 2;
+}
+
+message SkillWeight {
+  string name = 1;
+  float weight = 2;
+  bool must_have = 3;
+  bool nice_to_have = 4;
+}
+
+message Vacancy {
+  string id = 1;
+  uint64 owner_user_id = 2;
+  string title = 3;
+  string description = 4;
+  repeated SkillWeight skills = 5;
+  VacancyStatus status = 6;
+  uint32 version = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message CreateVacancyRequest {
+  string title = 1;
+  string description = 2;
+  repeated SkillWeight skills = 3;
+}
+
+message GetVacancyRequest {
+  string vacancy_id = 1;
+}
+
+message ListVacanciesRequest {
+  common.v1.PageRequest page = 1;
+  string query = 2;
+}
+
+message ListVacanciesResponse {
+  repeated Vacancy vacancies = 1;
+  common.v1.PageResponse page = 2;
+}
+
+message UpdateVacancyRequest {
+  string vacancy_id = 1;
+  string title = 2;
+  string description = 3;
+  repeated SkillWeight skills = 4;
+}
+
+message ArchiveVacancyRequest {
+  string vacancy_id = 1;
+}
+
+message ArchiveVacancyResponse {
+  string status = 1;
+}
+
+message VacancyResponse {
+  Vacancy vacancy = 1;
+}

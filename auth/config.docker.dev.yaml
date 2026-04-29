@@ -1,0 +1,24 @@
+database:
+  host: "postgres"
+  port: 5432
+  username: "admin"
+  password: ""        # set via AUTH_DB_PASSWORD env var (compose injects it)
+  name: "hr"
+  ssl_mode: "disable"
+
+redis:
+  host: "redis"
+  port: 6379
+  password: ""        # set via AUTH_REDIS_PASSWORD env var if redis is password-protected
+  db: 0
+
+auth:
+  jwt_secret: ""      # MUST be provided via AUTH_JWT_SECRET env var (>=32 bytes, not "CHANGE_ME_IN_PRODUCTION")
+  access_ttl_seconds: 86400
+  refresh_ttl_seconds: 604800
+  rate_limit_login_per_minute: 2
+  rate_limit_register_per_minute: 2
+  rate_limit_refresh_per_minute: 2
+
+server:
+  grpc_addr: ":50050"

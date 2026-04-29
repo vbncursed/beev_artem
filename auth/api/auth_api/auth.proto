@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package auth.service.v1;
+
+option go_package = "github.com/artem13815/hr/auth/internal/pb/auth_api";
+
+import "google/api/annotations.proto";
+import "models/auth_model.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+// AuthService предоставляет операции регистрации/логина и управление refresh-сессиями.
+service AuthService {
+  // Register создаёт пользователя и возвращает пару access/refresh токенов.
+  rpc Register(auth.models.v1.RegisterRequest) returns (auth.models.v1.AuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/register"
+      body: "*"
+    };
+  }
+
+  // Login проверяет учётные данные и возвращает пару access/refresh токенов.
+  rpc Login(auth.models.v1.LoginRequest) returns (auth.models.v1.AuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/login"
+      body: "*"
+    };
+  }
+
+  // Refresh принимает refresh_token и выдаёт новую пару access/refresh (refresh ротируется).
+  rpc Refresh(auth.models.v1.RefreshRequest) returns (auth.models.v1.AuthResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/refresh"
+      body: "*"
+    };
+  }
+
+  // Logout отзывает refresh-сессию (по refresh_token).
+  rpc Logout(auth.models.v1.LogoutRequest) returns (auth.models.v1.LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/logout"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+
+  // LogoutAll отзывает все refresh-сессии пользователя (по refresh_token одной из сессий).
+  rpc LogoutAll(auth.models.v1.LogoutAllRequest) returns (auth.models.v1.LogoutResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/logout-all"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+
+  // Me возвращает данные текущего пользователя по access token из metadata.
+  rpc Me(auth.models.v1.MeRequest) returns (auth.models.v1.MeResponse) {}
+
+  // ValidateAccessToken валидирует access token и возвращает пользователя.
+  rpc ValidateAccessToken(auth.models.v1.ValidateAccessTokenRequest) returns (auth.models.v1.ValidateAccessTokenResponse) {}
+
+  // UpdateUserRole изменяет роль пользователя (только для администраторов).
+  rpc UpdateUserRole(auth.models.v1.UpdateUserRoleRequest) returns (auth.models.v1.UpdateUserRoleResponse) {
+    option (google.api.http) = {
+      post: "/v1/auth/users/{user_id}/role"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+}
+
+// Определение security схемы для Bearer токена
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Auth Service API";
+    version: "1.0.0";
+    description: "Микросервис аутентификации и авторизации";
+  };
+  security_definitions: {
+    security: {
+      key: "BearerAuth";
+      value: {
+        type: TYPE_API_KEY;
+        in: IN_HEADER;
+        name: "Authorization";
+        description: "JWT Bearer токен. Формат: Bearer <token>";
+      }
+    }
+  }
+};

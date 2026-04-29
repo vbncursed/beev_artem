@@ -1,0 +1,172 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hr-postgres
+    profiles: ["dev"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: hr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hr"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - hr-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: hr-redis
+    profiles: ["dev"]
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - hr-net
+
+  auth:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    container_name: hr-auth
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:?AUTH_JWT_SECRET is required (>=32 bytes, not the placeholder)}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-admin}
+      AUTH_REDIS_PASSWORD: ${AUTH_REDIS_PASSWORD-}
+    expose:
+      - "50050"
+    networks:
+      - hr-net
+
+  vacancy:
+    build:
+      context: .
+      dockerfile: vacancy/Dockerfile
+    container_name: hr-vacancy
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    expose:
+      - "50051"
+    networks:
+      - hr-net
+
+  resume:
+    build:
+      context: .
+      dockerfile: resume/Dockerfile
+    container_name: hr-resume
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    expose:
+      - "50052"
+    networks:
+      - hr-net
+
+  analysis:
+    build:
+      context: .
+      dockerfile: analysis/Dockerfile
+    container_name: hr-analysis
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      multiagent:
+        condition: service_started
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    expose:
+      - "50054"
+    networks:
+      - hr-net
+
+  multiagent:
+    build:
+      context: .
+      dockerfile: multiagent/Dockerfile
+    container_name: hr-multiagent
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    expose:
+      - "50055"
+    networks:
+      - hr-net
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: hr-gateway
+    restart: unless-stopped
+    depends_on:
+      auth:
+        condition: service_started
+        required: true
+      vacancy:
+        condition: service_started
+        required: true
+      resume:
+        condition: service_started
+        required: true
+      analysis:
+        condition: service_started
+        required: true
+      multiagent:
+        condition: service_started
+        required: true
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    ports:
+      - "8080:8080"
+    networks:
+      - hr-net
+
+volumes:
+  postgres_data:
+    name: hr_postgres_data
+  redis_data:
+    name: hr_redis_data
+
+networks:
+  hr-net:
+    name: hr-net
+    driver: bridge

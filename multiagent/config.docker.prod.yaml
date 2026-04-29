@@ -1,0 +1,10 @@
+database:
+  host: "prod-postgres.example.internal"
+  port: 5432
+  username: "prod_user"
+  password: "CHANGE_ME"
+  name: "hr"
+  ssl_mode: "require"
+
+server:
+  grpc_addr: ":50055"

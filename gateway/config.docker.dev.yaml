@@ -1,0 +1,14 @@
+server:
+  http_addr: ":8080"
+
+auth:
+  grpc_addr: "auth:50050"
+
+vacancy:
+  grpc_addr: "vacancy:50051"
+
+resume:
+  grpc_addr: "resume:50052"
+
+analysis:
+  grpc_addr: "analysis:50054"

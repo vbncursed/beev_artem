@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "github.com/artem13815/hr/vacancy/internal/pb/common";
+
+message PageRequest {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message PageResponse {
+  uint32 limit = 1;
+  uint32 offset = 2;
+  uint64 total = 3;
+}
+
+enum SortOrder {
+  SORT_ORDER_UNSPECIFIED = 0;
+  SORT_ORDER_ASC = 1;
+  SORT_ORDER_DESC = 2;
+}

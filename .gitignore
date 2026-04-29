@@ -1,0 +1,27 @@
+# IDE
+.idea/
+*.iml
+
+# Go
+/vendor/
+*.exe
+*.test
+*.out
+
+# Build binaries
+**/app
+**/bin/
+
+# Generated proto code (rebuild with make generate-api)
+# Keep generated code in git for CI builds
+# internal/pb/ is committed
+
+# Config secrets
+config.local.yaml
+*.env
+test.md
+instruction.md
+
+# OS
+.DS_Store
+Thumbs.db

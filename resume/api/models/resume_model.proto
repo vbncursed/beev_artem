@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package resume.models.v1;
+
+option go_package = "github.com/artem13815/hr/resume/internal/pb/models";
+
+import "google/protobuf/timestamp.proto";
+
+message Candidate {
+  string id = 1;
+  string vacancy_id = 2;
+  string full_name = 3;
+  string email = 4;
+  string phone = 5;
+  string source = 6;
+  string comment = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message Resume {
+  string id = 1;
+  string candidate_id = 2;
+  string file_name = 3;
+  string file_type = 4;
+  uint64 file_size_bytes = 5;
+  string storage_path = 6;
+  string extracted_text = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message CreateCandidateRequest {
+  string vacancy_id = 1;
+  string full_name = 2;
+  string email = 3;
+  string phone = 4;
+  string source = 5;
+  string comment = 6;
+}
+
+message GetCandidateRequest {
+  string candidate_id = 1;
+}
+
+message CandidateResponse {
+  Candidate candidate = 1;
+}
+
+message CandidateResumeResponse {
+  Candidate candidate = 1;
+  Resume resume = 2;
+}
+
+message CreateCandidateFromResumeRequest {
+  string vacancy_id = 1;
+  bytes file_data = 2;
+}
+
+message ResumeIntakeFile {
+  string external_id = 1;
+  bytes file_data = 2;
+}
+
+message BatchIngestResumeRequest {
+  repeated ResumeIntakeFile files = 1;
+}
+
+message BatchIngestResumeItemResult {
+  string external_id = 1;
+  Candidate candidate = 2;
+  Resume resume = 3;
+  string error = 4;
+}
+
+message BatchIngestResumeResponse {
+  repeated BatchIngestResumeItemResult results = 1;
+}
+
+message UploadResumeMeta {
+  string candidate_id = 1;
+  string file_name = 2;
+  string file_type = 3;
+}
+
+message UploadResumeChunk {
+  bytes data = 1;
+}
+
+message UploadResumeRequest {
+  oneof payload {
+    UploadResumeMeta meta = 1;
+    UploadResumeChunk chunk = 2;
+  }
+}
+
+message UploadResumeResponse {
+  Resume resume = 1;
+}
+
+message GetResumeRequest {
+  string resume_id = 1;
+}
+
+message ResumeResponse {
+  Resume resume = 1;
+}

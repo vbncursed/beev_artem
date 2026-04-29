@@ -1,0 +1,10 @@
+database:
+  host: "postgres"
+  port: 5432
+  username: "admin"
+  password: "admin"
+  name: "hr"
+  ssl_mode: "disable"
+
+server:
+  grpc_addr: ":50052"

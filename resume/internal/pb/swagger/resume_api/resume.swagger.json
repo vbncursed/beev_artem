@@ -1,0 +1,502 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Resume Service API",
+    "description": "Candidate and resume management service",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "ResumeService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/candidates/{candidateId}": {
+      "get": {
+        "operationId": "ResumeService_GetCandidate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CandidateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResumeService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resumes/intake": {
+      "post": {
+        "operationId": "ResumeService_IngestResume",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CandidateResumeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1CreateCandidateFromResumeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ResumeService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resumes/intake/batch": {
+      "post": {
+        "operationId": "ResumeService_IngestResumeBatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1BatchIngestResumeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1BatchIngestResumeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ResumeService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/resumes/{resumeId}": {
+      "get": {
+        "operationId": "ResumeService_GetResume",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ResumeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "resumeId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ResumeService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/vacancies/{vacancyId}/candidates": {
+      "post": {
+        "operationId": "ResumeService_CreateCandidate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CandidateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vacancyId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ResumeServiceCreateCandidateBody"
+            }
+          }
+        ],
+        "tags": [
+          "ResumeService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/vacancies/{vacancyId}/candidates/from-resume": {
+      "post": {
+        "operationId": "ResumeService_CreateCandidateFromResume",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CandidateResumeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "vacancyId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ResumeServiceCreateCandidateFromResumeBody"
+            }
+          }
+        ],
+        "tags": [
+          "ResumeService"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "ResumeServiceCreateCandidateBody": {
+      "type": "object",
+      "properties": {
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "ResumeServiceCreateCandidateFromResumeBody": {
+      "type": "object",
+      "properties": {
+        "fileData": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1BatchIngestResumeItemResult": {
+      "type": "object",
+      "properties": {
+        "externalId": {
+          "type": "string"
+        },
+        "candidate": {
+          "$ref": "#/definitions/v1Candidate"
+        },
+        "resume": {
+          "$ref": "#/definitions/v1Resume"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "v1BatchIngestResumeRequest": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1ResumeIntakeFile"
+          }
+        }
+      }
+    },
+    "v1BatchIngestResumeResponse": {
+      "type": "object",
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1BatchIngestResumeItemResult"
+          }
+        }
+      }
+    },
+    "v1Candidate": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "vacancyId": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1CandidateResponse": {
+      "type": "object",
+      "properties": {
+        "candidate": {
+          "$ref": "#/definitions/v1Candidate"
+        }
+      }
+    },
+    "v1CandidateResumeResponse": {
+      "type": "object",
+      "properties": {
+        "candidate": {
+          "$ref": "#/definitions/v1Candidate"
+        },
+        "resume": {
+          "$ref": "#/definitions/v1Resume"
+        }
+      }
+    },
+    "v1CreateCandidateFromResumeRequest": {
+      "type": "object",
+      "properties": {
+        "vacancyId": {
+          "type": "string"
+        },
+        "fileData": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1Resume": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "candidateId": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "fileType": {
+          "type": "string"
+        },
+        "fileSizeBytes": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "storagePath": {
+          "type": "string"
+        },
+        "extractedText": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1ResumeIntakeFile": {
+      "type": "object",
+      "properties": {
+        "externalId": {
+          "type": "string"
+        },
+        "fileData": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1ResumeResponse": {
+      "type": "object",
+      "properties": {
+        "resume": {
+          "$ref": "#/definitions/v1Resume"
+        }
+      }
+    },
+    "v1UploadResumeChunk": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "v1UploadResumeMeta": {
+      "type": "object",
+      "properties": {
+        "candidateId": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "fileType": {
+          "type": "string"
+        }
+      }
+    },
+    "v1UploadResumeResponse": {
+      "type": "object",
+      "properties": {
+        "resume": {
+          "$ref": "#/definitions/v1Resume"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "description": "JWT Bearer token. Format: Bearer \u003ctoken\u003e",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}
