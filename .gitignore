@@ -9,7 +9,6 @@
 *.out
 
 # Build binaries
-**/app
 **/bin/
 
 # Generated proto code (rebuild with make generate-api)
