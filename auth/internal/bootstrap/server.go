@@ -16,8 +16,10 @@ import (
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"github.com/artem13815/hr/auth/config"
-	"github.com/artem13815/hr/auth/internal/api/auth_service_api"
+	"github.com/artem13815/hr/auth/internal/infrastructure/jwt"
 	"github.com/artem13815/hr/auth/internal/pb/auth_api"
+	transport_grpc "github.com/artem13815/hr/auth/internal/transport/grpc"
+	"github.com/artem13815/hr/auth/internal/transport/middleware"
 )
 
 const gracefulStopTimeout = 15 * time.Second
@@ -25,7 +27,7 @@ const gracefulStopTimeout = 15 * time.Second
 // AppRun starts the gRPC server and blocks until SIGINT/SIGTERM. On shutdown it
 // drains in-flight RPCs (GracefulStop with a timeout fallback to Stop) and
 // invokes the supplied cleanup functions in reverse order, LIFO-style.
-func AppRun(api *auth_service_api.AuthServiceAPI, cfg *config.Config, onShutdown ...func()) error {
+func AppRun(api *transport_grpc.AuthServiceAPI, validator *jwt.Validator, cfg *config.Config, onShutdown ...func()) error {
 	lis, err := net.Listen("tcp", cfg.Server.GRPCAddr)
 	if err != nil {
 		return fmt.Errorf("listen %s: %w", cfg.Server.GRPCAddr, err)
@@ -33,9 +35,9 @@ func AppRun(api *auth_service_api.AuthServiceAPI, cfg *config.Config, onShutdown
 
 	serverOpts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
-			auth_service_api.UnaryRecoveryInterceptor,
-			auth_service_api.UnaryLoggingInterceptor,
-			auth_service_api.UnaryAuthInterceptor(cfg.Auth.JWTSecret),
+			middleware.UnaryRecoveryInterceptor,
+			middleware.UnaryLoggingInterceptor,
+			middleware.UnaryAuthInterceptor(validator),
 		),
 	}
 	if cfg.Server.TLS.Enabled() {

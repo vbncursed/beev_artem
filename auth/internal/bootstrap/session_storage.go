@@ -1,7 +1,7 @@
 package bootstrap
 
 import (
-	"github.com/artem13815/hr/auth/internal/storage/session_storage"
+	"github.com/artem13815/hr/auth/internal/infrastructure/session_storage"
 	"github.com/redis/go-redis/v9"
 )
 

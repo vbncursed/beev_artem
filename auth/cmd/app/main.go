@@ -33,9 +33,10 @@ func main() {
 
 	loginLimiter, registerLimiter, refreshLimiter := bootstrap.InitRateLimiters(redisClient, cfg)
 
-	authAPI := bootstrap.InitAuthServiceAPI(authService, cfg, loginLimiter, registerLimiter, refreshLimiter)
+	jwtValidator := bootstrap.InitJWTValidator(cfg)
+	authAPI := bootstrap.InitAuthServiceAPI(authService, jwtValidator, loginLimiter, registerLimiter, refreshLimiter)
 
-	if err := bootstrap.AppRun(authAPI, cfg,
+	if err := bootstrap.AppRun(authAPI, jwtValidator, cfg,
 		// Cleanups run LIFO in bootstrap.runShutdown — order matches construction.
 		authStorage.Close,
 		func() {

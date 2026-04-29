@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/artem13815/hr/auth/config"
-	"github.com/artem13815/hr/auth/internal/storage/auth_storage"
+	"github.com/artem13815/hr/auth/internal/infrastructure/auth_storage"
 )
 
 // InitPGStorage builds the connection string from config and constructs the
