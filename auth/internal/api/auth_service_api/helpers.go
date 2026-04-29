@@ -2,6 +2,8 @@ package auth_service_api
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"net"
 	"strings"
@@ -10,6 +12,11 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
+// Metadata header that the gateway (or any upstream proxy) sets to forward the
+// real client IP. Without it, peer.FromContext only sees the gateway container's
+// address, which would collapse all traffic into a single rate-limit bucket.
+const mdClientIP = "x-client-ip"
+
 func isDatabaseError(err error) bool {
 	if err == nil {
 		return false
@@ -17,8 +24,7 @@ func isDatabaseError(err error) bool {
 
 	errStr := strings.ToLower(err.Error())
 
-	var netErr net.Error
-	if errors.As(err, &netErr) {
+	if _, ok := errors.AsType[net.Error](err); ok {
 		return true
 	}
 
@@ -49,32 +55,19 @@ func isDatabaseError(err error) bool {
 }
 
 func clientMeta(ctx context.Context) (userAgent, ip string) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
-		ua := md.Get("user-agent")
-		if len(ua) > 0 {
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	if md != nil {
+		if ua := md.Get("user-agent"); len(ua) > 0 {
 			userAgent = ua[0]
+		}
+		if forwarded := md.Get(mdClientIP); len(forwarded) > 0 {
+			ip = strings.TrimSpace(forwarded[0])
 		}
 	}
 
-	p, ok := peer.FromContext(ctx)
-	if ok && p.Addr != nil {
-		addr := p.Addr.String()
-
-		host, _, err := net.SplitHostPort(addr)
-		if err != nil {
-			if idx := strings.LastIndex(addr, ":"); idx != -1 {
-				host = addr[:idx]
-			} else {
-				host = addr
-			}
-		}
-
-		host = strings.Trim(host, "[]")
-
-		if host != "" {
-			ip = host
-		}
+	if ip == "" {
+		ip = peerIP(ctx)
 	}
 
 	if ip == "" {
@@ -84,3 +77,34 @@ func clientMeta(ctx context.Context) (userAgent, ip string) {
 	return userAgent, ip
 }
 
+func peerIP(ctx context.Context) string {
+	p, ok := peer.FromContext(ctx)
+	if !ok || p.Addr == nil {
+		return ""
+	}
+
+	addr := p.Addr.String()
+
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		if idx := strings.LastIndex(addr, ":"); idx != -1 {
+			host = addr[:idx]
+		} else {
+			host = addr
+		}
+	}
+
+	return strings.Trim(host, "[]")
+}
+
+// emailRateKey returns a stable, low-cardinality bucket key for per-email
+// rate limiting. We hash so that we don't store raw email addresses in Redis
+// keys (which would be PII visible in any monitoring dashboard).
+func emailRateKey(email string) string {
+	normalized := strings.ToLower(strings.TrimSpace(email))
+	if normalized == "" {
+		return "empty"
+	}
+	sum := sha256.Sum256([]byte(normalized))
+	return hex.EncodeToString(sum[:8])
+}

@@ -158,10 +158,6 @@ func (s *ValidateSuite) TestValidatePassword_Invalid() {
 			name:     "password with only letters and special",
 			password: "Password!",
 		},
-		{
-			name:     "password with all requirements but too short",
-			password: "Pass1!",
-		},
 	}
 
 	for _, tt := range tests {

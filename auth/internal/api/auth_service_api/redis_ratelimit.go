@@ -54,10 +54,9 @@ func (l *redisRateLimiter) Allow(ctx context.Context, key string) bool {
 	if ctx == nil {
 		return false
 	}
-	execCtx := context.WithoutCancel(ctx)
-
-	var cancel context.CancelFunc
-	execCtx, cancel = context.WithTimeout(execCtx, 200*time.Millisecond)
+	// Detach from the caller's cancellation but cap our own latency budget —
+	// the rate-limit check should not stall the RPC if Redis is degraded.
+	execCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 200*time.Millisecond)
 	defer cancel()
 
 	normalizedKey := normalizeRedisKey(key)
@@ -80,19 +79,22 @@ func (l *redisRateLimiter) Allow(ctx context.Context, key string) bool {
 	return allowed
 }
 
-// normalizeRedisKey нормализует ключ для использования в Redis
-// Заменяет специальные символы на безопасные альтернативы
+// keyNormalizer maps every Redis-unfriendly character we want to scrub to a
+// single underscore in one pass. Built once at package init so the hot path
+// allocates nothing.
+var keyNormalizer = strings.NewReplacer(
+	"[", "_", "]", "_", ":", "_", " ", "_", "/", "_", "\\", "_",
+)
+
+// normalizeRedisKey нормализует ключ для использования в Redis: специальные
+// символы заменяются на `_`, повторяющиеся `_` сжимаются в один, ведущие/
+// замыкающие удаляются. Пустые ключи отображаются в "unknown".
 func normalizeRedisKey(key string) string {
 	if key == "" {
 		return "unknown"
 	}
 
-	key = strings.ReplaceAll(key, "[", "_")
-	key = strings.ReplaceAll(key, "]", "_")
-	key = strings.ReplaceAll(key, ":", "_")
-	key = strings.ReplaceAll(key, " ", "_")
-	key = strings.ReplaceAll(key, "/", "_")
-	key = strings.ReplaceAll(key, "\\", "_")
+	key = keyNormalizer.Replace(key)
 
 	for strings.Contains(key, "__") {
 		key = strings.ReplaceAll(key, "__", "_")

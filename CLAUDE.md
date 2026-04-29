@@ -124,21 +124,29 @@ go build ./cmd/app
 
 `generate.sh` uses `protoc` (not buf) and resolves the grpc-gateway include path with `go list -m -f '{{.Dir}}' github.com/grpc-ecosystem/grpc-gateway/v2`. It produces three things: gRPC stubs (`internal/pb/...`), grpc-gateway handlers, and OpenAPI v2 (`internal/pb/swagger/`).
 
-## Mocks (mockery → minimock migration planned)
+## Mocks (minimock)
 
-Current state: each service has a `.mockery.yaml` driving [vektra/mockery] generation into `internal/services/<svc>_service/mocks/mocks.go` (testify-mock based). `make mock` runs `mockery` with no args.
+Each service uses [gojuno/minimock](https://github.com/gojuno/minimock) v3.4.7. Mocks live under `internal/services/<svc>_service/mocks/<iface>_mock.go` (one file per interface, named `<Iface>Mock`).
 
-Planned migration: replace mockery with [gojuno/minimock]. When touching mock generation:
-- swap each `.mockery.yaml` for a minimock invocation (typically `go:generate go run github.com/gojuno/minimock/v3/cmd/minimock@latest -i <pkg>.<Interface> -o ./mocks`),
-- update `make mock` in every `<svc>/scripts/command.mk`,
-- regenerate `mocks.go` files (minimock output is API-incompatible with testify-mock — call sites in tests will need updates: `EXPECT()` chains instead of `On(...).Return(...)`).
+Generation is driven by a `//go:generate` directive at the top of `internal/services/<svc>_service/<svc>_service.go`. The `-g` flag suppresses minimock's auto-emitted directive in the generated file so the only canonical source is the service file. The pinned `@v3.4.7` keeps the version reproducible without a tool entry in `go.mod`.
 
-Interfaces currently mocked (one per service, defined in the `services/<svc>_service` package):
-- auth: `AuthStorage`
+To regenerate per service: `make mock` (which runs `go generate ./internal/services/...`). Run after changing any storage interface.
+
+Interfaces currently mocked (one per service, two for auth):
+- auth: `AuthStorage`, `SessionStorage`
 - vacancy: `VacancyStorage`
 - resume: `ResumeStorage`
-- analysis: (see `analysis/.mockery.yaml`)
+- analysis: `AnalysisStorage`
 - multiagent: `DecisionStorage`
+
+**Test API (minimock vs testify-mock):** minimock uses `EXPECT()` builder chains, not testify's `On(...).Return(...)`. Example:
+
+```go
+mock := mocks.NewAuthStorageMock(t)
+mock.GetUserByEmailMock.Expect(ctx, "a@b").Return(&domain.User{ID: 42}, nil)
+```
+
+The mock struct registers a cleanup hook with the test that asserts all expectations were satisfied at the end of the test, so `t.Cleanup(...)` and `mock.AssertExpectations(t)` are not needed by the caller.
 
 ## Testing conventions
 

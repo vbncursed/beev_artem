@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -88,7 +89,7 @@ func AppRun(cfg *config.Config) error {
 	})
 	rootMux.Handle("/", withAuthContext(authClient, gwMux))
 
-	handler := withLogging(withJSONContentType(rootMux))
+	handler := withLogging(withClientIP(withJSONContentType(rootMux)))
 
 	srv := &http.Server{
 		Addr:              cfg.Server.HTTPAddr,
@@ -130,11 +131,50 @@ func withLogging(next http.Handler) http.Handler {
 
 func incomingHeaderMatcher(key string) (string, bool) {
 	switch strings.ToLower(key) {
-	case "authorization", "x-user-id", "user-id", "x-user-role", "x-user-email":
+	case "authorization", "x-user-id", "user-id", "x-user-role", "x-user-email", "x-client-ip":
 		return key, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}
+}
+
+// withClientIP populates X-Client-IP from r.RemoteAddr (or X-Forwarded-For if
+// the gateway sits behind a trusted proxy). The downstream gRPC services use
+// this header for rate-limit bucketing — without it every request carries the
+// gateway container's IP and they all share one bucket.
+//
+// SECURITY: trusting X-Forwarded-For is only safe when the gateway is behind a
+// proxy that strips/sets it. In direct-edge deployments, set
+// trustForwardedFor=false and rely solely on RemoteAddr.
+func withClientIP(next http.Handler) http.Handler {
+	const trustForwardedFor = false // flip to true when running behind a known LB/proxy
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip := remoteIP(r.RemoteAddr)
+		if trustForwardedFor {
+			if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+				if first, _, ok := strings.Cut(xff, ","); ok {
+					ip = strings.TrimSpace(first)
+				} else {
+					ip = strings.TrimSpace(xff)
+				}
+			}
+		}
+		if ip != "" {
+			r.Header.Set("X-Client-IP", ip)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func remoteIP(addr string) string {
+	if addr == "" {
+		return ""
+	}
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return addr
+	}
+	return host
 }
 
 func withAuthContext(authClient auth_api.AuthServiceClient, next http.Handler) http.Handler {

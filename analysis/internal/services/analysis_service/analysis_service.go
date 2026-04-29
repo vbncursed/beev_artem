@@ -1,5 +1,7 @@
 package analysis_service
 
+//go:generate go run github.com/gojuno/minimock/v3/cmd/minimock@v3.4.7 -i AnalysisStorage -o ./mocks -s _mock.go -g
+
 import (
 	"context"
 

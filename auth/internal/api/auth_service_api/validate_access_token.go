@@ -3,7 +3,6 @@ package auth_service_api
 import (
 	"context"
 	"errors"
-	"log/slog"
 
 	pb_models "github.com/artem13815/hr/auth/internal/pb/models"
 	"github.com/artem13815/hr/auth/internal/services/auth_service"
@@ -16,15 +15,13 @@ func (a *AuthServiceAPI) ValidateAccessToken(ctx context.Context, req *pb_models
 		return nil, newFieldError(codes.InvalidArgument, ErrCodeMissingField, "access_token", "Access token is required.")
 	}
 
-	claims, err := a.getClaimsFromToken(token, a.jwtSecret)
+	claims, err := parseTokenClaims(token, a.jwtSecret)
 	if err != nil {
-		slog.Info("ValidateAccessToken", "status", "error", "error", "unauthorized")
 		return nil, newError(codes.Unauthenticated, ErrCodeUnauthorized, "Invalid access token.")
 	}
 
 	user, err := a.authService.GetUserByID(ctx, claims.UserID)
 	if err != nil {
-		slog.Info("ValidateAccessToken", "status", "error", "user_id", claims.UserID, "error", err.Error())
 		switch {
 		case errors.Is(err, auth_service.ErrUserNotFound):
 			return nil, newError(codes.Unauthenticated, ErrCodeUnauthorized, "Invalid access token.")

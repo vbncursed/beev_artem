@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	pkgerrors "github.com/pkg/errors"
 )
 
 func (s *AuthStorage) UpdateUserRole(ctx context.Context, userID uint64, role string) error {
@@ -18,7 +16,7 @@ func (s *AuthStorage) UpdateUserRole(ctx context.Context, userID uint64, role st
 	)
 
 	if err != nil {
-		return pkgerrors.Wrap(err, "failed to update user role")
+		return fmt.Errorf("update user role: %w", err)
 	}
 
 	if result.RowsAffected() == 0 {

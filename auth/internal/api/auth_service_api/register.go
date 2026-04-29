@@ -14,8 +14,11 @@ import (
 func (a *AuthServiceAPI) Register(ctx context.Context, req *pb_models.RegisterRequest) (*pb_models.AuthResponse, error) {
 	ua, ip := clientMeta(ctx)
 
-	if !a.registerLimiter.Allow(ctx, ip) {
-		slog.Info("Register", "status", "rate_limited", "ip", ip)
+	// IP bucket caps signup volume from a single source; email bucket caps
+	// repeated attempts targeting the same address (e.g. forgot-password
+	// pivots into account takeover).
+	if !a.registerLimiter.Allow(ctx, "ip:"+ip) || !a.registerLimiter.Allow(ctx, "email:"+emailRateKey(req.GetEmail())) {
+		slog.Info("register rate limited", "ip", ip, "email_hash", emailRateKey(req.GetEmail()))
 		return nil, newError(codes.ResourceExhausted, ErrCodeRateLimitExceeded, "Too many registration attempts. Please try again later.")
 	}
 
@@ -26,7 +29,7 @@ func (a *AuthServiceAPI) Register(ctx context.Context, req *pb_models.RegisterRe
 		IP:        ip,
 	})
 	if err != nil {
-		slog.Info("Register", "status", "error", "email", req.GetEmail(), "error", err.Error())
+		slog.Info("register failed", "email_hash", emailRateKey(req.GetEmail()), "error", err.Error())
 		switch {
 		case errors.Is(err, auth_service.ErrInvalidEmail):
 			return nil, newFieldError(codes.InvalidArgument, ErrCodeInvalidEmail, "email", "Invalid email format.")
@@ -44,7 +47,6 @@ func (a *AuthServiceAPI) Register(ctx context.Context, req *pb_models.RegisterRe
 		}
 	}
 
-	slog.Info("Register", "status", "success", "user_id", res.UserID, "email", req.GetEmail())
 	return &pb_models.AuthResponse{
 		UserId:       res.UserID,
 		AccessToken:  res.AccessToken,

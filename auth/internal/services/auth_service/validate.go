@@ -30,16 +30,12 @@ func validateEmail(email string) error {
 		return ErrInvalidEmail
 	}
 
-	parts := strings.Split(email, "@")
-	if len(parts) != 2 {
+	_, domain, ok := strings.Cut(email, "@")
+	if !ok {
 		return ErrInvalidEmail
 	}
 
-	if len(parts[1]) == 0 || len(parts[1]) > 253 {
-		return ErrInvalidEmail
-	}
-
-	if len(parts[1]) < 3 {
+	if len(domain) < 3 || len(domain) > 253 {
 		return ErrInvalidEmail
 	}
 

@@ -31,19 +31,13 @@ type RateLimiter interface {
 	Allow(ctx context.Context, key string) bool
 }
 
-type denyAllLimiter struct{}
-
-func (denyAllLimiter) Allow(ctx context.Context, key string) bool { return false }
-
+// NewAuthServiceAPI requires non-nil limiters. The bootstrap layer (which
+// always returns a real Redis-backed limiter via InitRateLimiters) guarantees
+// this — passing nil is a programming error and we fail fast at construction
+// time rather than nil-panicking on the first request.
 func NewAuthServiceAPI(authService authService, jwtSecret string, loginLimiter, registerLimiter, refreshLimiter RateLimiter) *AuthServiceAPI {
-	if loginLimiter == nil {
-		loginLimiter = denyAllLimiter{}
-	}
-	if registerLimiter == nil {
-		registerLimiter = denyAllLimiter{}
-	}
-	if refreshLimiter == nil {
-		refreshLimiter = denyAllLimiter{}
+	if loginLimiter == nil || registerLimiter == nil || refreshLimiter == nil {
+		panic("auth_service_api: all rate limiters must be non-nil")
 	}
 	return &AuthServiceAPI{
 		authService:     authService,

@@ -33,8 +33,8 @@ const (
 type ErrorDetail struct {
 	Code    string            `json:"code"`
 	Message string            `json:"message"`
-	Field   string            `json:"field,omitempty"`
-	Meta    map[string]string `json:"meta,omitempty"`
+	Field   string            `json:"field,omitzero"`
+	Meta    map[string]string `json:"meta,omitzero"`
 }
 
 func newError(grpcCode codes.Code, errCode, message string) error {

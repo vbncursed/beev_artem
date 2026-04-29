@@ -12,23 +12,20 @@ import (
 )
 
 func (a *AuthServiceAPI) UpdateUserRole(ctx context.Context, req *pb_models.UpdateUserRoleRequest) (*pb_models.UpdateUserRoleResponse, error) {
-	adminUserID, err := a.getUserIDFromContext(ctx, a.jwtSecret)
-	if err != nil {
-		slog.Info("UpdateUserRole", "status", "error", "error", "unauthorized")
+	claims, ok := ClaimsFromContext(ctx)
+	if !ok {
 		return nil, newError(codes.Unauthenticated, ErrCodeUnauthorized, "Authentication required. Invalid or missing JWT token.")
 	}
 
+	adminUserID := claims.UserID
 	targetUserID := req.GetUserId()
 	newRole := req.GetRole()
 
 	if newRole != domain.RoleUser && newRole != domain.RoleAdmin {
-		slog.Info("UpdateUserRole", "status", "error", "admin_user_id", adminUserID, "target_user_id", targetUserID, "role", newRole, "error", "invalid_role")
 		return nil, newFieldError(codes.InvalidArgument, ErrCodeInvalidInput, "role", "Role must be 'user' or 'admin'.")
 	}
 
-	err = a.authService.UpdateUserRole(ctx, adminUserID, targetUserID, newRole)
-	if err != nil {
-		slog.Info("UpdateUserRole", "status", "error", "admin_user_id", adminUserID, "target_user_id", targetUserID, "role", newRole, "error", err.Error())
+	if err := a.authService.UpdateUserRole(ctx, adminUserID, targetUserID, newRole); err != nil {
 		switch {
 		case errors.Is(err, auth_service.ErrInvalidRole):
 			return nil, newFieldError(codes.InvalidArgument, ErrCodeInvalidInput, "role", "Invalid role. Must be 'user' or 'admin'.")
@@ -44,7 +41,14 @@ func (a *AuthServiceAPI) UpdateUserRole(ctx context.Context, req *pb_models.Upda
 		}
 	}
 
-	slog.Info("UpdateUserRole", "status", "success", "admin_user_id", adminUserID, "target_user_id", targetUserID, "new_role", newRole)
+	// Audit trail: role changes are admin actions, worth keeping a structured
+	// record beyond the generic RPC log line.
+	slog.Info("role updated",
+		"admin_user_id", adminUserID,
+		"target_user_id", targetUserID,
+		"new_role", newRole,
+	)
+
 	return &pb_models.UpdateUserRoleResponse{
 		Success: true,
 		Message: "User role updated successfully.",

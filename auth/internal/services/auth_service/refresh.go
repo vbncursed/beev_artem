@@ -15,7 +15,7 @@ func (s *AuthService) Refresh(ctx context.Context, in domain.RefreshInput) (*dom
 		return nil, ErrInvalidArgument
 	}
 
-	refreshHash := tokenToHash(in.RefreshToken)
+	refreshHash := hashRefreshToken(in.RefreshToken)
 
 	sess, err := s.sessionStorage.ConsumeSessionByRefreshHash(ctx, refreshHash)
 	if err != nil {

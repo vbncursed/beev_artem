@@ -1,9 +1,0 @@
-packages:
-    github.com/artem13815/hr/resume/internal/services/resume_service:
-        config:
-            dir: "{{.InterfaceDir}}/mocks"
-            filename: "mocks.go"
-            pkgname: "mocks"
-            structname: "{{.InterfaceName}}"
-        interfaces:
-            ResumeStorage:

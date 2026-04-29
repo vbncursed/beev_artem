@@ -38,10 +38,31 @@ type AuthConfig struct {
 	RateLimitLoginPerMinute    int    `yaml:"rate_limit_login_per_minute"`
 	RateLimitRegisterPerMinute int    `yaml:"rate_limit_register_per_minute"`
 	RateLimitRefreshPerMinute  int    `yaml:"rate_limit_refresh_per_minute"`
+	BcryptCost                 int    `yaml:"bcrypt_cost"`
 }
 
 type ServerConfig struct {
-	GRPCAddr string `yaml:"grpc_addr"`
+	GRPCAddr string    `yaml:"grpc_addr"`
+	TLS      TLSConfig `yaml:"tls"`
+}
+
+// TLSConfig is opt-in: leave both fields empty to keep plaintext gRPC (the
+// default for docker-compose and any deployment where mTLS is provided by a
+// service mesh / sidecar). When both cert_file and key_file are set, the
+// gRPC server upgrades to TLS — all clients (the gateway in particular) must
+// be reconfigured to dial with matching credentials.
+//
+// For real production, prefer service-mesh-managed mTLS (Istio, Linkerd,
+// k8s-cilium) over hand-rolled cert files in YAML. This toggle exists as an
+// escape hatch when no mesh is available.
+type TLSConfig struct {
+	CertFile string `yaml:"cert_file"`
+	KeyFile  string `yaml:"key_file"`
+}
+
+// Enabled reports whether both halves of a usable TLS keypair are configured.
+func (t TLSConfig) Enabled() bool {
+	return t.CertFile != "" && t.KeyFile != ""
 }
 
 const (
@@ -49,7 +70,7 @@ const (
 	envDBPassword    = "AUTH_DB_PASSWORD"
 	envRedisPassword = "AUTH_REDIS_PASSWORD"
 
-	jwtSecretMinLen     = 32
+	jwtSecretMinLen      = 32
 	jwtSecretPlaceholder = "CHANGE_ME_IN_PRODUCTION"
 )
 
@@ -100,6 +121,12 @@ func validate(cfg *Config) error {
 	}
 	if cfg.Auth.RefreshTTLSeconds <= 0 {
 		return errors.New("auth.refresh_ttl_seconds must be > 0")
+	}
+	// bcrypt cost: 0 means "fall back to bcrypt.DefaultCost"; anything outside
+	// bcrypt's accepted range (4..31) would crash at hashing time, so reject
+	// it loudly at boot.
+	if cfg.Auth.BcryptCost != 0 && (cfg.Auth.BcryptCost < 4 || cfg.Auth.BcryptCost > 31) {
+		return fmt.Errorf("auth.bcrypt_cost must be 0 (default) or in [4..31], got %d", cfg.Auth.BcryptCost)
 	}
 
 	return nil

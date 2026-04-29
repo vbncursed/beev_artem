@@ -10,17 +10,20 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// ConsumeSessionByRefreshHash atomically reads and deletes a session in one Redis
-// round-trip via GETDEL. Returns ErrSessionNotFound if the session does not exist
-// (or was already consumed by a concurrent caller).
+// ConsumeSessionByRefreshHash atomically reads and deletes a session in one
+// Redis round-trip via GETDEL. Returns ErrSessionNotFound if the session does
+// not exist (or was already consumed by a concurrent caller).
 //
-// This is the primitive used by Refresh to enforce one-shot refresh tokens: even
-// under concurrent replays of the same token, only one caller observes a non-nil
-// session.
+// After the session is consumed we also remove the hash from the
+// user_sessions:<user_id> index. If that follow-up SREM fails the worst case
+// is a stale entry in the set; RevokeAllSessionsByUserID is tolerant of stale
+// members (DEL on a missing key is a no-op).
+//
+// This is the primitive used by Refresh to enforce one-shot refresh tokens:
+// even under concurrent replays of the same token, only one caller observes a
+// non-nil session.
 func (s *SessionStorage) ConsumeSessionByRefreshHash(ctx context.Context, refreshHash []byte) (*domain.Session, error) {
-	key := sessionKey(refreshHash)
-
-	data, err := s.rdb.GetDel(ctx, key).Bytes()
+	data, err := s.rdb.GetDel(ctx, sessionKey(refreshHash)).Bytes()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return nil, ErrSessionNotFound
@@ -32,6 +35,9 @@ func (s *SessionStorage) ConsumeSessionByRefreshHash(ctx context.Context, refres
 	if err := json.Unmarshal(data, &sess); err != nil {
 		return nil, fmt.Errorf("unmarshal session: %w", err)
 	}
+
+	// Best-effort index cleanup; tolerated to fail.
+	s.rdb.SRem(ctx, userSessionsKey(sess.UserID), refreshHashHex(refreshHash))
 
 	return &sess, nil
 }

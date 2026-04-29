@@ -12,4 +12,4 @@ cov:
 
 .PHONY: mock
 mock:
-	mockery
+	go generate ./internal/services/...

@@ -1,5 +1,7 @@
 package auth_service
 
+//go:generate go run github.com/gojuno/minimock/v3/cmd/minimock@v3.4.7 -i AuthStorage,SessionStorage -o ./mocks -s _mock.go -g
+
 import (
 	"context"
 	"time"
@@ -33,14 +35,27 @@ type AuthService struct {
 	jwtSecret  string
 	accessTTL  time.Duration
 	refreshTTL time.Duration
+	bcryptCost int
 }
 
-func NewAuthService(authStorage AuthStorage, sessionStorage SessionStorage, jwtSecret string, accessTTLSeconds, refreshTTLSeconds int64) *AuthService {
+// NewAuthService takes durations (not int64 seconds) and the bcrypt cost as
+// proper-typed parameters. The bootstrap layer is responsible for converting
+// YAML scalars into the right types. bcryptCost == 0 falls back to
+// bcrypt.DefaultCost so callers don't have to know that constant.
+func NewAuthService(
+	authStorage AuthStorage,
+	sessionStorage SessionStorage,
+	jwtSecret string,
+	accessTTL time.Duration,
+	refreshTTL time.Duration,
+	bcryptCost int,
+) *AuthService {
 	return &AuthService{
 		authStorage:    authStorage,
 		sessionStorage: sessionStorage,
 		jwtSecret:      jwtSecret,
-		accessTTL:      time.Duration(accessTTLSeconds) * time.Second,
-		refreshTTL:     time.Duration(refreshTTLSeconds) * time.Second,
+		accessTTL:      accessTTL,
+		refreshTTL:     refreshTTL,
+		bcryptCost:     bcryptCost,
 	}
 }

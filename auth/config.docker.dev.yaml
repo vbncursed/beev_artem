@@ -19,6 +19,10 @@ auth:
   rate_limit_login_per_minute: 2
   rate_limit_register_per_minute: 2
   rate_limit_refresh_per_minute: 2
+  bcrypt_cost: 0      # 0 = bcrypt.DefaultCost (10); raise to 12 in prod if hardware can take it
 
 server:
   grpc_addr: ":50050"
+  tls:
+    cert_file: ""     # plaintext gRPC by default; see auth/README.md for prod options
+    key_file: ""

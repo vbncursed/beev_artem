@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,39 +15,6 @@ type tokenClaims struct {
 	UserID uint64
 	Email  string
 	Role   string
-}
-
-// getUserIDFromContext извлекает user_id из JWT токена в заголовке Authorization
-func (a *AuthServiceAPI) getUserIDFromContext(ctx context.Context, jwtSecret string) (uint64, error) {
-	tokenString, err := extractTokenFromContext(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	claims, err := parseJWTToken(tokenString, jwtSecret)
-	if err != nil {
-		return 0, err
-	}
-
-	parsed, err := parseClaims(claims)
-	if err != nil {
-		return 0, err
-	}
-
-	return parsed.UserID, nil
-}
-
-func (a *AuthServiceAPI) getClaimsFromContext(ctx context.Context, jwtSecret string) (*tokenClaims, error) {
-	tokenString, err := extractTokenFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return parseTokenClaims(tokenString, jwtSecret)
-}
-
-func (a *AuthServiceAPI) getClaimsFromToken(tokenString, jwtSecret string) (*tokenClaims, error) {
-	return parseTokenClaims(tokenString, jwtSecret)
 }
 
 func parseTokenClaims(tokenString, jwtSecret string) (*tokenClaims, error) {
@@ -102,9 +70,11 @@ func parseUintClaim(claims jwt.MapClaims, key string) (uint64, error) {
 	case uint64:
 		userID = v
 	case string:
-		if _, err := fmt.Sscanf(v, "%d", &userID); err != nil {
-			return 0, fmt.Errorf("invalid user_id format in claim %q: %v", key, v)
+		parsed, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid user_id format in claim %q: %w", key, err)
 		}
+		userID = parsed
 	default:
 		return 0, fmt.Errorf("unexpected user_id type in claim %q: %T", key, v)
 	}
@@ -125,9 +95,8 @@ func extractTokenFromContext(ctx context.Context) (string, error) {
 	var tokenString string
 	if authHeaders := md.Get("authorization"); len(authHeaders) > 0 {
 		authHeader := authHeaders[0]
-		parts := strings.Split(authHeader, " ")
-		if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
-			tokenString = parts[1]
+		if scheme, value, ok := strings.Cut(authHeader, " "); ok && strings.EqualFold(scheme, "bearer") {
+			tokenString = value
 		} else {
 			tokenString = authHeader
 		}
@@ -140,16 +109,27 @@ func extractTokenFromContext(ctx context.Context) (string, error) {
 	return tokenString, nil
 }
 
+// jwtParser is built once and reused: it pins the algorithm to HS256 (defense
+// against alg-confusion / "none" attacks even if the keyfunc is bypassed) and
+// requires `exp` to be present so a token without an expiry is rejected outright
+// instead of being accepted as eternal.
+var jwtParser = jwt.NewParser(
+	jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+	jwt.WithExpirationRequired(),
+)
+
 func parseJWTToken(tokenString, jwtSecret string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwtParser.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		// Belt-and-braces: WithValidMethods already enforces HS256, but we
+		// double-check so a future relaxation of the parser config can't
+		// silently accept a different family.
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(jwtSecret), nil
 	})
-
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+		return nil, fmt.Errorf("parse token: %w", err)
 	}
 
 	if !token.Valid {

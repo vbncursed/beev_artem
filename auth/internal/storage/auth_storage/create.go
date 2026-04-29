@@ -8,7 +8,6 @@ import (
 	"github.com/artem13815/hr/auth/internal/domain"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	pkgerrors "github.com/pkg/errors"
 )
 
 func (s *AuthStorage) CreateUser(ctx context.Context, email string, passwordHash string) (uint64, error) {
@@ -23,13 +22,12 @@ func (s *AuthStorage) CreateUser(ctx context.Context, email string, passwordHash
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, pkgerrors.Wrap(err, "failed to create user")
+			return 0, fmt.Errorf("create user: %w", err)
 		}
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return 0, pkgerrors.Wrap(err, "email already exists")
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == "23505" {
+			return 0, fmt.Errorf("email already exists: %w", err)
 		}
-		return 0, pkgerrors.Wrap(err, "failed to create user")
+		return 0, fmt.Errorf("create user: %w", err)
 	}
 
 	return userID, nil

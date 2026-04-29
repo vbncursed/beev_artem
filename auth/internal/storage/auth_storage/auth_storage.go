@@ -2,54 +2,96 @@ package auth_storage
 
 import (
 	"context"
+	"database/sql"
+	"embed"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/pkg/errors"
+	_ "github.com/jackc/pgx/v5/stdlib" // sql.Open("pgx", ...) driver
+	"github.com/pressly/goose/v3"
 )
+
+// initTimeout bounds the total time a startup pass (connect + ping + apply
+// migrations) is allowed to take. Without a deadline a stalled postgres would
+// hang the boot indefinitely — the container would never get to the point
+// where Docker / k8s could give up and restart it.
+const initTimeout = 30 * time.Second
+
+// embeddedMigrations are baked into the binary at compile time so the final
+// alpine image needs no extra files. The directory layout is the standard
+// goose convention: NNNNN_name.sql with `-- +goose Up/Down` blocks.
+//
+//go:embed migrations/*.sql
+var embeddedMigrations embed.FS
 
 type AuthStorage struct {
 	db *pgxpool.Pool
 }
 
+// Close releases all connections in the pool. Safe to call multiple times.
+func (s *AuthStorage) Close() {
+	if s.db != nil {
+		s.db.Close()
+	}
+}
+
+// NewAuthStorage opens a pgx pool, verifies connectivity with a Ping, and
+// applies any outstanding migrations through goose. Migrations replace the
+// previous "CREATE TABLE IF NOT EXISTS at boot" pattern so future schema
+// changes (add column, rename, drop FK, …) can be expressed as ordered SQL
+// files instead of imperative Go code.
 func NewAuthStorage(connString string) (*AuthStorage, error) {
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse config")
+		return nil, fmt.Errorf("parse pgx config: %w", err)
 	}
 
-	db, err := pgxpool.NewWithConfig(context.Background(), config)
+	ctx, cancel := context.WithTimeout(context.Background(), initTimeout)
+	defer cancel()
+
+	db, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to database")
+		return nil, fmt.Errorf("create pgx pool: %w", err)
 	}
 
-	storage := &AuthStorage{
-		db: db,
+	// pgx v5 connects lazily — force a real handshake now so the timeout
+	// applies to actual TCP/auth, not just config validation.
+	if err := db.Ping(ctx); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("ping postgres: %w", err)
 	}
 
-	err = storage.initTables()
-	if err != nil {
+	if err := applyMigrations(ctx, connString); err != nil {
+		db.Close()
 		return nil, err
 	}
 
-	return storage, nil
+	return &AuthStorage{db: db}, nil
 }
 
-func (s *AuthStorage) initTables() error {
-	sql := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (
-			%s BIGSERIAL PRIMARY KEY,
-			%s VARCHAR(255) UNIQUE NOT NULL,
-			%s VARCHAR(255) NOT NULL,
-			%s VARCHAR(50) NOT NULL DEFAULT 'user',
-			%s TIMESTAMP NOT NULL DEFAULT NOW()
-		)
-	`, tableName, idColumn, emailColumn, passwordHashColumn, roleColumn, createdAtColumn)
-
-	_, err := s.db.Exec(context.Background(), sql)
+// applyMigrations opens a short-lived database/sql connection (goose's API
+// requires *sql.DB) and runs UpContext. We use a separate connection rather
+// than bridging the pgx pool because migrations run exactly once at boot —
+// the extra round-trip cost is negligible and the code stays simpler.
+func applyMigrations(ctx context.Context, connString string) error {
+	sqlDB, err := sql.Open("pgx", connString)
 	if err != nil {
-		return errors.Wrap(err, "failed to init tables")
+		return fmt.Errorf("open migration db: %w", err)
+	}
+	defer sqlDB.Close()
+
+	if err := sqlDB.PingContext(ctx); err != nil {
+		return fmt.Errorf("ping migration db: %w", err)
 	}
 
+	goose.SetBaseFS(embeddedMigrations)
+	if err := goose.SetDialect("postgres"); err != nil {
+		return fmt.Errorf("goose dialect: %w", err)
+	}
+
+	if err := goose.UpContext(ctx, sqlDB, "migrations"); err != nil {
+		return fmt.Errorf("goose up: %w", err)
+	}
 	return nil
 }

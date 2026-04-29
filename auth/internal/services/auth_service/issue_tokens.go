@@ -66,7 +66,3 @@ func hashRefreshToken(refreshToken string) []byte {
 	hash := sha256.Sum256([]byte(refreshToken))
 	return hash[:]
 }
-
-func tokenToHash(token string) []byte {
-	return hashRefreshToken(token)
-}

@@ -19,6 +19,10 @@ auth:
   rate_limit_login_per_minute: 10
   rate_limit_register_per_minute: 5
   rate_limit_refresh_per_minute: 30
+  bcrypt_cost: 12     # 0 = library default (10); 12 is a reasonable prod baseline
 
 server:
   grpc_addr: ":50050"
+  tls:
+    cert_file: ""     # see auth/README.md — prefer service mesh / sidecar mTLS in production
+    key_file: ""

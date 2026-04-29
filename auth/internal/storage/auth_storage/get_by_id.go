@@ -7,7 +7,6 @@ import (
 
 	"github.com/artem13815/hr/auth/internal/domain"
 	"github.com/jackc/pgx/v5"
-	pkgerrors "github.com/pkg/errors"
 )
 
 func (s *AuthStorage) GetUserByID(ctx context.Context, userID uint64) (*domain.User, error) {
@@ -24,7 +23,7 @@ func (s *AuthStorage) GetUserByID(ctx context.Context, userID uint64) (*domain.U
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, pkgerrors.Wrap(err, "failed to get user by id")
+		return nil, fmt.Errorf("get user by id: %w", err)
 	}
 
 	return &u, nil

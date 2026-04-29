@@ -1,6 +1,8 @@
 package bootstrap
 
 import (
+	"time"
+
 	"github.com/artem13815/hr/auth/config"
 	"github.com/artem13815/hr/auth/internal/services/auth_service"
 	"github.com/artem13815/hr/auth/internal/storage/auth_storage"
@@ -12,7 +14,8 @@ func InitAuthService(authStorage *auth_storage.AuthStorage, sessionStorage *sess
 		authStorage,
 		sessionStorage,
 		cfg.Auth.JWTSecret,
-		cfg.Auth.AccessTTLSeconds,
-		cfg.Auth.RefreshTTLSeconds,
+		time.Duration(cfg.Auth.AccessTTLSeconds)*time.Second,
+		time.Duration(cfg.Auth.RefreshTTLSeconds)*time.Second,
+		cfg.Auth.BcryptCost,
 	)
 }

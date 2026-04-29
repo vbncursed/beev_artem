@@ -14,8 +14,8 @@ import (
 func (a *AuthServiceAPI) Refresh(ctx context.Context, req *pb_models.RefreshRequest) (*pb_models.AuthResponse, error) {
 	ua, ip := clientMeta(ctx)
 
-	if !a.refreshLimiter.Allow(ctx, ip) {
-		slog.Info("Refresh", "status", "rate_limited", "ip", ip)
+	if !a.refreshLimiter.Allow(ctx, "ip:"+ip) {
+		slog.Info("refresh rate limited", "ip", ip)
 		return nil, newError(codes.ResourceExhausted, ErrCodeRateLimitExceeded, "Too many refresh attempts. Please try again later.")
 	}
 
@@ -25,7 +25,6 @@ func (a *AuthServiceAPI) Refresh(ctx context.Context, req *pb_models.RefreshRequ
 		IP:           ip,
 	})
 	if err != nil {
-		slog.Info("Refresh", "status", "error", "error", err.Error())
 		switch {
 		case errors.Is(err, auth_service.ErrInvalidArgument):
 			return nil, newFieldError(codes.InvalidArgument, ErrCodeMissingField, "refresh_token", "Refresh token is required.")
@@ -43,7 +42,6 @@ func (a *AuthServiceAPI) Refresh(ctx context.Context, req *pb_models.RefreshRequ
 		}
 	}
 
-	slog.Info("Refresh", "status", "success", "user_id", res.UserID)
 	return &pb_models.AuthResponse{
 		UserId:       res.UserID,
 		AccessToken:  res.AccessToken,
