@@ -24,10 +24,13 @@ up-build-prod: ## up-prod + --build
 	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build
 
 down: ## Stop and remove containers
-	$(DOCKER_COMPOSE) down
+	# COMPOSE_PROFILES=dev so the dev-profiled postgres/redis containers
+	# are part of the teardown — without it they stay running, hold the
+	# `hr-net` network alive, and the next `make up` reuses stale state.
+	COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) down
 
 down-v: ## Full reset: down + remove volumes/orphans
-	$(DOCKER_COMPOSE) down -v --remove-orphans
+	COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) down -v --remove-orphans
 
 restart: down up ## Restart dev stack
 
