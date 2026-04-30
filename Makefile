@@ -6,7 +6,7 @@ SERVICES := auth gateway vacancy resume analysis multiagent
 # edge with no business logic, so test/cov/race are scoped here.
 USECASE_SERVICES := auth vacancy resume analysis multiagent
 
-.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild test-all cov-all race-all lint-all generate-api
+.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild test cov race lint generate-api
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -54,16 +54,16 @@ rebuild: ## Rebuild and restart one service: make rebuild SVC=auth [ENV=prod]
 		APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build $(SVC); \
 	fi
 
-test-all: ## go test -count=1 against each service's internal/usecase
+test: ## go test -count=1 against each service's internal/usecase
 	@for s in $(USECASE_SERVICES); do echo "=== $$s ==="; (cd $$s && go test -count=1 ./internal/usecase) || exit 1; done
 
-cov-all: ## go test -cover against each service's internal/usecase
+cov: ## go test -cover against each service's internal/usecase
 	@for s in $(USECASE_SERVICES); do echo "=== $$s ==="; (cd $$s && go test -cover ./internal/usecase) || exit 1; done
 
-race-all: ## go test -race against each service's internal/usecase
+race: ## go test -race against each service's internal/usecase
 	@for s in $(USECASE_SERVICES); do echo "=== $$s ==="; (cd $$s && go test -race -count=1 ./internal/usecase) || exit 1; done
 
-lint-all: ## go vet across all services (excludes mocks/)
+lint: ## go vet across all services (excludes mocks/)
 	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go vet $$(go list ./... | grep -v /mocks)) || exit 1; done
 
 generate-api: ## Regenerate protobuf code for all services (calls each service's scripts/generate.sh)
