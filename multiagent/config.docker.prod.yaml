@@ -8,3 +8,13 @@ database:
 
 server:
   grpc_addr: ":50055"
+
+yandex:
+  folder_id: "CHANGE_ME"
+  model: "qwen3.6-35b-a3b/latest"
+  request_timeout: 60s
+  max_output_tokens: 1500
+
+rate_limit:
+  rps: 10
+  burst: 5

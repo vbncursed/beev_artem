@@ -29,7 +29,15 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	service := bootstrap.InitMultiAgentService(storage)
+
+	promptStore, err := bootstrap.InitPromptStore()
+	if err != nil {
+		storage.Close()
+		return err
+	}
+	llmClient := bootstrap.InitYandexLLM(cfg)
+
+	service := bootstrap.InitMultiAgentService(storage, llmClient, promptStore)
 	api := bootstrap.InitMultiAgentServiceAPI(service)
 
 	return bootstrap.AppRun(api, cfg, storage.Close)

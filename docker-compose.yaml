@@ -126,6 +126,9 @@ services:
         required: false
     environment:
       APP_ENV: ${APP_ENV:-dev}
+      # Yandex Cloud API key for Foundation Models. Sourced from .env so
+      # the secret never lands in compose / git.
+      YANDEX_API_KEY: ${YANDEX_API_KEY}
     expose:
       - "50055"
     networks:

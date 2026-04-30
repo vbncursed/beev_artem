@@ -16,6 +16,7 @@ func pbToDomainRequest(req *pb.GenerateDecisionRequest) domain.DecisionRequest {
 	return domain.DecisionRequest{
 		Model:             req.GetModel(),
 		Mode:              domain.AgentMode(req.GetMode()),
+		Role:              req.GetRole(),
 		CandidateSkills:   req.GetCandidateSkills(),
 		MissingSkills:     req.GetMissingSkills(),
 		CandidateSummary:  req.GetCandidateSummary(),
