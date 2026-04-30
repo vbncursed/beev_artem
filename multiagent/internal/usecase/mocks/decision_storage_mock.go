@@ -12,7 +12,7 @@ import (
 	"github.com/gojuno/minimock/v3"
 )
 
-// DecisionStorageMock implements mm_multiagent_service.DecisionStorage
+// DecisionStorageMock implements mm_usecase.DecisionStorage
 type DecisionStorageMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
@@ -25,7 +25,7 @@ type DecisionStorageMock struct {
 	StoreDecisionMock          mDecisionStorageMockStoreDecision
 }
 
-// NewDecisionStorageMock returns a mock for mm_multiagent_service.DecisionStorage
+// NewDecisionStorageMock returns a mock for mm_usecase.DecisionStorage
 func NewDecisionStorageMock(t minimock.Tester) *DecisionStorageMock {
 	m := &DecisionStorageMock{t: t}
 
@@ -279,7 +279,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) invocationsDone() bool
 	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
 }
 
-// StoreDecision implements mm_multiagent_service.DecisionStorage
+// StoreDecision implements mm_usecase.DecisionStorage
 func (mmStoreDecision *DecisionStorageMock) StoreDecision(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse) (err error) {
 	mm_atomic.AddUint64(&mmStoreDecision.beforeStoreDecisionCounter, 1)
 	defer mm_atomic.AddUint64(&mmStoreDecision.afterStoreDecisionCounter, 1)

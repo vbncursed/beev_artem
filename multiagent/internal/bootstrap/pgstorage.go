@@ -4,10 +4,13 @@ import (
 	"fmt"
 
 	"github.com/artem13815/hr/multiagent/config"
-	"github.com/artem13815/hr/multiagent/internal/storage/multiagent_storage"
+	"github.com/artem13815/hr/multiagent/internal/infrastructure/persistence"
 )
 
-func InitPGStorage(cfg *config.Config) *multiagent_storage.MultiAgentStorage {
+// InitPGStorage builds the connection string and hands it to the storage
+// layer, which owns the boot timeout, the pool ping, and the goose migration
+// pass. cfg.Database fields are validated by config.LoadConfig.
+func InitPGStorage(cfg *config.Config) (*persistence.MultiAgentStorage, error) {
 	connectionString := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.Database.Username,
@@ -18,9 +21,9 @@ func InitPGStorage(cfg *config.Config) *multiagent_storage.MultiAgentStorage {
 		cfg.Database.SSLMode,
 	)
 
-	storage, err := multiagent_storage.NewMultiAgentStorage(connectionString)
+	storage, err := persistence.NewMultiAgentStorage(connectionString)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("init pg storage: %w", err)
 	}
-	return storage
+	return storage, nil
 }

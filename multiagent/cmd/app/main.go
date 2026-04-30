@@ -2,7 +2,7 @@ package main
 
 import (
 	"cmp"
-	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -11,17 +11,28 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		slog.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	configPath := cmp.Or(os.Getenv("configPath"), defaultConfigPathByEnv(os.Getenv("APP_ENV")))
 
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to load config: %v", err))
+		return err
 	}
 
-	storage := bootstrap.InitPGStorage(cfg)
+	storage, err := bootstrap.InitPGStorage(cfg)
+	if err != nil {
+		return err
+	}
 	service := bootstrap.InitMultiAgentService(storage)
 	api := bootstrap.InitMultiAgentServiceAPI(service)
-	bootstrap.AppRun(api, cfg)
+
+	return bootstrap.AppRun(api, cfg, storage.Close)
 }
 
 func defaultConfigPathByEnv(appEnv string) string {

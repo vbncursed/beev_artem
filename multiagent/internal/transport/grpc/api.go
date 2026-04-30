@@ -1,4 +1,4 @@
-package multiagent_service_api
+package grpc
 
 import (
 	"context"

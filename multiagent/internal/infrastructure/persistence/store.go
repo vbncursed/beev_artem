@@ -1,4 +1,4 @@
-package multiagent_storage
+package persistence
 
 import (
 	"context"

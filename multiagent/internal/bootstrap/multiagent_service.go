@@ -1,10 +1,10 @@
 package bootstrap
 
 import (
-	"github.com/artem13815/hr/multiagent/internal/services/multiagent_service"
-	"github.com/artem13815/hr/multiagent/internal/storage/multiagent_storage"
+	"github.com/artem13815/hr/multiagent/internal/usecase"
+	"github.com/artem13815/hr/multiagent/internal/infrastructure/persistence"
 )
 
-func InitMultiAgentService(storage *multiagent_storage.MultiAgentStorage) *multiagent_service.MultiAgentService {
-	return multiagent_service.NewMultiAgentService(storage)
+func InitMultiAgentService(storage *persistence.MultiAgentStorage) *usecase.MultiAgentService {
+	return usecase.NewMultiAgentService(storage)
 }
