@@ -51,11 +51,11 @@ rebuild: ## Rebuild and restart one service: make rebuild SVC=auth [ENV=prod]
 		APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build $(SVC); \
 	fi
 
-test-all: ## go test -count=1 across all services
-	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go test -count=1 ./...) || exit 1; done
+test-all: ## go test -count=1 across all services (excludes mocks/)
+	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go test -count=1 $$(go list ./... | grep -v /mocks)) || exit 1; done
 
-lint-all: ## go vet across all services
-	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go vet ./...) || exit 1; done
+lint-all: ## go vet across all services (excludes mocks/)
+	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go vet $$(go list ./... | grep -v /mocks)) || exit 1; done
 
 generate-api: ## Regenerate protobuf code for all services (calls each service's scripts/generate.sh)
 	@for s in $(SERVICES); do echo "=== $$s ==="; bash $$s/scripts/generate.sh; done
