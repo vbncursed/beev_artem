@@ -2,6 +2,8 @@
 
 cd "$(dirname "$0")/.." || exit
 
+mkdir -p ./internal/pb ./internal/pb/openapi
+
 GATEWAY_PATH=$(go list -m -f '{{.Dir}}' github.com/grpc-ecosystem/grpc-gateway/v2)
 
 protoc -I ./api \

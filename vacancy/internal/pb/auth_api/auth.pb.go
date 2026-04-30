@@ -153,7 +153,7 @@ const file_auth_api_auth_proto_rawDesc = "" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
 	"\x04role\x18\x04 \x01(\tR\x04role2\x81\x01\n" +
 	"\vAuthService\x12r\n" +
-	"\x13ValidateAccessToken\x12+.auth.service.v1.ValidateAccessTokenRequest\x1a,.auth.service.v1.ValidateAccessTokenResponse\"\x00B6Z4github.com/artem13815/hr/vacancy/internal/pb/auth_apib\x06proto3"
+	"\x13ValidateAccessToken\x12+.auth.service.v1.ValidateAccessTokenRequest\x1a,.auth.service.v1.ValidateAccessTokenResponse\"\x00B7Z5github.com/artem13815/hr/vacancy/internal/pb/auth_apib\x06proto3"
 
 var (
 	file_auth_api_auth_proto_rawDescOnce sync.Once

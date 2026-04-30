@@ -2,6 +2,8 @@
 
 cd "$(dirname "$0")/.." || exit
 
+mkdir -p ./internal/pb
+
 GATEWAY_PATH=$(go list -m -f '{{.Dir}}' github.com/grpc-ecosystem/grpc-gateway/v2)
 
 # Генерация gRPC кода

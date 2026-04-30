@@ -6,7 +6,7 @@ SERVICES := auth gateway vacancy resume analysis multiagent
 # edge with no business logic, so test/cov/race are scoped here.
 USECASE_SERVICES := auth vacancy resume analysis multiagent
 
-.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild test cov race lint generate-api
+.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild test cov race lint generate-api mock clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -71,3 +71,9 @@ lint: ## go vet across all services (excludes mocks/)
 
 generate-api: ## Regenerate protobuf code for all services (calls each service's scripts/generate.sh)
 	@for s in $(SERVICES); do echo "=== $$s ==="; bash $$s/scripts/generate.sh; done
+
+mock: ## Regenerate minimock files in every service that has a usecase layer
+	@for s in $(USECASE_SERVICES); do echo "=== $$s ==="; (cd $$s && $(MAKE) --no-print-directory mock) || exit 1; done
+
+clean: ## Remove generated artifacts in every service (pb, mocks, local bin); recoverable via generate-api + mock
+	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && $(MAKE) --no-print-directory clean) || exit 1; done
