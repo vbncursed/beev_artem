@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")/.." || exit
 
-mkdir -p ./internal/pb ./internal/pb/swagger
+mkdir -p ./internal/pb
 
 GATEWAY_PATH=$(go list -m -f '{{.Dir}}' github.com/grpc-ecosystem/grpc-gateway/v2)
 
@@ -21,9 +21,7 @@ protoc -I ./api \
   --grpc-gateway_opt logtostderr=true \
   ./api/vacancy_api/vacancy.proto
 
-protoc -I ./api \
-  -I ./api/google/api \
-  -I "${GATEWAY_PATH}" \
-  --openapiv2_out=./internal/pb/swagger \
-  --openapiv2_opt logtostderr=true \
-  ./api/vacancy_api/vacancy.proto
+# OpenAPI emission lives in the gateway service: it owns the public docs
+# surface, generates a single merged OpenAPI 3.0 document via gnostic, and
+# serves it at /swagger.json + /docs. Backend services do not emit swagger
+# files because nobody consumes them.

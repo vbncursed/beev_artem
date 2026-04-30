@@ -30,12 +30,15 @@ protoc -I ./api \
   ./api/resume_api/resume.proto \
   ./api/analysis_api/analysis.proto
 
-mkdir -p ./internal/pb/swagger
+# OpenAPI 3.0 via gnostic's protoc-gen-openapi. One invocation across all
+# four service protos produces a single merged ./internal/pb/openapi/openapi.yaml,
+# so the gateway just reads + JSON-marshals it at boot — no per-service
+# merge logic.
+mkdir -p ./internal/pb/openapi
 protoc -I ./api \
   -I ./api/google/api \
   -I "${GATEWAY_PATH}" \
-  --openapiv2_out=./internal/pb/swagger \
-  --openapiv2_opt logtostderr=true \
+  --openapi_out=title="Gateway API",version="1.0.0",description="Unified gateway API docs":./internal/pb/openapi \
   ./api/auth_api/auth.proto \
   ./api/vacancy_api/vacancy.proto \
   ./api/resume_api/resume.proto \

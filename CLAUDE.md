@@ -94,7 +94,7 @@ All five backend services follow the same shape. Gateway is a transport-only edg
 │   │   └── prompts/                       (multiagent only) embedded role prompts
 │   │       ├── store.go                   Store implementing usecase.PromptStore
 │   │       └── templates/<role>.txt       programmer / manager / accountant / default
-│   ├── pb/                                generated protobuf, grpc, grpc-gateway, swagger
+│   ├── pb/                                generated protobuf, grpc, grpc-gateway (gateway also has openapi/openapi.yaml)
 │   ├── transport/
 │   │   ├── grpc/                          gRPC handlers, conversions, errors
 │   │   │   ├── <svc>_api.go               server type + service interface (consumer port)
@@ -122,7 +122,7 @@ gateway/internal/
 │   ├── server.go                          AppRun: HTTP server lifecycle
 │   ├── auth_client.go                     init wrapper
 │   ├── gateway_mux.go                     register all 4 backend grpc-gateway handlers
-│   ├── swagger.go                         merge per-service OpenAPI specs at boot
+│   ├── swagger.go                         load merged OpenAPI 3 spec, YAML→JSON for /swagger.json
 │   └── http_handler.go                    compose root handler tree
 ├── infrastructure/auth_client/client.go   gRPC client to auth (same shape as data services)
 └── transport/http/
@@ -211,7 +211,7 @@ EXPOSE <port>
 CMD ["<svc>-service"]
 ```
 
-Static binary (`CGO_ENABLED=0`) → final image is plain `alpine:3.22`, no Go toolchain. Both dev and prod config files are baked into the image; `APP_ENV` selects which one is used at runtime. Multiagent additionally embeds the `assets/prompts/*.txt` via `//go:embed` (no extra Dockerfile changes needed). Gateway image additionally copies the swagger directory for the `/swagger.json` and `/docs` endpoints.
+Static binary (`CGO_ENABLED=0`) → final image is plain `alpine:3.22`, no Go toolchain. Both dev and prod config files are baked into the image; `APP_ENV` selects which one is used at runtime. Multiagent additionally embeds the `assets/prompts/*.txt` via `//go:embed` (no extra Dockerfile changes needed). Gateway image additionally copies `internal/pb/openapi/openapi.yaml` (the merged OpenAPI 3.0 document gnostic produces) so it can serve `/swagger.json` and `/docs`.
 
 ### Port topology (host vs compose-internal)
 
@@ -260,7 +260,7 @@ Each service has its own `Makefile`. Services with a usecase layer (auth/vacancy
 | Target | Command |
 |---|---|
 | `make help` | List targets |
-| `make generate-api` | `bash scripts/generate.sh` (protoc + go + grpc + gateway + swagger) |
+| `make generate-api` | `bash scripts/generate.sh` (protoc + go + grpc + gateway; gateway additionally emits OpenAPI 3 via gnostic) |
 | `make mock` | `go generate ./internal/usecase` (regenerates minimock files) |
 | `make test` | `go test -count=1 ./internal/usecase` |
 | `make cov` | `go test -cover ./internal/usecase` |
@@ -272,7 +272,7 @@ Gateway has only `help / generate-api / lint / tidy` (no usecase / no business l
 
 **No `make run`** — services boot only through docker-compose. Use `make rebuild SVC=<name>` for fast iteration.
 
-`generate.sh` uses `protoc` (not buf) and resolves the grpc-gateway include path with `go list -m -f '{{.Dir}}' github.com/grpc-ecosystem/grpc-gateway/v2`. It produces three artifacts: gRPC stubs (`internal/pb/...`), grpc-gateway handlers, and OpenAPI v2 (`internal/pb/swagger/`).
+`generate.sh` uses `protoc` (not buf) and resolves the grpc-gateway include path with `go list -m -f '{{.Dir}}' github.com/grpc-ecosystem/grpc-gateway/v2`. Backend services emit two artifacts: gRPC stubs (`internal/pb/...`) and grpc-gateway handlers. Only the gateway emits docs: a single merged **OpenAPI 3.0** document at `internal/pb/openapi/openapi.yaml` produced by gnostic's `protoc-gen-openapi` (one invocation across all four service protos). The gateway loads it at boot and serves it as JSON at `/swagger.json` (Scalar UI at `/docs` reads that endpoint).
 
 ## Migrations (goose + embedded SQL)
 

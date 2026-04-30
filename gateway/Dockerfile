@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=builder /out/gateway-service /usr/local/bin/gateway-service
 COPY --from=builder /src/gateway/config.docker.dev.yaml ./config.docker.dev.yaml
 COPY --from=builder /src/gateway/config.docker.prod.yaml ./config.docker.prod.yaml
-COPY --from=builder /src/gateway/internal/pb/swagger ./internal/pb/swagger
+COPY --from=builder /src/gateway/internal/pb/openapi ./internal/pb/openapi
 
 EXPOSE 8080
 

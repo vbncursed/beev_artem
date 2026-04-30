@@ -4,113 +4,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"go.yaml.in/yaml/v4"
 )
 
-// swaggerSpecPaths lists the per-service OpenAPI v2 specs grpc-gateway
-// emits during code generation. Order is irrelevant — mergeSwaggerFiles
-// is order-stable for paths/definitions/securityDefinitions.
-var swaggerSpecPaths = []string{
-	"./internal/pb/swagger/auth_api/auth.swagger.json",
-	"./internal/pb/swagger/vacancy_api/vacancy.swagger.json",
-	"./internal/pb/swagger/resume_api/resume.swagger.json",
-	"./internal/pb/swagger/analysis_api/analysis.swagger.json",
-}
+// openAPISpecPath is the merged OpenAPI 3.0 document gnostic emits during
+// code generation. A single protoc-gen-openapi invocation across all four
+// service protos produces this one file already merged — so this layer
+// just reads it and converts YAML to JSON for the /swagger.json endpoint.
+const openAPISpecPath = "./internal/pb/openapi/openapi.yaml"
 
-// InitSwaggerSpec reads the per-service swagger files and stitches them
-// into one document the docs UI can render. Performed once at boot so
-// the per-request /swagger.json handler is just a static read.
+// InitSwaggerSpec loads the embedded merged OpenAPI v3 document and
+// returns it as JSON bytes. Performed once at boot so the per-request
+// /swagger.json handler is just a static read.
+//
+// We do YAML -> JSON here (rather than committing JSON) because gnostic's
+// canonical output format is YAML and forcing a hand conversion at
+// generate time would drift on every regeneration.
 func InitSwaggerSpec() ([]byte, error) {
-	return mergeSwaggerFiles(swaggerSpecPaths...)
-}
-
-func mergeSwaggerFiles(paths ...string) ([]byte, error) {
-	merged := map[string]any{
-		"swagger":             "2.0",
-		"info":                map[string]any{"title": "Gateway API", "version": "1.0.0", "description": "Unified gateway API docs"},
-		"paths":               map[string]any{},
-		"definitions":         map[string]any{},
-		"tags":                []any{},
-		"securityDefinitions": map[string]any{},
+	raw, err := os.ReadFile(openAPISpecPath)
+	if err != nil {
+		return nil, fmt.Errorf("read openapi spec %s: %w", openAPISpecPath, err)
 	}
-
-	pathSet := merged["paths"].(map[string]any)
-	defsSet := merged["definitions"].(map[string]any)
-	secSet := merged["securityDefinitions"].(map[string]any)
-	tagSet := map[string]struct{}{}
-	consumes := map[string]struct{}{}
-	produces := map[string]struct{}{}
-
-	for _, path := range paths {
-		payload, err := os.ReadFile(path)
-		if err != nil {
-			return nil, fmt.Errorf("read swagger %s: %w", path, err)
-		}
-
-		var spec map[string]any
-		if err := json.Unmarshal(payload, &spec); err != nil {
-			return nil, fmt.Errorf("parse swagger %s: %w", path, err)
-		}
-
-		mergeMapAny(pathSet, spec["paths"])
-		mergeMapAny(defsSet, spec["definitions"])
-		mergeMapAny(secSet, spec["securityDefinitions"])
-
-		if tags, ok := spec["tags"].([]any); ok {
-			for _, raw := range tags {
-				tag, ok := raw.(map[string]any)
-				if !ok {
-					continue
-				}
-				name, _ := tag["name"].(string)
-				if name == "" {
-					continue
-				}
-				if _, exists := tagSet[name]; exists {
-					continue
-				}
-				tagSet[name] = struct{}{}
-				merged["tags"] = append(merged["tags"].([]any), tag)
-			}
-		}
-
-		collectStringArray(consumes, spec["consumes"])
-		collectStringArray(produces, spec["produces"])
+	var doc map[string]any
+	if err := yaml.Unmarshal(raw, &doc); err != nil {
+		return nil, fmt.Errorf("parse openapi spec %s: %w", openAPISpecPath, err)
 	}
-
-	merged["consumes"] = setToArray(consumes)
-	merged["produces"] = setToArray(produces)
-
-	return json.MarshalIndent(merged, "", "  ")
-}
-
-func mergeMapAny(dst map[string]any, srcRaw any) {
-	src, ok := srcRaw.(map[string]any)
-	if !ok {
-		return
+	out, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal openapi to json: %w", err)
 	}
-	for k, v := range src {
-		dst[k] = v
-	}
-}
-
-func collectStringArray(set map[string]struct{}, raw any) {
-	arr, ok := raw.([]any)
-	if !ok {
-		return
-	}
-	for _, item := range arr {
-		s, ok := item.(string)
-		if !ok || s == "" {
-			continue
-		}
-		set[s] = struct{}{}
-	}
-}
-
-func setToArray(set map[string]struct{}) []any {
-	out := make([]any, 0, len(set))
-	for k := range set {
-		out = append(out, k)
-	}
-	return out
+	return out, nil
 }
