@@ -4,10 +4,13 @@ import (
 	"fmt"
 
 	"github.com/artem13815/hr/analysis/config"
-	"github.com/artem13815/hr/analysis/internal/storage/analysis_storage"
+	"github.com/artem13815/hr/analysis/internal/infrastructure/persistence"
 )
 
-func InitPGStorage(cfg *config.Config) *analysis_storage.AnalysisStorage {
+// InitPGStorage builds the connection string and hands it to the storage
+// layer, which owns the boot timeout, the pool ping, and the goose migration
+// pass. cfg.Database fields are validated by config.LoadConfig.
+func InitPGStorage(cfg *config.Config) (*persistence.AnalysisStorage, error) {
 	connectionString := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		cfg.Database.Username,
@@ -18,9 +21,9 @@ func InitPGStorage(cfg *config.Config) *analysis_storage.AnalysisStorage {
 		cfg.Database.SSLMode,
 	)
 
-	storage, err := analysis_storage.NewAnalysisStorage(connectionString)
+	storage, err := persistence.NewAnalysisStorage(connectionString)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("init pg storage: %w", err)
 	}
-	return storage
+	return storage, nil
 }

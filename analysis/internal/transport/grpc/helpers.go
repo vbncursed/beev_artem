@@ -1,48 +1,11 @@
-package analysis_service_api
+package grpc
 
 import (
-	"context"
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/artem13815/hr/analysis/internal/domain"
 	pb_common "github.com/artem13815/hr/analysis/internal/pb/common"
 	pb_models "github.com/artem13815/hr/analysis/internal/pb/models"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-type userContext struct {
-	UserID  uint64
-	Role    string
-	IsAdmin bool
-}
-
-func getUserContext(ctx context.Context) (*userContext, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, fmt.Errorf("metadata not found")
-	}
-
-	role := "user"
-	if values := md.Get("x-user-role"); len(values) > 0 && strings.TrimSpace(values[0]) != "" {
-		role = strings.ToLower(strings.TrimSpace(values[0]))
-	}
-
-	keys := []string{"x-user-id", "user-id"}
-	for _, key := range keys {
-		if values := md.Get(key); len(values) > 0 {
-			userID, err := strconv.ParseUint(values[0], 10, 64)
-			if err != nil || userID == 0 {
-				return nil, fmt.Errorf("invalid user id")
-			}
-			return &userContext{UserID: userID, Role: role, IsAdmin: role == "admin"}, nil
-		}
-	}
-
-	return nil, fmt.Errorf("user id not found")
-}
 
 func toPBStatus(s string) pb_models.AnalysisStatus {
 	switch s {

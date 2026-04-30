@@ -1,10 +1,10 @@
 package bootstrap
 
 import (
-	"github.com/artem13815/hr/analysis/internal/api/analysis_service_api"
-	"github.com/artem13815/hr/analysis/internal/services/analysis_service"
+	transport_grpc "github.com/artem13815/hr/analysis/internal/transport/grpc"
+	"github.com/artem13815/hr/analysis/internal/usecase"
 )
 
-func InitAnalysisServiceAPI(service *analysis_service.AnalysisService) *analysis_service_api.AnalysisServiceAPI {
-	return analysis_service_api.NewAnalysisServiceAPI(service)
+func InitAnalysisServiceAPI(service *usecase.AnalysisService) *transport_grpc.AnalysisServiceAPI {
+	return transport_grpc.NewAnalysisServiceAPI(service)
 }

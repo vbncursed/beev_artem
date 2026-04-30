@@ -1,4 +1,4 @@
-package analysis_service
+package usecase
 
 import (
 	"cmp"

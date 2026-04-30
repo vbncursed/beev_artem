@@ -1,4 +1,4 @@
-package analysis_storage
+package persistence
 
 import (
 	"context"

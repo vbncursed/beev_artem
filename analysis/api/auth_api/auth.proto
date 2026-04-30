@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+// Narrow contract: resume only needs ValidateAccessToken from the auth
+// service. The package and service names match auth's full FQDN
+// (auth.service.v1.AuthService/ValidateAccessToken) so the gRPC wire call
+// reaches the same handler — message type names are local and do not affect
+// the wire format. Field tags (1..4) MUST stay in sync with auth's
+// auth_model.proto: ValidateAccessTokenRequest/Response.
+package auth.service.v1;
+
+option go_package = "github.com/artem13815/hr/analysis/internal/pb/auth_api";
+
+service AuthService {
+  rpc ValidateAccessToken(ValidateAccessTokenRequest) returns (ValidateAccessTokenResponse) {}
+}
+
+message ValidateAccessTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateAccessTokenResponse {
+  bool valid = 1;
+  uint64 user_id = 2;
+  string email = 3;
+  string role = 4;
+}

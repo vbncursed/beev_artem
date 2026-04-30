@@ -12,7 +12,7 @@ import (
 	"github.com/gojuno/minimock/v3"
 )
 
-// AnalysisStorageMock implements mm_analysis_service.AnalysisStorage
+// AnalysisStorageMock implements mm_usecase.AnalysisStorage
 type AnalysisStorageMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
@@ -46,7 +46,7 @@ type AnalysisStorageMock struct {
 	UpdateAIDecisionMock          mAnalysisStorageMockUpdateAIDecision
 }
 
-// NewAnalysisStorageMock returns a mock for mm_analysis_service.AnalysisStorage
+// NewAnalysisStorageMock returns a mock for mm_usecase.AnalysisStorage
 func NewAnalysisStorageMock(t minimock.Tester) *AnalysisStorageMock {
 	m := &AnalysisStorageMock{t: t}
 
@@ -336,7 +336,7 @@ func (mmGetAnalysis *mAnalysisStorageMockGetAnalysis) invocationsDone() bool {
 	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
 }
 
-// GetAnalysis implements mm_analysis_service.AnalysisStorage
+// GetAnalysis implements mm_usecase.AnalysisStorage
 func (mmGetAnalysis *AnalysisStorageMock) GetAnalysis(ctx context.Context, analysisID string, requestUserID uint64, isAdmin bool) (ap1 *domain.Analysis, err error) {
 	mm_atomic.AddUint64(&mmGetAnalysis.beforeGetAnalysisCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetAnalysis.afterGetAnalysisCounter, 1)
@@ -689,7 +689,7 @@ func (mmListCandidatesByVacancy *mAnalysisStorageMockListCandidatesByVacancy) in
 	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
 }
 
-// ListCandidatesByVacancy implements mm_analysis_service.AnalysisStorage
+// ListCandidatesByVacancy implements mm_usecase.AnalysisStorage
 func (mmListCandidatesByVacancy *AnalysisStorageMock) ListCandidatesByVacancy(ctx context.Context, in domain.ListCandidatesByVacancyInput) (lp1 *domain.ListCandidatesByVacancyResult, err error) {
 	mm_atomic.AddUint64(&mmListCandidatesByVacancy.beforeListCandidatesByVacancyCounter, 1)
 	defer mm_atomic.AddUint64(&mmListCandidatesByVacancy.afterListCandidatesByVacancyCounter, 1)
@@ -1032,7 +1032,7 @@ func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) invocationsDone() bool
 	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
 }
 
-// StartAnalysis implements mm_analysis_service.AnalysisStorage
+// StartAnalysis implements mm_usecase.AnalysisStorage
 func (mmStartAnalysis *AnalysisStorageMock) StartAnalysis(ctx context.Context, in domain.StartAnalysisInput) (sp1 *domain.StartAnalysisResult, err error) {
 	mm_atomic.AddUint64(&mmStartAnalysis.beforeStartAnalysisCounter, 1)
 	defer mm_atomic.AddUint64(&mmStartAnalysis.afterStartAnalysisCounter, 1)
@@ -1400,7 +1400,7 @@ func (mmUpdateAIDecision *mAnalysisStorageMockUpdateAIDecision) invocationsDone(
 	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
 }
 
-// UpdateAIDecision implements mm_analysis_service.AnalysisStorage
+// UpdateAIDecision implements mm_usecase.AnalysisStorage
 func (mmUpdateAIDecision *AnalysisStorageMock) UpdateAIDecision(ctx context.Context, analysisID string, ai domain.AIDecision) (err error) {
 	mm_atomic.AddUint64(&mmUpdateAIDecision.beforeUpdateAIDecisionCounter, 1)
 	defer mm_atomic.AddUint64(&mmUpdateAIDecision.afterUpdateAIDecisionCounter, 1)
