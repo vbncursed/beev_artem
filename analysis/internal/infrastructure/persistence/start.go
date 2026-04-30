@@ -14,7 +14,7 @@ import (
 func (s *AnalysisStorage) LoadResumeContext(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (*domain.ResumeContext, error) {
 	var rc domain.ResumeContext
 	err := s.db.QueryRow(ctx, `
-SELECT r.id, r.candidate_id, c.vacancy_id, c.owner_user_id, c.full_name, c.email, c.phone, r.extracted_text, COALESCE(v.version, 1)
+SELECT r.id, r.candidate_id, c.vacancy_id, c.owner_user_id, c.full_name, c.email, c.phone, r.extracted_text, COALESCE(v.version, 1), COALESCE(v.role, '')
 FROM resumes r
 JOIN candidates c ON c.id = r.candidate_id
 LEFT JOIN vacancies v ON v.id = c.vacancy_id
@@ -29,6 +29,7 @@ WHERE r.id = $1 AND ($2 OR c.owner_user_id = $3)
 		&rc.Phone,
 		&rc.ResumeText,
 		&rc.VacancyVersion,
+		&rc.VacancyRole,
 	)
 	if err != nil {
 		return nil, err

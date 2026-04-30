@@ -30,6 +30,10 @@ message GenerateDecisionRequest {
   string score_explanation = 10;
   float match_score = 11;
   string resume_text = 12;
+
+  // role selects the prompt template multiagent uses for this vacancy.
+  // Empty -> default prompt. See vacancy.Vacancy.role for the source.
+  string role = 13;
 }
 
 message AgentResult {

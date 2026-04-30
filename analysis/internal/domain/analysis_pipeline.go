@@ -13,6 +13,10 @@ type ResumeContext struct {
 	Phone          string
 	ResumeText     string
 	VacancyVersion uint32
+	// VacancyRole is the prompt-selection key forwarded to multiagent
+	// during the LLM fan-out. Empty when the vacancy has no role set —
+	// multiagent handles the fallback to default prompt.
+	VacancyRole string
 }
 
 // AnalysisPayload is the structured outcome of the scoring step. The Scorer

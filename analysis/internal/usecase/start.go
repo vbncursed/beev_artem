@@ -70,7 +70,7 @@ func (s *AnalysisService) StartAnalysis(ctx context.Context, in domain.StartAnal
 	res := &domain.StartAnalysisResult{AnalysisID: analysisID, Status: domain.StatusQueued}
 
 	if in.UseLLM && s.multiAgentClient != nil {
-		s.refreshAIDecisionAsync(ctx, analysisID, in.RequestUserID, in.IsAdmin, payload)
+		s.refreshAIDecisionAsync(ctx, analysisID, rc.VacancyRole, payload)
 	}
 
 	return res, nil
@@ -82,16 +82,20 @@ func (s *AnalysisService) StartAnalysis(ctx context.Context, in domain.StartAnal
 // the authoritative fallback, so failing here just means the row keeps the
 // heuristic AI it already has.
 //
+// role is forwarded so multiagent can pick the prompt for this vacancy
+// (empty -> default prompt; multiagent owns the fallback).
+//
 // Inlined into StartAnalysis flow synchronously today (not actually async)
 // because we want the freshly-saved row visible to the next read. If this
 // becomes too slow, lift it to a background worker fed by an outbox table.
-func (s *AnalysisService) refreshAIDecisionAsync(ctx context.Context, analysisID string, requestUserID uint64, isAdmin bool, payload domain.AnalysisPayload) {
+func (s *AnalysisService) refreshAIDecisionAsync(ctx context.Context, analysisID string, role string, payload domain.AnalysisPayload) {
 	maCtx, cancel := context.WithTimeout(ctx, multiagentTimeout)
 	defer cancel()
 
 	maResp, err := s.multiAgentClient.GenerateDecision(maCtx, &pb_multiagent.GenerateDecisionRequest{
 		Model:             "qwen-chat",
 		Mode:              pb_multiagent.AgentMode_AGENT_MODE_BALANCED,
+		Role:              role,
 		CandidateSkills:   payload.Profile.Skills,
 		MissingSkills:     payload.Breakdown.MissingSkills,
 		CandidateSummary:  payload.Profile.Summary,

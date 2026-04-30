@@ -24,6 +24,7 @@ func happyResume() *domain.ResumeContext {
 		OwnerUserID:    7,
 		ResumeText:     "go pgx grpc",
 		VacancyVersion: 3,
+		VacancyRole:    "programmer",
 	}
 }
 
@@ -301,6 +302,9 @@ func (s *StartAnalysisSuite) TestLLMFanOutOverwritesAIDecision() {
 	assert.Assert(t, maStub.called, "multiagent client must be invoked")
 	assert.Equal(t, maStub.capturedReq.GetMatchScore(), payload.Score)
 	assert.DeepEqual(t, maStub.capturedReq.GetCandidateSkills(), payload.Profile.Skills)
+	// Role from the joined vacancy must reach multiagent so it can select
+	// the right prompt — this is the whole point of the role plumbing.
+	assert.Equal(t, maStub.capturedReq.GetRole(), rc.VacancyRole)
 }
 
 // TestLLMFanOutErrorIsSwallowed covers the fail-closed contract for LLM
