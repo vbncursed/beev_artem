@@ -1,6 +1,7 @@
 package analysis_storage
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -8,7 +9,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/artem13815/hr/analysis/internal/domain"
@@ -139,13 +140,7 @@ func buildAnalysisPayload(resumeText string, skills []domain.VacancySkill) (doma
 	baseScore := (matchedWeight / totalWeight) * 100
 	mustPenalty := float32(mustMissingCount) * 10
 	niceBonus := float32(niceMatchedCount) * 2
-	matchScore := baseScore - mustPenalty + niceBonus
-	if matchScore < 0 {
-		matchScore = 0
-	}
-	if matchScore > 100 {
-		matchScore = 100
-	}
+	matchScore := min(max(baseScore-mustPenalty+niceBonus, 0), 100)
 
 	extra := extractExtraSkills(lowerText, requiredSet)
 
@@ -208,14 +203,14 @@ func extractExtraSkills(text string, required map[string]struct{}) []string {
 		}
 		items = append(items, kv{k: k, v: v})
 	}
-	sort.Slice(items, func(i, j int) bool {
-		if items[i].v == items[j].v {
-			return items[i].k < items[j].k
+	slices.SortFunc(items, func(a, b kv) int {
+		if a.v == b.v {
+			return cmp.Compare(a.k, b.k)
 		}
-		return items[i].v > items[j].v
+		return cmp.Compare(b.v, a.v) // descending by frequency
 	})
 	out := make([]string, 0, 8)
-	for i := 0; i < len(items) && i < 8; i++ {
+	for i := range min(len(items), 8) {
 		out = append(out, items[i].k)
 	}
 	return out

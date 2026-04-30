@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"strings"
@@ -10,10 +11,7 @@ import (
 )
 
 func main() {
-	configPath := os.Getenv("configPath")
-	if configPath == "" {
-		configPath = defaultConfigPathByEnv(os.Getenv("APP_ENV"))
-	}
+	configPath := cmp.Or(os.Getenv("configPath"), defaultConfigPathByEnv(os.Getenv("APP_ENV")))
 
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {

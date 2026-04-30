@@ -1,6 +1,7 @@
 package analysis_service_api
 
 import (
+	"cmp"
 	"context"
 	"errors"
 
@@ -17,13 +18,10 @@ func (a *AnalysisServiceAPI) ListCandidatesByVacancy(ctx context.Context, req *p
 		return nil, newError(codes.Unauthenticated, ErrCodeUnauthorized, "Authentication required.")
 	}
 
-	limit := uint32(20)
-	offset := uint32(0)
-	if req.GetPage() != nil {
-		if req.GetPage().GetLimit() > 0 {
-			limit = req.GetPage().GetLimit()
-		}
-		offset = req.GetPage().GetOffset()
+	var limit, offset uint32 = 20, 0
+	if p := req.GetPage(); p != nil {
+		limit = cmp.Or(p.GetLimit(), limit)
+		offset = p.GetOffset()
 	}
 
 	res, err := a.analysisService.ListCandidatesByVacancy(ctx, domain.ListCandidatesByVacancyInput{
