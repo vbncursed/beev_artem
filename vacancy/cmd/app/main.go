@@ -1,30 +1,47 @@
 package main
 
 import (
-	"fmt"
+	"cmp"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/artem13815/hr/vacancy/config"
 	"github.com/artem13815/hr/vacancy/internal/bootstrap"
+	"github.com/artem13815/hr/vacancy/internal/infrastructure/auth_client"
 )
 
 func main() {
-	configPath := os.Getenv("configPath")
-	if configPath == "" {
-		configPath = defaultConfigPathByEnv(os.Getenv("APP_ENV"))
+	if err := run(); err != nil {
+		slog.Error("fatal", "err", err)
+		os.Exit(1)
 	}
+}
+
+func run() error {
+	configPath := cmp.Or(os.Getenv("configPath"), defaultConfigPathByEnv(os.Getenv("APP_ENV")))
 
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
-		panic(fmt.Sprintf("failed to load config: %v", err))
+		return err
 	}
 
-	storage := bootstrap.InitPGStorage(cfg)
+	storage, err := bootstrap.InitPGStorage(cfg)
+	if err != nil {
+		return err
+	}
 	service := bootstrap.InitVacancyService(storage)
 	api := bootstrap.InitVacancyServiceAPI(service)
 
-	bootstrap.AppRun(api, cfg)
+	authClient, authCleanup, err := auth_client.New(cfg)
+	if err != nil {
+		storage.Close()
+		return err
+	}
+
+	// Hooks run LIFO during shutdown — close the auth conn before the
+	// pgxpool, mirroring construction order.
+	return bootstrap.AppRun(api, authClient, cfg, storage.Close, authCleanup)
 }
 
 func defaultConfigPathByEnv(appEnv string) string {

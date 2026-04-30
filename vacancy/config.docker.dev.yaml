@@ -8,3 +8,6 @@ database:
 
 server:
   grpc_addr: ":50051"
+
+auth:
+  grpc_addr: "auth:50050"

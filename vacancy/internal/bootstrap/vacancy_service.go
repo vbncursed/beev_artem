@@ -1,10 +1,10 @@
 package bootstrap
 
 import (
-	"github.com/artem13815/hr/vacancy/internal/services/vacancy_service"
-	"github.com/artem13815/hr/vacancy/internal/storage/vacancy_storage"
+	"github.com/artem13815/hr/vacancy/internal/infrastructure/persistence"
+	"github.com/artem13815/hr/vacancy/internal/usecase"
 )
 
-func InitVacancyService(storage *vacancy_storage.VacancyStorage) *vacancy_service.VacancyService {
-	return vacancy_service.NewVacancyService(storage)
+func InitVacancyService(storage *persistence.VacancyStorage) *usecase.VacancyService {
+	return usecase.NewVacancyService(storage)
 }
