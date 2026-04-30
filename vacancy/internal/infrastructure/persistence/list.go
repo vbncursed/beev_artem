@@ -23,7 +23,7 @@ WHERE ($1 OR owner_user_id = $2)
 	}
 
 	rows, err := s.db.Query(ctx, `
-SELECT id, owner_user_id, title, description, status, version, created_at, updated_at
+SELECT id, owner_user_id, title, description, role, status, version, created_at, updated_at
 FROM vacancies
 WHERE ($1 OR owner_user_id = $2)
   AND ($3 = '%%' OR title ILIKE $3 OR description ILIKE $3)
@@ -38,7 +38,7 @@ LIMIT $4 OFFSET $5
 	vacancies := make([]domain.Vacancy, 0)
 	for rows.Next() {
 		var v domain.Vacancy
-		if err := rows.Scan(&v.ID, &v.OwnerUserID, &v.Title, &v.Description, &v.Status, &v.Version, &v.CreatedAt, &v.UpdatedAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.OwnerUserID, &v.Title, &v.Description, &v.Role, &v.Status, &v.Version, &v.CreatedAt, &v.UpdatedAt); err != nil {
 			return nil, err
 		}
 		skills, err := loadSkills(ctx, s.db, v.ID)

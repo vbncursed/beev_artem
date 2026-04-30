@@ -11,7 +11,7 @@ import (
 func (s *VacancyStorage) GetVacancy(ctx context.Context, vacancyID string, ownerUserID uint64, isAdmin bool) (*domain.Vacancy, error) {
 	var vacancy domain.Vacancy
 	err := s.db.QueryRow(ctx, `
-SELECT id, owner_user_id, title, description, status, version, created_at, updated_at
+SELECT id, owner_user_id, title, description, role, status, version, created_at, updated_at
 FROM vacancies
 WHERE id = $1
   AND ($2 OR owner_user_id = $3)
@@ -20,6 +20,7 @@ WHERE id = $1
 		&vacancy.OwnerUserID,
 		&vacancy.Title,
 		&vacancy.Description,
+		&vacancy.Role,
 		&vacancy.Status,
 		&vacancy.Version,
 		&vacancy.CreatedAt,

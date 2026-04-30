@@ -17,10 +17,11 @@ func (s *VacancyStorage) UpdateVacancy(ctx context.Context, in domain.UpdateVaca
 UPDATE vacancies
 SET title = $1,
     description = $2,
+    role = $3,
     version = version + 1,
     updated_at = NOW()
-WHERE id = $3 AND ($4 OR owner_user_id = $5)
-`, in.Title, in.Description, in.VacancyID, in.IsAdmin, in.OwnerUserID)
+WHERE id = $4 AND ($5 OR owner_user_id = $6)
+`, in.Title, in.Description, in.Role, in.VacancyID, in.IsAdmin, in.OwnerUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 
 	var vacancy domain.Vacancy
 	err = tx.QueryRow(ctx, `
-SELECT id, owner_user_id, title, description, status, version, created_at, updated_at
+SELECT id, owner_user_id, title, description, role, status, version, created_at, updated_at
 FROM vacancies
 WHERE id = $1
 `, in.VacancyID).Scan(
@@ -53,6 +54,7 @@ WHERE id = $1
 		&vacancy.OwnerUserID,
 		&vacancy.Title,
 		&vacancy.Description,
+		&vacancy.Role,
 		&vacancy.Status,
 		&vacancy.Version,
 		&vacancy.CreatedAt,

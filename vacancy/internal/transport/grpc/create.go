@@ -21,6 +21,7 @@ func (a *VacancyServiceAPI) CreateVacancy(ctx context.Context, req *pb_models.Cr
 		OwnerUserID: userCtx.UserID,
 		Title:       req.GetTitle(),
 		Description: req.GetDescription(),
+		Role:        req.GetRole(),
 		Skills:      fromPBSkills(req.GetSkills()),
 	})
 	if err != nil {

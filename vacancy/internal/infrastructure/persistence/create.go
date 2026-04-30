@@ -20,9 +20,9 @@ func (s *VacancyStorage) CreateVacancy(ctx context.Context, in domain.CreateVaca
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Exec(ctx, `
-INSERT INTO vacancies (id, owner_user_id, title, description, status, version)
-VALUES ($1, $2, $3, $4, $5, $6)
-`, id, in.OwnerUserID, in.Title, in.Description, domain.StatusActive, 1)
+INSERT INTO vacancies (id, owner_user_id, title, description, role, status, version)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+`, id, in.OwnerUserID, in.Title, in.Description, in.Role, domain.StatusActive, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ VALUES ($1, $2, $3, $4, $5, $6)
 
 	var vacancy domain.Vacancy
 	err = tx.QueryRow(ctx, `
-SELECT id, owner_user_id, title, description, status, version, created_at, updated_at
+SELECT id, owner_user_id, title, description, role, status, version, created_at, updated_at
 FROM vacancies
 WHERE id = $1
 `, id).Scan(
@@ -47,6 +47,7 @@ WHERE id = $1
 		&vacancy.OwnerUserID,
 		&vacancy.Title,
 		&vacancy.Description,
+		&vacancy.Role,
 		&vacancy.Status,
 		&vacancy.Version,
 		&vacancy.CreatedAt,

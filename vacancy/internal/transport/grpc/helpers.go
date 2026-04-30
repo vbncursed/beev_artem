@@ -39,6 +39,7 @@ func toPBVacancy(v domain.Vacancy) *pb_models.Vacancy {
 		OwnerUserId: v.OwnerUserID,
 		Title:       v.Title,
 		Description: v.Description,
+		Role:        v.Role,
 		Skills:      toPBSkills(v.Skills),
 		Status:      toPBStatus(v.Status),
 		Version:     v.Version,

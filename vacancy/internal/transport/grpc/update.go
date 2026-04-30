@@ -23,6 +23,7 @@ func (a *VacancyServiceAPI) UpdateVacancy(ctx context.Context, req *pb_models.Up
 		IsAdmin:     userCtx.IsAdmin,
 		Title:       req.GetTitle(),
 		Description: req.GetDescription(),
+		Role:        req.GetRole(),
 		Skills:      fromPBSkills(req.GetSkills()),
 	})
 	if err != nil {

@@ -19,17 +19,22 @@ type Vacancy struct {
 	OwnerUserID uint64
 	Title       string
 	Description string
-	Skills      []SkillWeight
-	Status      string
-	Version     uint32
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	// Role steers downstream prompt selection (multiagent picks
+	// assets/prompts/<role>.txt; empty falls back to default.txt).
+	// Free-form so adding a new role is just a prompt file commit.
+	Role      string
+	Skills    []SkillWeight
+	Status    string
+	Version   uint32
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type CreateVacancyInput struct {
 	OwnerUserID uint64
 	Title       string
 	Description string
+	Role        string
 	Skills      []SkillWeight
 }
 
@@ -53,6 +58,7 @@ type UpdateVacancyInput struct {
 	IsAdmin     bool
 	Title       string
 	Description string
+	Role        string
 	Skills      []SkillWeight
 }
 

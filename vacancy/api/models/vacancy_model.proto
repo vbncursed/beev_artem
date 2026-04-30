@@ -30,12 +30,17 @@ message Vacancy {
   uint32 version = 7;
   google.protobuf.Timestamp created_at = 8;
   google.protobuf.Timestamp updated_at = 9;
+  // role drives prompt selection in multiagent. Free-form string;
+  // multiagent looks up assets/prompts/<role>.txt and falls back to
+  // default.txt when no match is found.
+  string role = 10;
 }
 
 message CreateVacancyRequest {
   string title = 1;
   string description = 2;
   repeated SkillWeight skills = 3;
+  string role = 4;
 }
 
 message GetVacancyRequest {
@@ -57,6 +62,7 @@ message UpdateVacancyRequest {
   string title = 2;
   string description = 3;
   repeated SkillWeight skills = 4;
+  string role = 5;
 }
 
 message ArchiveVacancyRequest {

@@ -240,6 +240,9 @@
             "type": "object",
             "$ref": "#/definitions/v1SkillWeight"
           }
+        },
+        "role": {
+          "type": "string"
         }
       }
     },
@@ -294,6 +297,9 @@
             "type": "object",
             "$ref": "#/definitions/v1SkillWeight"
           }
+        },
+        "role": {
+          "type": "string"
         }
       }
     },
@@ -397,6 +403,10 @@
         "updatedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "role": {
+          "type": "string",
+          "description": "role drives prompt selection in multiagent. Free-form string;\nmultiagent looks up assets/prompts/\u003crole\u003e.txt and falls back to\ndefault.txt when no match is found."
         }
       }
     },
