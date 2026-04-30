@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -105,7 +106,7 @@ func AppRun(cfg *config.Config) error {
 		"resume_grpc_addr", cfg.Resume.GRPCAddr,
 		"analysis_grpc_addr", cfg.Analysis.GRPCAddr,
 	)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("gateway http server failed: %w", err)
 	}
 
@@ -232,9 +233,8 @@ func extractBearerToken(authHeader string) string {
 	if authHeader == "" {
 		return ""
 	}
-	parts := strings.SplitN(authHeader, " ", 2)
-	if len(parts) == 2 && strings.EqualFold(parts[0], "bearer") {
-		return strings.TrimSpace(parts[1])
+	if scheme, value, ok := strings.Cut(authHeader, " "); ok && strings.EqualFold(scheme, "bearer") {
+		return strings.TrimSpace(value)
 	}
 	return strings.TrimSpace(authHeader)
 }
