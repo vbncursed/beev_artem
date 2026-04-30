@@ -46,5 +46,28 @@ func LoadConfig(filename string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal YAML: %w", err)
 	}
 
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("invalid config %s: %w", filename, err)
+	}
+
 	return &cfg, nil
+}
+
+// validate rejects configs that would otherwise crash later in less obvious
+// places — missing addresses surface as connection-refused at first
+// request instead of an actionable boot error.
+func (c *Config) validate() error {
+	switch {
+	case c.Server.HTTPAddr == "":
+		return fmt.Errorf("server.http_addr is required")
+	case c.Auth.GRPCAddr == "":
+		return fmt.Errorf("auth.grpc_addr is required")
+	case c.Vacancy.GRPCAddr == "":
+		return fmt.Errorf("vacancy.grpc_addr is required")
+	case c.Resume.GRPCAddr == "":
+		return fmt.Errorf("resume.grpc_addr is required")
+	case c.Analysis.GRPCAddr == "":
+		return fmt.Errorf("analysis.grpc_addr is required")
+	}
+	return nil
 }
