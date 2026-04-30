@@ -8,7 +8,7 @@ import (
 	mm_atomic "sync/atomic"
 	mm_time "time"
 
-	pb "github.com/artem13815/hr/multiagent/internal/pb/multiagent_api"
+	"github.com/artem13815/hr/multiagent/internal/domain"
 	"github.com/gojuno/minimock/v3"
 )
 
@@ -17,9 +17,9 @@ type DecisionStorageMock struct {
 	t          minimock.Tester
 	finishOnce sync.Once
 
-	funcStoreDecision          func(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse) (err error)
+	funcStoreDecision          func(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse) (err error)
 	funcStoreDecisionOrigin    string
-	inspectFuncStoreDecision   func(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse)
+	inspectFuncStoreDecision   func(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse)
 	afterStoreDecisionCounter  uint64
 	beforeStoreDecisionCounter uint64
 	StoreDecisionMock          mDecisionStorageMockStoreDecision
@@ -68,15 +68,15 @@ type DecisionStorageMockStoreDecisionExpectation struct {
 // DecisionStorageMockStoreDecisionParams contains parameters of the DecisionStorage.StoreDecision
 type DecisionStorageMockStoreDecisionParams struct {
 	ctx  context.Context
-	req  *pb.GenerateDecisionRequest
-	resp *pb.GenerateDecisionResponse
+	req  domain.DecisionRequest
+	resp *domain.DecisionResponse
 }
 
 // DecisionStorageMockStoreDecisionParamPtrs contains pointers to parameters of the DecisionStorage.StoreDecision
 type DecisionStorageMockStoreDecisionParamPtrs struct {
 	ctx  *context.Context
-	req  **pb.GenerateDecisionRequest
-	resp **pb.GenerateDecisionResponse
+	req  *domain.DecisionRequest
+	resp **domain.DecisionResponse
 }
 
 // DecisionStorageMockStoreDecisionResults contains results of the DecisionStorage.StoreDecision
@@ -103,7 +103,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) Optional() *mDecisionS
 }
 
 // Expect sets up expected params for DecisionStorage.StoreDecision
-func (mmStoreDecision *mDecisionStorageMockStoreDecision) Expect(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse) *mDecisionStorageMockStoreDecision {
+func (mmStoreDecision *mDecisionStorageMockStoreDecision) Expect(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse) *mDecisionStorageMockStoreDecision {
 	if mmStoreDecision.mock.funcStoreDecision != nil {
 		mmStoreDecision.mock.t.Fatalf("DecisionStorageMock.StoreDecision mock is already set by Set")
 	}
@@ -151,7 +151,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectCtxParam1(ctx co
 }
 
 // ExpectReqParam2 sets up expected param req for DecisionStorage.StoreDecision
-func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectReqParam2(req *pb.GenerateDecisionRequest) *mDecisionStorageMockStoreDecision {
+func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectReqParam2(req domain.DecisionRequest) *mDecisionStorageMockStoreDecision {
 	if mmStoreDecision.mock.funcStoreDecision != nil {
 		mmStoreDecision.mock.t.Fatalf("DecisionStorageMock.StoreDecision mock is already set by Set")
 	}
@@ -174,7 +174,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectReqParam2(req *p
 }
 
 // ExpectRespParam3 sets up expected param resp for DecisionStorage.StoreDecision
-func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectRespParam3(resp *pb.GenerateDecisionResponse) *mDecisionStorageMockStoreDecision {
+func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectRespParam3(resp *domain.DecisionResponse) *mDecisionStorageMockStoreDecision {
 	if mmStoreDecision.mock.funcStoreDecision != nil {
 		mmStoreDecision.mock.t.Fatalf("DecisionStorageMock.StoreDecision mock is already set by Set")
 	}
@@ -197,7 +197,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) ExpectRespParam3(resp 
 }
 
 // Inspect accepts an inspector function that has same arguments as the DecisionStorage.StoreDecision
-func (mmStoreDecision *mDecisionStorageMockStoreDecision) Inspect(f func(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse)) *mDecisionStorageMockStoreDecision {
+func (mmStoreDecision *mDecisionStorageMockStoreDecision) Inspect(f func(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse)) *mDecisionStorageMockStoreDecision {
 	if mmStoreDecision.mock.inspectFuncStoreDecision != nil {
 		mmStoreDecision.mock.t.Fatalf("Inspect function is already set for DecisionStorageMock.StoreDecision")
 	}
@@ -222,7 +222,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) Return(err error) *Dec
 }
 
 // Set uses given function f to mock the DecisionStorage.StoreDecision method
-func (mmStoreDecision *mDecisionStorageMockStoreDecision) Set(f func(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse) (err error)) *DecisionStorageMock {
+func (mmStoreDecision *mDecisionStorageMockStoreDecision) Set(f func(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse) (err error)) *DecisionStorageMock {
 	if mmStoreDecision.defaultExpectation != nil {
 		mmStoreDecision.mock.t.Fatalf("Default expectation is already set for the DecisionStorage.StoreDecision method")
 	}
@@ -238,7 +238,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) Set(f func(ctx context
 
 // When sets expectation for the DecisionStorage.StoreDecision which will trigger the result defined by the following
 // Then helper
-func (mmStoreDecision *mDecisionStorageMockStoreDecision) When(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse) *DecisionStorageMockStoreDecisionExpectation {
+func (mmStoreDecision *mDecisionStorageMockStoreDecision) When(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse) *DecisionStorageMockStoreDecisionExpectation {
 	if mmStoreDecision.mock.funcStoreDecision != nil {
 		mmStoreDecision.mock.t.Fatalf("DecisionStorageMock.StoreDecision mock is already set by Set")
 	}
@@ -280,7 +280,7 @@ func (mmStoreDecision *mDecisionStorageMockStoreDecision) invocationsDone() bool
 }
 
 // StoreDecision implements mm_usecase.DecisionStorage
-func (mmStoreDecision *DecisionStorageMock) StoreDecision(ctx context.Context, req *pb.GenerateDecisionRequest, resp *pb.GenerateDecisionResponse) (err error) {
+func (mmStoreDecision *DecisionStorageMock) StoreDecision(ctx context.Context, req domain.DecisionRequest, resp *domain.DecisionResponse) (err error) {
 	mm_atomic.AddUint64(&mmStoreDecision.beforeStoreDecisionCounter, 1)
 	defer mm_atomic.AddUint64(&mmStoreDecision.afterStoreDecisionCounter, 1)
 
