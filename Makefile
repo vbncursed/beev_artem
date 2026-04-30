@@ -1,104 +1,61 @@
+.DEFAULT_GOAL := help
+
 DOCKER_COMPOSE ?= docker compose
-APP_ENV ?= dev
+SERVICES := auth gateway vacancy resume analysis multiagent
 
-.PHONY: help
-help: ## Показать список доступных команд
-	@echo "Usage: make <target>"
-	@echo ""
-	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
+.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild test-all lint-all generate-api
 
-.PHONY: up
-up: ## Поднять dev-окружение (gateway + auth + vacancy + resume + analysis + multiagent + локальные postgres/redis)
+help: ## Show available targets
+	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
+
+up: ## Start dev stack (gateway + services + local postgres/redis)
 	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d
 
-.PHONY: up-dev
-up-dev: ## То же, что up: поднять dev-окружение
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d
-
-.PHONY: up-prod
-up-prod: ## Поднять prod-профиль (gateway + auth + vacancy + resume + analysis + multiagent, внешние postgres/redis)
+up-prod: ## Start prod stack (no local infra; uses external hosts from config.docker.prod.yaml)
 	APP_ENV=prod $(DOCKER_COMPOSE) up -d
 
-.PHONY: rebuild-dev
-rebuild-dev: ## Пересобрать и перезапустить весь dev-стек
+up-build: ## up + --build
 	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build
 
-.PHONY: rebuild-prod
-rebuild-prod: ## Пересобрать и перезапустить весь prod-стек
+up-build-prod: ## up-prod + --build
 	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build
 
-.PHONY: auth-rebuild-dev
-auth-rebuild-dev: ## Пересобрать и перезапустить только auth в dev
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build auth
-
-.PHONY: auth-rebuild-prod
-auth-rebuild-prod: ## Пересобрать и перезапустить только auth в prod
-	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build auth
-
-.PHONY: gateway-rebuild-dev
-gateway-rebuild-dev: ## Пересобрать и перезапустить только gateway в dev
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build gateway
-
-.PHONY: gateway-rebuild-prod
-gateway-rebuild-prod: ## Пересобрать и перезапустить только gateway в prod
-	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build gateway
-
-.PHONY: vacancy-rebuild-dev
-vacancy-rebuild-dev: ## Пересобрать и перезапустить только vacancy в dev
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build vacancy
-
-.PHONY: vacancy-rebuild-prod
-vacancy-rebuild-prod: ## Пересобрать и перезапустить только vacancy в prod
-	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build vacancy
-
-.PHONY: resume-rebuild-dev
-resume-rebuild-dev: ## Пересобрать и перезапустить только resume в dev
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build resume
-
-.PHONY: resume-rebuild-prod
-resume-rebuild-prod: ## Пересобрать и перезапустить только resume в prod
-	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build resume
-
-.PHONY: analysis-rebuild-dev
-analysis-rebuild-dev: ## Пересобрать и перезапустить только analysis в dev
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build analysis
-
-.PHONY: analysis-rebuild-prod
-analysis-rebuild-prod: ## Пересобрать и перезапустить только analysis в prod
-	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build analysis
-
-.PHONY: multiagent-rebuild-dev
-multiagent-rebuild-dev: ## Пересобрать и перезапустить только multiagent в dev
-	APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build multiagent
-
-.PHONY: multiagent-rebuild-prod
-multiagent-rebuild-prod: ## Пересобрать и перезапустить только multiagent в prod
-	APP_ENV=prod $(DOCKER_COMPOSE) up -d --build multiagent
-
-.PHONY: down
-down: ## Остановить и удалить контейнеры текущего compose проекта
+down: ## Stop and remove containers
 	$(DOCKER_COMPOSE) down
 
-.PHONY: restart
-restart: ## Перезапустить dev-окружение (down + up)
-restart: down up
+down-v: ## Full reset: down + remove volumes/orphans
+	$(DOCKER_COMPOSE) down -v --remove-orphans
 
-.PHONY: restart-prod
-restart-prod: ## Перезапустить prod-профиль (down + up-prod)
-restart-prod: down up-prod
+restart: down up ## Restart dev stack
 
-.PHONY: ps
-ps: ## Показать список контейнеров compose проекта
+restart-prod: down up-prod ## Restart prod stack
+
+ps: ## List containers
 	$(DOCKER_COMPOSE) ps
 
-.PHONY: logs
-logs: ## Смотреть логи всех сервисов (follow, последние 200 строк)
+logs: ## Tail logs (last 200 lines, follow)
 	$(DOCKER_COMPOSE) logs -f --tail=200
 
-.PHONY: pull
-pull: ## Обновить Docker-образы из реестра
+pull: ## Pull updated images from registry
 	$(DOCKER_COMPOSE) pull
 
-.PHONY: down-v
-down-v: ## Полный сброс compose-проекта (down -v --remove-orphans)
-	$(DOCKER_COMPOSE) down -v --remove-orphans
+# rebuild replaces 12 hand-written per-service targets with one parameterised
+# call. The dev branch flips on the "dev" profile so postgres+redis come up
+# alongside; prod relies on external infra hosts pinned in
+# config.docker.prod.yaml.
+rebuild: ## Rebuild and restart one service: make rebuild SVC=auth [ENV=prod]
+	@if [ -z "$(SVC)" ]; then echo "Usage: make rebuild SVC=<service> [ENV=prod]"; exit 1; fi
+	@if [ "$(ENV)" = "prod" ]; then \
+		APP_ENV=prod $(DOCKER_COMPOSE) up -d --build $(SVC); \
+	else \
+		APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build $(SVC); \
+	fi
+
+test-all: ## go test -count=1 across all services
+	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go test -count=1 ./...) || exit 1; done
+
+lint-all: ## go vet across all services
+	@for s in $(SERVICES); do echo "=== $$s ==="; (cd $$s && go vet ./...) || exit 1; done
+
+generate-api: ## Regenerate protobuf code for all services (calls each service's scripts/generate.sh)
+	@for s in $(SERVICES); do echo "=== $$s ==="; bash $$s/scripts/generate.sh; done
