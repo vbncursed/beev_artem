@@ -31,12 +31,33 @@ type AnalysisStorageMock struct {
 	beforeListCandidatesByVacancyCounter uint64
 	ListCandidatesByVacancyMock          mAnalysisStorageMockListCandidatesByVacancy
 
-	funcStartAnalysis          func(ctx context.Context, in domain.StartAnalysisInput) (sp1 *domain.StartAnalysisResult, err error)
-	funcStartAnalysisOrigin    string
-	inspectFuncStartAnalysis   func(ctx context.Context, in domain.StartAnalysisInput)
-	afterStartAnalysisCounter  uint64
-	beforeStartAnalysisCounter uint64
-	StartAnalysisMock          mAnalysisStorageMockStartAnalysis
+	funcLoadResumeContext          func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (rp1 *domain.ResumeContext, err error)
+	funcLoadResumeContextOrigin    string
+	inspectFuncLoadResumeContext   func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool)
+	afterLoadResumeContextCounter  uint64
+	beforeLoadResumeContextCounter uint64
+	LoadResumeContextMock          mAnalysisStorageMockLoadResumeContext
+
+	funcLoadVacancySkills          func(ctx context.Context, vacancyID string) (va1 []domain.VacancySkill, err error)
+	funcLoadVacancySkillsOrigin    string
+	inspectFuncLoadVacancySkills   func(ctx context.Context, vacancyID string)
+	afterLoadVacancySkillsCounter  uint64
+	beforeLoadVacancySkillsCounter uint64
+	LoadVacancySkillsMock          mAnalysisStorageMockLoadVacancySkills
+
+	funcNewID          func() (s1 string, err error)
+	funcNewIDOrigin    string
+	inspectFuncNewID   func()
+	afterNewIDCounter  uint64
+	beforeNewIDCounter uint64
+	NewIDMock          mAnalysisStorageMockNewID
+
+	funcSaveAnalysis          func(ctx context.Context, in domain.SaveAnalysisInput) (err error)
+	funcSaveAnalysisOrigin    string
+	inspectFuncSaveAnalysis   func(ctx context.Context, in domain.SaveAnalysisInput)
+	afterSaveAnalysisCounter  uint64
+	beforeSaveAnalysisCounter uint64
+	SaveAnalysisMock          mAnalysisStorageMockSaveAnalysis
 
 	funcUpdateAIDecision          func(ctx context.Context, analysisID string, ai domain.AIDecision) (err error)
 	funcUpdateAIDecisionOrigin    string
@@ -60,8 +81,16 @@ func NewAnalysisStorageMock(t minimock.Tester) *AnalysisStorageMock {
 	m.ListCandidatesByVacancyMock = mAnalysisStorageMockListCandidatesByVacancy{mock: m}
 	m.ListCandidatesByVacancyMock.callArgs = []*AnalysisStorageMockListCandidatesByVacancyParams{}
 
-	m.StartAnalysisMock = mAnalysisStorageMockStartAnalysis{mock: m}
-	m.StartAnalysisMock.callArgs = []*AnalysisStorageMockStartAnalysisParams{}
+	m.LoadResumeContextMock = mAnalysisStorageMockLoadResumeContext{mock: m}
+	m.LoadResumeContextMock.callArgs = []*AnalysisStorageMockLoadResumeContextParams{}
+
+	m.LoadVacancySkillsMock = mAnalysisStorageMockLoadVacancySkills{mock: m}
+	m.LoadVacancySkillsMock.callArgs = []*AnalysisStorageMockLoadVacancySkillsParams{}
+
+	m.NewIDMock = mAnalysisStorageMockNewID{mock: m}
+
+	m.SaveAnalysisMock = mAnalysisStorageMockSaveAnalysis{mock: m}
+	m.SaveAnalysisMock.callArgs = []*AnalysisStorageMockSaveAnalysisParams{}
 
 	m.UpdateAIDecisionMock = mAnalysisStorageMockUpdateAIDecision{mock: m}
 	m.UpdateAIDecisionMock.callArgs = []*AnalysisStorageMockUpdateAIDecisionParams{}
@@ -819,50 +848,984 @@ func (m *AnalysisStorageMock) MinimockListCandidatesByVacancyInspect() {
 	}
 }
 
-type mAnalysisStorageMockStartAnalysis struct {
+type mAnalysisStorageMockLoadResumeContext struct {
 	optional           bool
 	mock               *AnalysisStorageMock
-	defaultExpectation *AnalysisStorageMockStartAnalysisExpectation
-	expectations       []*AnalysisStorageMockStartAnalysisExpectation
+	defaultExpectation *AnalysisStorageMockLoadResumeContextExpectation
+	expectations       []*AnalysisStorageMockLoadResumeContextExpectation
 
-	callArgs []*AnalysisStorageMockStartAnalysisParams
+	callArgs []*AnalysisStorageMockLoadResumeContextParams
 	mutex    sync.RWMutex
 
 	expectedInvocations       uint64
 	expectedInvocationsOrigin string
 }
 
-// AnalysisStorageMockStartAnalysisExpectation specifies expectation struct of the AnalysisStorage.StartAnalysis
-type AnalysisStorageMockStartAnalysisExpectation struct {
+// AnalysisStorageMockLoadResumeContextExpectation specifies expectation struct of the AnalysisStorage.LoadResumeContext
+type AnalysisStorageMockLoadResumeContextExpectation struct {
 	mock               *AnalysisStorageMock
-	params             *AnalysisStorageMockStartAnalysisParams
-	paramPtrs          *AnalysisStorageMockStartAnalysisParamPtrs
-	expectationOrigins AnalysisStorageMockStartAnalysisExpectationOrigins
-	results            *AnalysisStorageMockStartAnalysisResults
+	params             *AnalysisStorageMockLoadResumeContextParams
+	paramPtrs          *AnalysisStorageMockLoadResumeContextParamPtrs
+	expectationOrigins AnalysisStorageMockLoadResumeContextExpectationOrigins
+	results            *AnalysisStorageMockLoadResumeContextResults
 	returnOrigin       string
 	Counter            uint64
 }
 
-// AnalysisStorageMockStartAnalysisParams contains parameters of the AnalysisStorage.StartAnalysis
-type AnalysisStorageMockStartAnalysisParams struct {
-	ctx context.Context
-	in  domain.StartAnalysisInput
+// AnalysisStorageMockLoadResumeContextParams contains parameters of the AnalysisStorage.LoadResumeContext
+type AnalysisStorageMockLoadResumeContextParams struct {
+	ctx           context.Context
+	resumeID      string
+	requestUserID uint64
+	isAdmin       bool
 }
 
-// AnalysisStorageMockStartAnalysisParamPtrs contains pointers to parameters of the AnalysisStorage.StartAnalysis
-type AnalysisStorageMockStartAnalysisParamPtrs struct {
-	ctx *context.Context
-	in  *domain.StartAnalysisInput
+// AnalysisStorageMockLoadResumeContextParamPtrs contains pointers to parameters of the AnalysisStorage.LoadResumeContext
+type AnalysisStorageMockLoadResumeContextParamPtrs struct {
+	ctx           *context.Context
+	resumeID      *string
+	requestUserID *uint64
+	isAdmin       *bool
 }
 
-// AnalysisStorageMockStartAnalysisResults contains results of the AnalysisStorage.StartAnalysis
-type AnalysisStorageMockStartAnalysisResults struct {
-	sp1 *domain.StartAnalysisResult
+// AnalysisStorageMockLoadResumeContextResults contains results of the AnalysisStorage.LoadResumeContext
+type AnalysisStorageMockLoadResumeContextResults struct {
+	rp1 *domain.ResumeContext
 	err error
 }
 
-// AnalysisStorageMockStartAnalysisOrigins contains origins of expectations of the AnalysisStorage.StartAnalysis
-type AnalysisStorageMockStartAnalysisExpectationOrigins struct {
+// AnalysisStorageMockLoadResumeContextOrigins contains origins of expectations of the AnalysisStorage.LoadResumeContext
+type AnalysisStorageMockLoadResumeContextExpectationOrigins struct {
+	origin              string
+	originCtx           string
+	originResumeID      string
+	originRequestUserID string
+	originIsAdmin       string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Optional() *mAnalysisStorageMockLoadResumeContext {
+	mmLoadResumeContext.optional = true
+	return mmLoadResumeContext
+}
+
+// Expect sets up expected params for AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Expect(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) *mAnalysisStorageMockLoadResumeContext {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	if mmLoadResumeContext.defaultExpectation == nil {
+		mmLoadResumeContext.defaultExpectation = &AnalysisStorageMockLoadResumeContextExpectation{}
+	}
+
+	if mmLoadResumeContext.defaultExpectation.paramPtrs != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by ExpectParams functions")
+	}
+
+	mmLoadResumeContext.defaultExpectation.params = &AnalysisStorageMockLoadResumeContextParams{ctx, resumeID, requestUserID, isAdmin}
+	mmLoadResumeContext.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmLoadResumeContext.expectations {
+		if minimock.Equal(e.params, mmLoadResumeContext.defaultExpectation.params) {
+			mmLoadResumeContext.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmLoadResumeContext.defaultExpectation.params)
+		}
+	}
+
+	return mmLoadResumeContext
+}
+
+// ExpectCtxParam1 sets up expected param ctx for AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) ExpectCtxParam1(ctx context.Context) *mAnalysisStorageMockLoadResumeContext {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	if mmLoadResumeContext.defaultExpectation == nil {
+		mmLoadResumeContext.defaultExpectation = &AnalysisStorageMockLoadResumeContextExpectation{}
+	}
+
+	if mmLoadResumeContext.defaultExpectation.params != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Expect")
+	}
+
+	if mmLoadResumeContext.defaultExpectation.paramPtrs == nil {
+		mmLoadResumeContext.defaultExpectation.paramPtrs = &AnalysisStorageMockLoadResumeContextParamPtrs{}
+	}
+	mmLoadResumeContext.defaultExpectation.paramPtrs.ctx = &ctx
+	mmLoadResumeContext.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmLoadResumeContext
+}
+
+// ExpectResumeIDParam2 sets up expected param resumeID for AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) ExpectResumeIDParam2(resumeID string) *mAnalysisStorageMockLoadResumeContext {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	if mmLoadResumeContext.defaultExpectation == nil {
+		mmLoadResumeContext.defaultExpectation = &AnalysisStorageMockLoadResumeContextExpectation{}
+	}
+
+	if mmLoadResumeContext.defaultExpectation.params != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Expect")
+	}
+
+	if mmLoadResumeContext.defaultExpectation.paramPtrs == nil {
+		mmLoadResumeContext.defaultExpectation.paramPtrs = &AnalysisStorageMockLoadResumeContextParamPtrs{}
+	}
+	mmLoadResumeContext.defaultExpectation.paramPtrs.resumeID = &resumeID
+	mmLoadResumeContext.defaultExpectation.expectationOrigins.originResumeID = minimock.CallerInfo(1)
+
+	return mmLoadResumeContext
+}
+
+// ExpectRequestUserIDParam3 sets up expected param requestUserID for AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) ExpectRequestUserIDParam3(requestUserID uint64) *mAnalysisStorageMockLoadResumeContext {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	if mmLoadResumeContext.defaultExpectation == nil {
+		mmLoadResumeContext.defaultExpectation = &AnalysisStorageMockLoadResumeContextExpectation{}
+	}
+
+	if mmLoadResumeContext.defaultExpectation.params != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Expect")
+	}
+
+	if mmLoadResumeContext.defaultExpectation.paramPtrs == nil {
+		mmLoadResumeContext.defaultExpectation.paramPtrs = &AnalysisStorageMockLoadResumeContextParamPtrs{}
+	}
+	mmLoadResumeContext.defaultExpectation.paramPtrs.requestUserID = &requestUserID
+	mmLoadResumeContext.defaultExpectation.expectationOrigins.originRequestUserID = minimock.CallerInfo(1)
+
+	return mmLoadResumeContext
+}
+
+// ExpectIsAdminParam4 sets up expected param isAdmin for AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) ExpectIsAdminParam4(isAdmin bool) *mAnalysisStorageMockLoadResumeContext {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	if mmLoadResumeContext.defaultExpectation == nil {
+		mmLoadResumeContext.defaultExpectation = &AnalysisStorageMockLoadResumeContextExpectation{}
+	}
+
+	if mmLoadResumeContext.defaultExpectation.params != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Expect")
+	}
+
+	if mmLoadResumeContext.defaultExpectation.paramPtrs == nil {
+		mmLoadResumeContext.defaultExpectation.paramPtrs = &AnalysisStorageMockLoadResumeContextParamPtrs{}
+	}
+	mmLoadResumeContext.defaultExpectation.paramPtrs.isAdmin = &isAdmin
+	mmLoadResumeContext.defaultExpectation.expectationOrigins.originIsAdmin = minimock.CallerInfo(1)
+
+	return mmLoadResumeContext
+}
+
+// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Inspect(f func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool)) *mAnalysisStorageMockLoadResumeContext {
+	if mmLoadResumeContext.mock.inspectFuncLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.LoadResumeContext")
+	}
+
+	mmLoadResumeContext.mock.inspectFuncLoadResumeContext = f
+
+	return mmLoadResumeContext
+}
+
+// Return sets up results that will be returned by AnalysisStorage.LoadResumeContext
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Return(rp1 *domain.ResumeContext, err error) *AnalysisStorageMock {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	if mmLoadResumeContext.defaultExpectation == nil {
+		mmLoadResumeContext.defaultExpectation = &AnalysisStorageMockLoadResumeContextExpectation{mock: mmLoadResumeContext.mock}
+	}
+	mmLoadResumeContext.defaultExpectation.results = &AnalysisStorageMockLoadResumeContextResults{rp1, err}
+	mmLoadResumeContext.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmLoadResumeContext.mock
+}
+
+// Set uses given function f to mock the AnalysisStorage.LoadResumeContext method
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Set(f func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (rp1 *domain.ResumeContext, err error)) *AnalysisStorageMock {
+	if mmLoadResumeContext.defaultExpectation != nil {
+		mmLoadResumeContext.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.LoadResumeContext method")
+	}
+
+	if len(mmLoadResumeContext.expectations) > 0 {
+		mmLoadResumeContext.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.LoadResumeContext method")
+	}
+
+	mmLoadResumeContext.mock.funcLoadResumeContext = f
+	mmLoadResumeContext.mock.funcLoadResumeContextOrigin = minimock.CallerInfo(1)
+	return mmLoadResumeContext.mock
+}
+
+// When sets expectation for the AnalysisStorage.LoadResumeContext which will trigger the result defined by the following
+// Then helper
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) When(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) *AnalysisStorageMockLoadResumeContextExpectation {
+	if mmLoadResumeContext.mock.funcLoadResumeContext != nil {
+		mmLoadResumeContext.mock.t.Fatalf("AnalysisStorageMock.LoadResumeContext mock is already set by Set")
+	}
+
+	expectation := &AnalysisStorageMockLoadResumeContextExpectation{
+		mock:               mmLoadResumeContext.mock,
+		params:             &AnalysisStorageMockLoadResumeContextParams{ctx, resumeID, requestUserID, isAdmin},
+		expectationOrigins: AnalysisStorageMockLoadResumeContextExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmLoadResumeContext.expectations = append(mmLoadResumeContext.expectations, expectation)
+	return expectation
+}
+
+// Then sets up AnalysisStorage.LoadResumeContext return parameters for the expectation previously defined by the When method
+func (e *AnalysisStorageMockLoadResumeContextExpectation) Then(rp1 *domain.ResumeContext, err error) *AnalysisStorageMock {
+	e.results = &AnalysisStorageMockLoadResumeContextResults{rp1, err}
+	return e.mock
+}
+
+// Times sets number of times AnalysisStorage.LoadResumeContext should be invoked
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Times(n uint64) *mAnalysisStorageMockLoadResumeContext {
+	if n == 0 {
+		mmLoadResumeContext.mock.t.Fatalf("Times of AnalysisStorageMock.LoadResumeContext mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmLoadResumeContext.expectedInvocations, n)
+	mmLoadResumeContext.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmLoadResumeContext
+}
+
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) invocationsDone() bool {
+	if len(mmLoadResumeContext.expectations) == 0 && mmLoadResumeContext.defaultExpectation == nil && mmLoadResumeContext.mock.funcLoadResumeContext == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmLoadResumeContext.mock.afterLoadResumeContextCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmLoadResumeContext.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// LoadResumeContext implements mm_usecase.AnalysisStorage
+func (mmLoadResumeContext *AnalysisStorageMock) LoadResumeContext(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (rp1 *domain.ResumeContext, err error) {
+	mm_atomic.AddUint64(&mmLoadResumeContext.beforeLoadResumeContextCounter, 1)
+	defer mm_atomic.AddUint64(&mmLoadResumeContext.afterLoadResumeContextCounter, 1)
+
+	mmLoadResumeContext.t.Helper()
+
+	if mmLoadResumeContext.inspectFuncLoadResumeContext != nil {
+		mmLoadResumeContext.inspectFuncLoadResumeContext(ctx, resumeID, requestUserID, isAdmin)
+	}
+
+	mm_params := AnalysisStorageMockLoadResumeContextParams{ctx, resumeID, requestUserID, isAdmin}
+
+	// Record call args
+	mmLoadResumeContext.LoadResumeContextMock.mutex.Lock()
+	mmLoadResumeContext.LoadResumeContextMock.callArgs = append(mmLoadResumeContext.LoadResumeContextMock.callArgs, &mm_params)
+	mmLoadResumeContext.LoadResumeContextMock.mutex.Unlock()
+
+	for _, e := range mmLoadResumeContext.LoadResumeContextMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.rp1, e.results.err
+		}
+	}
+
+	if mmLoadResumeContext.LoadResumeContextMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.Counter, 1)
+		mm_want := mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.params
+		mm_want_ptrs := mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.paramPtrs
+
+		mm_got := AnalysisStorageMockLoadResumeContextParams{ctx, resumeID, requestUserID, isAdmin}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmLoadResumeContext.t.Errorf("AnalysisStorageMock.LoadResumeContext got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.resumeID != nil && !minimock.Equal(*mm_want_ptrs.resumeID, mm_got.resumeID) {
+				mmLoadResumeContext.t.Errorf("AnalysisStorageMock.LoadResumeContext got unexpected parameter resumeID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.expectationOrigins.originResumeID, *mm_want_ptrs.resumeID, mm_got.resumeID, minimock.Diff(*mm_want_ptrs.resumeID, mm_got.resumeID))
+			}
+
+			if mm_want_ptrs.requestUserID != nil && !minimock.Equal(*mm_want_ptrs.requestUserID, mm_got.requestUserID) {
+				mmLoadResumeContext.t.Errorf("AnalysisStorageMock.LoadResumeContext got unexpected parameter requestUserID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.expectationOrigins.originRequestUserID, *mm_want_ptrs.requestUserID, mm_got.requestUserID, minimock.Diff(*mm_want_ptrs.requestUserID, mm_got.requestUserID))
+			}
+
+			if mm_want_ptrs.isAdmin != nil && !minimock.Equal(*mm_want_ptrs.isAdmin, mm_got.isAdmin) {
+				mmLoadResumeContext.t.Errorf("AnalysisStorageMock.LoadResumeContext got unexpected parameter isAdmin, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.expectationOrigins.originIsAdmin, *mm_want_ptrs.isAdmin, mm_got.isAdmin, minimock.Diff(*mm_want_ptrs.isAdmin, mm_got.isAdmin))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmLoadResumeContext.t.Errorf("AnalysisStorageMock.LoadResumeContext got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmLoadResumeContext.LoadResumeContextMock.defaultExpectation.results
+		if mm_results == nil {
+			mmLoadResumeContext.t.Fatal("No results are set for the AnalysisStorageMock.LoadResumeContext")
+		}
+		return (*mm_results).rp1, (*mm_results).err
+	}
+	if mmLoadResumeContext.funcLoadResumeContext != nil {
+		return mmLoadResumeContext.funcLoadResumeContext(ctx, resumeID, requestUserID, isAdmin)
+	}
+	mmLoadResumeContext.t.Fatalf("Unexpected call to AnalysisStorageMock.LoadResumeContext. %v %v %v %v", ctx, resumeID, requestUserID, isAdmin)
+	return
+}
+
+// LoadResumeContextAfterCounter returns a count of finished AnalysisStorageMock.LoadResumeContext invocations
+func (mmLoadResumeContext *AnalysisStorageMock) LoadResumeContextAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmLoadResumeContext.afterLoadResumeContextCounter)
+}
+
+// LoadResumeContextBeforeCounter returns a count of AnalysisStorageMock.LoadResumeContext invocations
+func (mmLoadResumeContext *AnalysisStorageMock) LoadResumeContextBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmLoadResumeContext.beforeLoadResumeContextCounter)
+}
+
+// Calls returns a list of arguments used in each call to AnalysisStorageMock.LoadResumeContext.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmLoadResumeContext *mAnalysisStorageMockLoadResumeContext) Calls() []*AnalysisStorageMockLoadResumeContextParams {
+	mmLoadResumeContext.mutex.RLock()
+
+	argCopy := make([]*AnalysisStorageMockLoadResumeContextParams, len(mmLoadResumeContext.callArgs))
+	copy(argCopy, mmLoadResumeContext.callArgs)
+
+	mmLoadResumeContext.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockLoadResumeContextDone returns true if the count of the LoadResumeContext invocations corresponds
+// the number of defined expectations
+func (m *AnalysisStorageMock) MinimockLoadResumeContextDone() bool {
+	if m.LoadResumeContextMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.LoadResumeContextMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.LoadResumeContextMock.invocationsDone()
+}
+
+// MinimockLoadResumeContextInspect logs each unmet expectation
+func (m *AnalysisStorageMock) MinimockLoadResumeContextInspect() {
+	for _, e := range m.LoadResumeContextMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to AnalysisStorageMock.LoadResumeContext at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterLoadResumeContextCounter := mm_atomic.LoadUint64(&m.afterLoadResumeContextCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.LoadResumeContextMock.defaultExpectation != nil && afterLoadResumeContextCounter < 1 {
+		if m.LoadResumeContextMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to AnalysisStorageMock.LoadResumeContext at\n%s", m.LoadResumeContextMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to AnalysisStorageMock.LoadResumeContext at\n%s with params: %#v", m.LoadResumeContextMock.defaultExpectation.expectationOrigins.origin, *m.LoadResumeContextMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcLoadResumeContext != nil && afterLoadResumeContextCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.LoadResumeContext at\n%s", m.funcLoadResumeContextOrigin)
+	}
+
+	if !m.LoadResumeContextMock.invocationsDone() && afterLoadResumeContextCounter > 0 {
+		m.t.Errorf("Expected %d calls to AnalysisStorageMock.LoadResumeContext at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.LoadResumeContextMock.expectedInvocations), m.LoadResumeContextMock.expectedInvocationsOrigin, afterLoadResumeContextCounter)
+	}
+}
+
+type mAnalysisStorageMockLoadVacancySkills struct {
+	optional           bool
+	mock               *AnalysisStorageMock
+	defaultExpectation *AnalysisStorageMockLoadVacancySkillsExpectation
+	expectations       []*AnalysisStorageMockLoadVacancySkillsExpectation
+
+	callArgs []*AnalysisStorageMockLoadVacancySkillsParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// AnalysisStorageMockLoadVacancySkillsExpectation specifies expectation struct of the AnalysisStorage.LoadVacancySkills
+type AnalysisStorageMockLoadVacancySkillsExpectation struct {
+	mock               *AnalysisStorageMock
+	params             *AnalysisStorageMockLoadVacancySkillsParams
+	paramPtrs          *AnalysisStorageMockLoadVacancySkillsParamPtrs
+	expectationOrigins AnalysisStorageMockLoadVacancySkillsExpectationOrigins
+	results            *AnalysisStorageMockLoadVacancySkillsResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// AnalysisStorageMockLoadVacancySkillsParams contains parameters of the AnalysisStorage.LoadVacancySkills
+type AnalysisStorageMockLoadVacancySkillsParams struct {
+	ctx       context.Context
+	vacancyID string
+}
+
+// AnalysisStorageMockLoadVacancySkillsParamPtrs contains pointers to parameters of the AnalysisStorage.LoadVacancySkills
+type AnalysisStorageMockLoadVacancySkillsParamPtrs struct {
+	ctx       *context.Context
+	vacancyID *string
+}
+
+// AnalysisStorageMockLoadVacancySkillsResults contains results of the AnalysisStorage.LoadVacancySkills
+type AnalysisStorageMockLoadVacancySkillsResults struct {
+	va1 []domain.VacancySkill
+	err error
+}
+
+// AnalysisStorageMockLoadVacancySkillsOrigins contains origins of expectations of the AnalysisStorage.LoadVacancySkills
+type AnalysisStorageMockLoadVacancySkillsExpectationOrigins struct {
+	origin          string
+	originCtx       string
+	originVacancyID string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Optional() *mAnalysisStorageMockLoadVacancySkills {
+	mmLoadVacancySkills.optional = true
+	return mmLoadVacancySkills
+}
+
+// Expect sets up expected params for AnalysisStorage.LoadVacancySkills
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Expect(ctx context.Context, vacancyID string) *mAnalysisStorageMockLoadVacancySkills {
+	if mmLoadVacancySkills.mock.funcLoadVacancySkills != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Set")
+	}
+
+	if mmLoadVacancySkills.defaultExpectation == nil {
+		mmLoadVacancySkills.defaultExpectation = &AnalysisStorageMockLoadVacancySkillsExpectation{}
+	}
+
+	if mmLoadVacancySkills.defaultExpectation.paramPtrs != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by ExpectParams functions")
+	}
+
+	mmLoadVacancySkills.defaultExpectation.params = &AnalysisStorageMockLoadVacancySkillsParams{ctx, vacancyID}
+	mmLoadVacancySkills.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmLoadVacancySkills.expectations {
+		if minimock.Equal(e.params, mmLoadVacancySkills.defaultExpectation.params) {
+			mmLoadVacancySkills.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmLoadVacancySkills.defaultExpectation.params)
+		}
+	}
+
+	return mmLoadVacancySkills
+}
+
+// ExpectCtxParam1 sets up expected param ctx for AnalysisStorage.LoadVacancySkills
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) ExpectCtxParam1(ctx context.Context) *mAnalysisStorageMockLoadVacancySkills {
+	if mmLoadVacancySkills.mock.funcLoadVacancySkills != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Set")
+	}
+
+	if mmLoadVacancySkills.defaultExpectation == nil {
+		mmLoadVacancySkills.defaultExpectation = &AnalysisStorageMockLoadVacancySkillsExpectation{}
+	}
+
+	if mmLoadVacancySkills.defaultExpectation.params != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Expect")
+	}
+
+	if mmLoadVacancySkills.defaultExpectation.paramPtrs == nil {
+		mmLoadVacancySkills.defaultExpectation.paramPtrs = &AnalysisStorageMockLoadVacancySkillsParamPtrs{}
+	}
+	mmLoadVacancySkills.defaultExpectation.paramPtrs.ctx = &ctx
+	mmLoadVacancySkills.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmLoadVacancySkills
+}
+
+// ExpectVacancyIDParam2 sets up expected param vacancyID for AnalysisStorage.LoadVacancySkills
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) ExpectVacancyIDParam2(vacancyID string) *mAnalysisStorageMockLoadVacancySkills {
+	if mmLoadVacancySkills.mock.funcLoadVacancySkills != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Set")
+	}
+
+	if mmLoadVacancySkills.defaultExpectation == nil {
+		mmLoadVacancySkills.defaultExpectation = &AnalysisStorageMockLoadVacancySkillsExpectation{}
+	}
+
+	if mmLoadVacancySkills.defaultExpectation.params != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Expect")
+	}
+
+	if mmLoadVacancySkills.defaultExpectation.paramPtrs == nil {
+		mmLoadVacancySkills.defaultExpectation.paramPtrs = &AnalysisStorageMockLoadVacancySkillsParamPtrs{}
+	}
+	mmLoadVacancySkills.defaultExpectation.paramPtrs.vacancyID = &vacancyID
+	mmLoadVacancySkills.defaultExpectation.expectationOrigins.originVacancyID = minimock.CallerInfo(1)
+
+	return mmLoadVacancySkills
+}
+
+// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.LoadVacancySkills
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Inspect(f func(ctx context.Context, vacancyID string)) *mAnalysisStorageMockLoadVacancySkills {
+	if mmLoadVacancySkills.mock.inspectFuncLoadVacancySkills != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.LoadVacancySkills")
+	}
+
+	mmLoadVacancySkills.mock.inspectFuncLoadVacancySkills = f
+
+	return mmLoadVacancySkills
+}
+
+// Return sets up results that will be returned by AnalysisStorage.LoadVacancySkills
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Return(va1 []domain.VacancySkill, err error) *AnalysisStorageMock {
+	if mmLoadVacancySkills.mock.funcLoadVacancySkills != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Set")
+	}
+
+	if mmLoadVacancySkills.defaultExpectation == nil {
+		mmLoadVacancySkills.defaultExpectation = &AnalysisStorageMockLoadVacancySkillsExpectation{mock: mmLoadVacancySkills.mock}
+	}
+	mmLoadVacancySkills.defaultExpectation.results = &AnalysisStorageMockLoadVacancySkillsResults{va1, err}
+	mmLoadVacancySkills.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmLoadVacancySkills.mock
+}
+
+// Set uses given function f to mock the AnalysisStorage.LoadVacancySkills method
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Set(f func(ctx context.Context, vacancyID string) (va1 []domain.VacancySkill, err error)) *AnalysisStorageMock {
+	if mmLoadVacancySkills.defaultExpectation != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.LoadVacancySkills method")
+	}
+
+	if len(mmLoadVacancySkills.expectations) > 0 {
+		mmLoadVacancySkills.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.LoadVacancySkills method")
+	}
+
+	mmLoadVacancySkills.mock.funcLoadVacancySkills = f
+	mmLoadVacancySkills.mock.funcLoadVacancySkillsOrigin = minimock.CallerInfo(1)
+	return mmLoadVacancySkills.mock
+}
+
+// When sets expectation for the AnalysisStorage.LoadVacancySkills which will trigger the result defined by the following
+// Then helper
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) When(ctx context.Context, vacancyID string) *AnalysisStorageMockLoadVacancySkillsExpectation {
+	if mmLoadVacancySkills.mock.funcLoadVacancySkills != nil {
+		mmLoadVacancySkills.mock.t.Fatalf("AnalysisStorageMock.LoadVacancySkills mock is already set by Set")
+	}
+
+	expectation := &AnalysisStorageMockLoadVacancySkillsExpectation{
+		mock:               mmLoadVacancySkills.mock,
+		params:             &AnalysisStorageMockLoadVacancySkillsParams{ctx, vacancyID},
+		expectationOrigins: AnalysisStorageMockLoadVacancySkillsExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmLoadVacancySkills.expectations = append(mmLoadVacancySkills.expectations, expectation)
+	return expectation
+}
+
+// Then sets up AnalysisStorage.LoadVacancySkills return parameters for the expectation previously defined by the When method
+func (e *AnalysisStorageMockLoadVacancySkillsExpectation) Then(va1 []domain.VacancySkill, err error) *AnalysisStorageMock {
+	e.results = &AnalysisStorageMockLoadVacancySkillsResults{va1, err}
+	return e.mock
+}
+
+// Times sets number of times AnalysisStorage.LoadVacancySkills should be invoked
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Times(n uint64) *mAnalysisStorageMockLoadVacancySkills {
+	if n == 0 {
+		mmLoadVacancySkills.mock.t.Fatalf("Times of AnalysisStorageMock.LoadVacancySkills mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmLoadVacancySkills.expectedInvocations, n)
+	mmLoadVacancySkills.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmLoadVacancySkills
+}
+
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) invocationsDone() bool {
+	if len(mmLoadVacancySkills.expectations) == 0 && mmLoadVacancySkills.defaultExpectation == nil && mmLoadVacancySkills.mock.funcLoadVacancySkills == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmLoadVacancySkills.mock.afterLoadVacancySkillsCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmLoadVacancySkills.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// LoadVacancySkills implements mm_usecase.AnalysisStorage
+func (mmLoadVacancySkills *AnalysisStorageMock) LoadVacancySkills(ctx context.Context, vacancyID string) (va1 []domain.VacancySkill, err error) {
+	mm_atomic.AddUint64(&mmLoadVacancySkills.beforeLoadVacancySkillsCounter, 1)
+	defer mm_atomic.AddUint64(&mmLoadVacancySkills.afterLoadVacancySkillsCounter, 1)
+
+	mmLoadVacancySkills.t.Helper()
+
+	if mmLoadVacancySkills.inspectFuncLoadVacancySkills != nil {
+		mmLoadVacancySkills.inspectFuncLoadVacancySkills(ctx, vacancyID)
+	}
+
+	mm_params := AnalysisStorageMockLoadVacancySkillsParams{ctx, vacancyID}
+
+	// Record call args
+	mmLoadVacancySkills.LoadVacancySkillsMock.mutex.Lock()
+	mmLoadVacancySkills.LoadVacancySkillsMock.callArgs = append(mmLoadVacancySkills.LoadVacancySkillsMock.callArgs, &mm_params)
+	mmLoadVacancySkills.LoadVacancySkillsMock.mutex.Unlock()
+
+	for _, e := range mmLoadVacancySkills.LoadVacancySkillsMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.va1, e.results.err
+		}
+	}
+
+	if mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.Counter, 1)
+		mm_want := mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.params
+		mm_want_ptrs := mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.paramPtrs
+
+		mm_got := AnalysisStorageMockLoadVacancySkillsParams{ctx, vacancyID}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmLoadVacancySkills.t.Errorf("AnalysisStorageMock.LoadVacancySkills got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.vacancyID != nil && !minimock.Equal(*mm_want_ptrs.vacancyID, mm_got.vacancyID) {
+				mmLoadVacancySkills.t.Errorf("AnalysisStorageMock.LoadVacancySkills got unexpected parameter vacancyID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.expectationOrigins.originVacancyID, *mm_want_ptrs.vacancyID, mm_got.vacancyID, minimock.Diff(*mm_want_ptrs.vacancyID, mm_got.vacancyID))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmLoadVacancySkills.t.Errorf("AnalysisStorageMock.LoadVacancySkills got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmLoadVacancySkills.LoadVacancySkillsMock.defaultExpectation.results
+		if mm_results == nil {
+			mmLoadVacancySkills.t.Fatal("No results are set for the AnalysisStorageMock.LoadVacancySkills")
+		}
+		return (*mm_results).va1, (*mm_results).err
+	}
+	if mmLoadVacancySkills.funcLoadVacancySkills != nil {
+		return mmLoadVacancySkills.funcLoadVacancySkills(ctx, vacancyID)
+	}
+	mmLoadVacancySkills.t.Fatalf("Unexpected call to AnalysisStorageMock.LoadVacancySkills. %v %v", ctx, vacancyID)
+	return
+}
+
+// LoadVacancySkillsAfterCounter returns a count of finished AnalysisStorageMock.LoadVacancySkills invocations
+func (mmLoadVacancySkills *AnalysisStorageMock) LoadVacancySkillsAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmLoadVacancySkills.afterLoadVacancySkillsCounter)
+}
+
+// LoadVacancySkillsBeforeCounter returns a count of AnalysisStorageMock.LoadVacancySkills invocations
+func (mmLoadVacancySkills *AnalysisStorageMock) LoadVacancySkillsBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmLoadVacancySkills.beforeLoadVacancySkillsCounter)
+}
+
+// Calls returns a list of arguments used in each call to AnalysisStorageMock.LoadVacancySkills.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmLoadVacancySkills *mAnalysisStorageMockLoadVacancySkills) Calls() []*AnalysisStorageMockLoadVacancySkillsParams {
+	mmLoadVacancySkills.mutex.RLock()
+
+	argCopy := make([]*AnalysisStorageMockLoadVacancySkillsParams, len(mmLoadVacancySkills.callArgs))
+	copy(argCopy, mmLoadVacancySkills.callArgs)
+
+	mmLoadVacancySkills.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockLoadVacancySkillsDone returns true if the count of the LoadVacancySkills invocations corresponds
+// the number of defined expectations
+func (m *AnalysisStorageMock) MinimockLoadVacancySkillsDone() bool {
+	if m.LoadVacancySkillsMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.LoadVacancySkillsMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.LoadVacancySkillsMock.invocationsDone()
+}
+
+// MinimockLoadVacancySkillsInspect logs each unmet expectation
+func (m *AnalysisStorageMock) MinimockLoadVacancySkillsInspect() {
+	for _, e := range m.LoadVacancySkillsMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to AnalysisStorageMock.LoadVacancySkills at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterLoadVacancySkillsCounter := mm_atomic.LoadUint64(&m.afterLoadVacancySkillsCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.LoadVacancySkillsMock.defaultExpectation != nil && afterLoadVacancySkillsCounter < 1 {
+		if m.LoadVacancySkillsMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to AnalysisStorageMock.LoadVacancySkills at\n%s", m.LoadVacancySkillsMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to AnalysisStorageMock.LoadVacancySkills at\n%s with params: %#v", m.LoadVacancySkillsMock.defaultExpectation.expectationOrigins.origin, *m.LoadVacancySkillsMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcLoadVacancySkills != nil && afterLoadVacancySkillsCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.LoadVacancySkills at\n%s", m.funcLoadVacancySkillsOrigin)
+	}
+
+	if !m.LoadVacancySkillsMock.invocationsDone() && afterLoadVacancySkillsCounter > 0 {
+		m.t.Errorf("Expected %d calls to AnalysisStorageMock.LoadVacancySkills at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.LoadVacancySkillsMock.expectedInvocations), m.LoadVacancySkillsMock.expectedInvocationsOrigin, afterLoadVacancySkillsCounter)
+	}
+}
+
+type mAnalysisStorageMockNewID struct {
+	optional           bool
+	mock               *AnalysisStorageMock
+	defaultExpectation *AnalysisStorageMockNewIDExpectation
+	expectations       []*AnalysisStorageMockNewIDExpectation
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// AnalysisStorageMockNewIDExpectation specifies expectation struct of the AnalysisStorage.NewID
+type AnalysisStorageMockNewIDExpectation struct {
+	mock *AnalysisStorageMock
+
+	results      *AnalysisStorageMockNewIDResults
+	returnOrigin string
+	Counter      uint64
+}
+
+// AnalysisStorageMockNewIDResults contains results of the AnalysisStorage.NewID
+type AnalysisStorageMockNewIDResults struct {
+	s1  string
+	err error
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmNewID *mAnalysisStorageMockNewID) Optional() *mAnalysisStorageMockNewID {
+	mmNewID.optional = true
+	return mmNewID
+}
+
+// Expect sets up expected params for AnalysisStorage.NewID
+func (mmNewID *mAnalysisStorageMockNewID) Expect() *mAnalysisStorageMockNewID {
+	if mmNewID.mock.funcNewID != nil {
+		mmNewID.mock.t.Fatalf("AnalysisStorageMock.NewID mock is already set by Set")
+	}
+
+	if mmNewID.defaultExpectation == nil {
+		mmNewID.defaultExpectation = &AnalysisStorageMockNewIDExpectation{}
+	}
+
+	return mmNewID
+}
+
+// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.NewID
+func (mmNewID *mAnalysisStorageMockNewID) Inspect(f func()) *mAnalysisStorageMockNewID {
+	if mmNewID.mock.inspectFuncNewID != nil {
+		mmNewID.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.NewID")
+	}
+
+	mmNewID.mock.inspectFuncNewID = f
+
+	return mmNewID
+}
+
+// Return sets up results that will be returned by AnalysisStorage.NewID
+func (mmNewID *mAnalysisStorageMockNewID) Return(s1 string, err error) *AnalysisStorageMock {
+	if mmNewID.mock.funcNewID != nil {
+		mmNewID.mock.t.Fatalf("AnalysisStorageMock.NewID mock is already set by Set")
+	}
+
+	if mmNewID.defaultExpectation == nil {
+		mmNewID.defaultExpectation = &AnalysisStorageMockNewIDExpectation{mock: mmNewID.mock}
+	}
+	mmNewID.defaultExpectation.results = &AnalysisStorageMockNewIDResults{s1, err}
+	mmNewID.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmNewID.mock
+}
+
+// Set uses given function f to mock the AnalysisStorage.NewID method
+func (mmNewID *mAnalysisStorageMockNewID) Set(f func() (s1 string, err error)) *AnalysisStorageMock {
+	if mmNewID.defaultExpectation != nil {
+		mmNewID.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.NewID method")
+	}
+
+	if len(mmNewID.expectations) > 0 {
+		mmNewID.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.NewID method")
+	}
+
+	mmNewID.mock.funcNewID = f
+	mmNewID.mock.funcNewIDOrigin = minimock.CallerInfo(1)
+	return mmNewID.mock
+}
+
+// Times sets number of times AnalysisStorage.NewID should be invoked
+func (mmNewID *mAnalysisStorageMockNewID) Times(n uint64) *mAnalysisStorageMockNewID {
+	if n == 0 {
+		mmNewID.mock.t.Fatalf("Times of AnalysisStorageMock.NewID mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmNewID.expectedInvocations, n)
+	mmNewID.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmNewID
+}
+
+func (mmNewID *mAnalysisStorageMockNewID) invocationsDone() bool {
+	if len(mmNewID.expectations) == 0 && mmNewID.defaultExpectation == nil && mmNewID.mock.funcNewID == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmNewID.mock.afterNewIDCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmNewID.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// NewID implements mm_usecase.AnalysisStorage
+func (mmNewID *AnalysisStorageMock) NewID() (s1 string, err error) {
+	mm_atomic.AddUint64(&mmNewID.beforeNewIDCounter, 1)
+	defer mm_atomic.AddUint64(&mmNewID.afterNewIDCounter, 1)
+
+	mmNewID.t.Helper()
+
+	if mmNewID.inspectFuncNewID != nil {
+		mmNewID.inspectFuncNewID()
+	}
+
+	if mmNewID.NewIDMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmNewID.NewIDMock.defaultExpectation.Counter, 1)
+
+		mm_results := mmNewID.NewIDMock.defaultExpectation.results
+		if mm_results == nil {
+			mmNewID.t.Fatal("No results are set for the AnalysisStorageMock.NewID")
+		}
+		return (*mm_results).s1, (*mm_results).err
+	}
+	if mmNewID.funcNewID != nil {
+		return mmNewID.funcNewID()
+	}
+	mmNewID.t.Fatalf("Unexpected call to AnalysisStorageMock.NewID.")
+	return
+}
+
+// NewIDAfterCounter returns a count of finished AnalysisStorageMock.NewID invocations
+func (mmNewID *AnalysisStorageMock) NewIDAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmNewID.afterNewIDCounter)
+}
+
+// NewIDBeforeCounter returns a count of AnalysisStorageMock.NewID invocations
+func (mmNewID *AnalysisStorageMock) NewIDBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmNewID.beforeNewIDCounter)
+}
+
+// MinimockNewIDDone returns true if the count of the NewID invocations corresponds
+// the number of defined expectations
+func (m *AnalysisStorageMock) MinimockNewIDDone() bool {
+	if m.NewIDMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.NewIDMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.NewIDMock.invocationsDone()
+}
+
+// MinimockNewIDInspect logs each unmet expectation
+func (m *AnalysisStorageMock) MinimockNewIDInspect() {
+	for _, e := range m.NewIDMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Error("Expected call to AnalysisStorageMock.NewID")
+		}
+	}
+
+	afterNewIDCounter := mm_atomic.LoadUint64(&m.afterNewIDCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.NewIDMock.defaultExpectation != nil && afterNewIDCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.NewID at\n%s", m.NewIDMock.defaultExpectation.returnOrigin)
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcNewID != nil && afterNewIDCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.NewID at\n%s", m.funcNewIDOrigin)
+	}
+
+	if !m.NewIDMock.invocationsDone() && afterNewIDCounter > 0 {
+		m.t.Errorf("Expected %d calls to AnalysisStorageMock.NewID at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.NewIDMock.expectedInvocations), m.NewIDMock.expectedInvocationsOrigin, afterNewIDCounter)
+	}
+}
+
+type mAnalysisStorageMockSaveAnalysis struct {
+	optional           bool
+	mock               *AnalysisStorageMock
+	defaultExpectation *AnalysisStorageMockSaveAnalysisExpectation
+	expectations       []*AnalysisStorageMockSaveAnalysisExpectation
+
+	callArgs []*AnalysisStorageMockSaveAnalysisParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// AnalysisStorageMockSaveAnalysisExpectation specifies expectation struct of the AnalysisStorage.SaveAnalysis
+type AnalysisStorageMockSaveAnalysisExpectation struct {
+	mock               *AnalysisStorageMock
+	params             *AnalysisStorageMockSaveAnalysisParams
+	paramPtrs          *AnalysisStorageMockSaveAnalysisParamPtrs
+	expectationOrigins AnalysisStorageMockSaveAnalysisExpectationOrigins
+	results            *AnalysisStorageMockSaveAnalysisResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// AnalysisStorageMockSaveAnalysisParams contains parameters of the AnalysisStorage.SaveAnalysis
+type AnalysisStorageMockSaveAnalysisParams struct {
+	ctx context.Context
+	in  domain.SaveAnalysisInput
+}
+
+// AnalysisStorageMockSaveAnalysisParamPtrs contains pointers to parameters of the AnalysisStorage.SaveAnalysis
+type AnalysisStorageMockSaveAnalysisParamPtrs struct {
+	ctx *context.Context
+	in  *domain.SaveAnalysisInput
+}
+
+// AnalysisStorageMockSaveAnalysisResults contains results of the AnalysisStorage.SaveAnalysis
+type AnalysisStorageMockSaveAnalysisResults struct {
+	err error
+}
+
+// AnalysisStorageMockSaveAnalysisOrigins contains origins of expectations of the AnalysisStorage.SaveAnalysis
+type AnalysisStorageMockSaveAnalysisExpectationOrigins struct {
 	origin    string
 	originCtx string
 	originIn  string
@@ -873,292 +1836,292 @@ type AnalysisStorageMockStartAnalysisExpectationOrigins struct {
 // Optional() makes method check to work in '0 or more' mode.
 // It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
 // catch the problems when the expected method call is totally skipped during test run.
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Optional() *mAnalysisStorageMockStartAnalysis {
-	mmStartAnalysis.optional = true
-	return mmStartAnalysis
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Optional() *mAnalysisStorageMockSaveAnalysis {
+	mmSaveAnalysis.optional = true
+	return mmSaveAnalysis
 }
 
-// Expect sets up expected params for AnalysisStorage.StartAnalysis
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Expect(ctx context.Context, in domain.StartAnalysisInput) *mAnalysisStorageMockStartAnalysis {
-	if mmStartAnalysis.mock.funcStartAnalysis != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Set")
+// Expect sets up expected params for AnalysisStorage.SaveAnalysis
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Expect(ctx context.Context, in domain.SaveAnalysisInput) *mAnalysisStorageMockSaveAnalysis {
+	if mmSaveAnalysis.mock.funcSaveAnalysis != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Set")
 	}
 
-	if mmStartAnalysis.defaultExpectation == nil {
-		mmStartAnalysis.defaultExpectation = &AnalysisStorageMockStartAnalysisExpectation{}
+	if mmSaveAnalysis.defaultExpectation == nil {
+		mmSaveAnalysis.defaultExpectation = &AnalysisStorageMockSaveAnalysisExpectation{}
 	}
 
-	if mmStartAnalysis.defaultExpectation.paramPtrs != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by ExpectParams functions")
+	if mmSaveAnalysis.defaultExpectation.paramPtrs != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by ExpectParams functions")
 	}
 
-	mmStartAnalysis.defaultExpectation.params = &AnalysisStorageMockStartAnalysisParams{ctx, in}
-	mmStartAnalysis.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
-	for _, e := range mmStartAnalysis.expectations {
-		if minimock.Equal(e.params, mmStartAnalysis.defaultExpectation.params) {
-			mmStartAnalysis.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmStartAnalysis.defaultExpectation.params)
+	mmSaveAnalysis.defaultExpectation.params = &AnalysisStorageMockSaveAnalysisParams{ctx, in}
+	mmSaveAnalysis.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmSaveAnalysis.expectations {
+		if minimock.Equal(e.params, mmSaveAnalysis.defaultExpectation.params) {
+			mmSaveAnalysis.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmSaveAnalysis.defaultExpectation.params)
 		}
 	}
 
-	return mmStartAnalysis
+	return mmSaveAnalysis
 }
 
-// ExpectCtxParam1 sets up expected param ctx for AnalysisStorage.StartAnalysis
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) ExpectCtxParam1(ctx context.Context) *mAnalysisStorageMockStartAnalysis {
-	if mmStartAnalysis.mock.funcStartAnalysis != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Set")
+// ExpectCtxParam1 sets up expected param ctx for AnalysisStorage.SaveAnalysis
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) ExpectCtxParam1(ctx context.Context) *mAnalysisStorageMockSaveAnalysis {
+	if mmSaveAnalysis.mock.funcSaveAnalysis != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Set")
 	}
 
-	if mmStartAnalysis.defaultExpectation == nil {
-		mmStartAnalysis.defaultExpectation = &AnalysisStorageMockStartAnalysisExpectation{}
+	if mmSaveAnalysis.defaultExpectation == nil {
+		mmSaveAnalysis.defaultExpectation = &AnalysisStorageMockSaveAnalysisExpectation{}
 	}
 
-	if mmStartAnalysis.defaultExpectation.params != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Expect")
+	if mmSaveAnalysis.defaultExpectation.params != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Expect")
 	}
 
-	if mmStartAnalysis.defaultExpectation.paramPtrs == nil {
-		mmStartAnalysis.defaultExpectation.paramPtrs = &AnalysisStorageMockStartAnalysisParamPtrs{}
+	if mmSaveAnalysis.defaultExpectation.paramPtrs == nil {
+		mmSaveAnalysis.defaultExpectation.paramPtrs = &AnalysisStorageMockSaveAnalysisParamPtrs{}
 	}
-	mmStartAnalysis.defaultExpectation.paramPtrs.ctx = &ctx
-	mmStartAnalysis.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+	mmSaveAnalysis.defaultExpectation.paramPtrs.ctx = &ctx
+	mmSaveAnalysis.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
 
-	return mmStartAnalysis
+	return mmSaveAnalysis
 }
 
-// ExpectInParam2 sets up expected param in for AnalysisStorage.StartAnalysis
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) ExpectInParam2(in domain.StartAnalysisInput) *mAnalysisStorageMockStartAnalysis {
-	if mmStartAnalysis.mock.funcStartAnalysis != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Set")
+// ExpectInParam2 sets up expected param in for AnalysisStorage.SaveAnalysis
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) ExpectInParam2(in domain.SaveAnalysisInput) *mAnalysisStorageMockSaveAnalysis {
+	if mmSaveAnalysis.mock.funcSaveAnalysis != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Set")
 	}
 
-	if mmStartAnalysis.defaultExpectation == nil {
-		mmStartAnalysis.defaultExpectation = &AnalysisStorageMockStartAnalysisExpectation{}
+	if mmSaveAnalysis.defaultExpectation == nil {
+		mmSaveAnalysis.defaultExpectation = &AnalysisStorageMockSaveAnalysisExpectation{}
 	}
 
-	if mmStartAnalysis.defaultExpectation.params != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Expect")
+	if mmSaveAnalysis.defaultExpectation.params != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Expect")
 	}
 
-	if mmStartAnalysis.defaultExpectation.paramPtrs == nil {
-		mmStartAnalysis.defaultExpectation.paramPtrs = &AnalysisStorageMockStartAnalysisParamPtrs{}
+	if mmSaveAnalysis.defaultExpectation.paramPtrs == nil {
+		mmSaveAnalysis.defaultExpectation.paramPtrs = &AnalysisStorageMockSaveAnalysisParamPtrs{}
 	}
-	mmStartAnalysis.defaultExpectation.paramPtrs.in = &in
-	mmStartAnalysis.defaultExpectation.expectationOrigins.originIn = minimock.CallerInfo(1)
+	mmSaveAnalysis.defaultExpectation.paramPtrs.in = &in
+	mmSaveAnalysis.defaultExpectation.expectationOrigins.originIn = minimock.CallerInfo(1)
 
-	return mmStartAnalysis
+	return mmSaveAnalysis
 }
 
-// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.StartAnalysis
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Inspect(f func(ctx context.Context, in domain.StartAnalysisInput)) *mAnalysisStorageMockStartAnalysis {
-	if mmStartAnalysis.mock.inspectFuncStartAnalysis != nil {
-		mmStartAnalysis.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.StartAnalysis")
+// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.SaveAnalysis
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Inspect(f func(ctx context.Context, in domain.SaveAnalysisInput)) *mAnalysisStorageMockSaveAnalysis {
+	if mmSaveAnalysis.mock.inspectFuncSaveAnalysis != nil {
+		mmSaveAnalysis.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.SaveAnalysis")
 	}
 
-	mmStartAnalysis.mock.inspectFuncStartAnalysis = f
+	mmSaveAnalysis.mock.inspectFuncSaveAnalysis = f
 
-	return mmStartAnalysis
+	return mmSaveAnalysis
 }
 
-// Return sets up results that will be returned by AnalysisStorage.StartAnalysis
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Return(sp1 *domain.StartAnalysisResult, err error) *AnalysisStorageMock {
-	if mmStartAnalysis.mock.funcStartAnalysis != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Set")
+// Return sets up results that will be returned by AnalysisStorage.SaveAnalysis
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Return(err error) *AnalysisStorageMock {
+	if mmSaveAnalysis.mock.funcSaveAnalysis != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Set")
 	}
 
-	if mmStartAnalysis.defaultExpectation == nil {
-		mmStartAnalysis.defaultExpectation = &AnalysisStorageMockStartAnalysisExpectation{mock: mmStartAnalysis.mock}
+	if mmSaveAnalysis.defaultExpectation == nil {
+		mmSaveAnalysis.defaultExpectation = &AnalysisStorageMockSaveAnalysisExpectation{mock: mmSaveAnalysis.mock}
 	}
-	mmStartAnalysis.defaultExpectation.results = &AnalysisStorageMockStartAnalysisResults{sp1, err}
-	mmStartAnalysis.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
-	return mmStartAnalysis.mock
+	mmSaveAnalysis.defaultExpectation.results = &AnalysisStorageMockSaveAnalysisResults{err}
+	mmSaveAnalysis.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmSaveAnalysis.mock
 }
 
-// Set uses given function f to mock the AnalysisStorage.StartAnalysis method
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Set(f func(ctx context.Context, in domain.StartAnalysisInput) (sp1 *domain.StartAnalysisResult, err error)) *AnalysisStorageMock {
-	if mmStartAnalysis.defaultExpectation != nil {
-		mmStartAnalysis.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.StartAnalysis method")
+// Set uses given function f to mock the AnalysisStorage.SaveAnalysis method
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Set(f func(ctx context.Context, in domain.SaveAnalysisInput) (err error)) *AnalysisStorageMock {
+	if mmSaveAnalysis.defaultExpectation != nil {
+		mmSaveAnalysis.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.SaveAnalysis method")
 	}
 
-	if len(mmStartAnalysis.expectations) > 0 {
-		mmStartAnalysis.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.StartAnalysis method")
+	if len(mmSaveAnalysis.expectations) > 0 {
+		mmSaveAnalysis.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.SaveAnalysis method")
 	}
 
-	mmStartAnalysis.mock.funcStartAnalysis = f
-	mmStartAnalysis.mock.funcStartAnalysisOrigin = minimock.CallerInfo(1)
-	return mmStartAnalysis.mock
+	mmSaveAnalysis.mock.funcSaveAnalysis = f
+	mmSaveAnalysis.mock.funcSaveAnalysisOrigin = minimock.CallerInfo(1)
+	return mmSaveAnalysis.mock
 }
 
-// When sets expectation for the AnalysisStorage.StartAnalysis which will trigger the result defined by the following
+// When sets expectation for the AnalysisStorage.SaveAnalysis which will trigger the result defined by the following
 // Then helper
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) When(ctx context.Context, in domain.StartAnalysisInput) *AnalysisStorageMockStartAnalysisExpectation {
-	if mmStartAnalysis.mock.funcStartAnalysis != nil {
-		mmStartAnalysis.mock.t.Fatalf("AnalysisStorageMock.StartAnalysis mock is already set by Set")
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) When(ctx context.Context, in domain.SaveAnalysisInput) *AnalysisStorageMockSaveAnalysisExpectation {
+	if mmSaveAnalysis.mock.funcSaveAnalysis != nil {
+		mmSaveAnalysis.mock.t.Fatalf("AnalysisStorageMock.SaveAnalysis mock is already set by Set")
 	}
 
-	expectation := &AnalysisStorageMockStartAnalysisExpectation{
-		mock:               mmStartAnalysis.mock,
-		params:             &AnalysisStorageMockStartAnalysisParams{ctx, in},
-		expectationOrigins: AnalysisStorageMockStartAnalysisExpectationOrigins{origin: minimock.CallerInfo(1)},
+	expectation := &AnalysisStorageMockSaveAnalysisExpectation{
+		mock:               mmSaveAnalysis.mock,
+		params:             &AnalysisStorageMockSaveAnalysisParams{ctx, in},
+		expectationOrigins: AnalysisStorageMockSaveAnalysisExpectationOrigins{origin: minimock.CallerInfo(1)},
 	}
-	mmStartAnalysis.expectations = append(mmStartAnalysis.expectations, expectation)
+	mmSaveAnalysis.expectations = append(mmSaveAnalysis.expectations, expectation)
 	return expectation
 }
 
-// Then sets up AnalysisStorage.StartAnalysis return parameters for the expectation previously defined by the When method
-func (e *AnalysisStorageMockStartAnalysisExpectation) Then(sp1 *domain.StartAnalysisResult, err error) *AnalysisStorageMock {
-	e.results = &AnalysisStorageMockStartAnalysisResults{sp1, err}
+// Then sets up AnalysisStorage.SaveAnalysis return parameters for the expectation previously defined by the When method
+func (e *AnalysisStorageMockSaveAnalysisExpectation) Then(err error) *AnalysisStorageMock {
+	e.results = &AnalysisStorageMockSaveAnalysisResults{err}
 	return e.mock
 }
 
-// Times sets number of times AnalysisStorage.StartAnalysis should be invoked
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Times(n uint64) *mAnalysisStorageMockStartAnalysis {
+// Times sets number of times AnalysisStorage.SaveAnalysis should be invoked
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Times(n uint64) *mAnalysisStorageMockSaveAnalysis {
 	if n == 0 {
-		mmStartAnalysis.mock.t.Fatalf("Times of AnalysisStorageMock.StartAnalysis mock can not be zero")
+		mmSaveAnalysis.mock.t.Fatalf("Times of AnalysisStorageMock.SaveAnalysis mock can not be zero")
 	}
-	mm_atomic.StoreUint64(&mmStartAnalysis.expectedInvocations, n)
-	mmStartAnalysis.expectedInvocationsOrigin = minimock.CallerInfo(1)
-	return mmStartAnalysis
+	mm_atomic.StoreUint64(&mmSaveAnalysis.expectedInvocations, n)
+	mmSaveAnalysis.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmSaveAnalysis
 }
 
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) invocationsDone() bool {
-	if len(mmStartAnalysis.expectations) == 0 && mmStartAnalysis.defaultExpectation == nil && mmStartAnalysis.mock.funcStartAnalysis == nil {
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) invocationsDone() bool {
+	if len(mmSaveAnalysis.expectations) == 0 && mmSaveAnalysis.defaultExpectation == nil && mmSaveAnalysis.mock.funcSaveAnalysis == nil {
 		return true
 	}
 
-	totalInvocations := mm_atomic.LoadUint64(&mmStartAnalysis.mock.afterStartAnalysisCounter)
-	expectedInvocations := mm_atomic.LoadUint64(&mmStartAnalysis.expectedInvocations)
+	totalInvocations := mm_atomic.LoadUint64(&mmSaveAnalysis.mock.afterSaveAnalysisCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmSaveAnalysis.expectedInvocations)
 
 	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
 }
 
-// StartAnalysis implements mm_usecase.AnalysisStorage
-func (mmStartAnalysis *AnalysisStorageMock) StartAnalysis(ctx context.Context, in domain.StartAnalysisInput) (sp1 *domain.StartAnalysisResult, err error) {
-	mm_atomic.AddUint64(&mmStartAnalysis.beforeStartAnalysisCounter, 1)
-	defer mm_atomic.AddUint64(&mmStartAnalysis.afterStartAnalysisCounter, 1)
+// SaveAnalysis implements mm_usecase.AnalysisStorage
+func (mmSaveAnalysis *AnalysisStorageMock) SaveAnalysis(ctx context.Context, in domain.SaveAnalysisInput) (err error) {
+	mm_atomic.AddUint64(&mmSaveAnalysis.beforeSaveAnalysisCounter, 1)
+	defer mm_atomic.AddUint64(&mmSaveAnalysis.afterSaveAnalysisCounter, 1)
 
-	mmStartAnalysis.t.Helper()
+	mmSaveAnalysis.t.Helper()
 
-	if mmStartAnalysis.inspectFuncStartAnalysis != nil {
-		mmStartAnalysis.inspectFuncStartAnalysis(ctx, in)
+	if mmSaveAnalysis.inspectFuncSaveAnalysis != nil {
+		mmSaveAnalysis.inspectFuncSaveAnalysis(ctx, in)
 	}
 
-	mm_params := AnalysisStorageMockStartAnalysisParams{ctx, in}
+	mm_params := AnalysisStorageMockSaveAnalysisParams{ctx, in}
 
 	// Record call args
-	mmStartAnalysis.StartAnalysisMock.mutex.Lock()
-	mmStartAnalysis.StartAnalysisMock.callArgs = append(mmStartAnalysis.StartAnalysisMock.callArgs, &mm_params)
-	mmStartAnalysis.StartAnalysisMock.mutex.Unlock()
+	mmSaveAnalysis.SaveAnalysisMock.mutex.Lock()
+	mmSaveAnalysis.SaveAnalysisMock.callArgs = append(mmSaveAnalysis.SaveAnalysisMock.callArgs, &mm_params)
+	mmSaveAnalysis.SaveAnalysisMock.mutex.Unlock()
 
-	for _, e := range mmStartAnalysis.StartAnalysisMock.expectations {
+	for _, e := range mmSaveAnalysis.SaveAnalysisMock.expectations {
 		if minimock.Equal(*e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
-			return e.results.sp1, e.results.err
+			return e.results.err
 		}
 	}
 
-	if mmStartAnalysis.StartAnalysisMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmStartAnalysis.StartAnalysisMock.defaultExpectation.Counter, 1)
-		mm_want := mmStartAnalysis.StartAnalysisMock.defaultExpectation.params
-		mm_want_ptrs := mmStartAnalysis.StartAnalysisMock.defaultExpectation.paramPtrs
+	if mmSaveAnalysis.SaveAnalysisMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.Counter, 1)
+		mm_want := mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.params
+		mm_want_ptrs := mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.paramPtrs
 
-		mm_got := AnalysisStorageMockStartAnalysisParams{ctx, in}
+		mm_got := AnalysisStorageMockSaveAnalysisParams{ctx, in}
 
 		if mm_want_ptrs != nil {
 
 			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
-				mmStartAnalysis.t.Errorf("AnalysisStorageMock.StartAnalysis got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
-					mmStartAnalysis.StartAnalysisMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+				mmSaveAnalysis.t.Errorf("AnalysisStorageMock.SaveAnalysis got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
 			}
 
 			if mm_want_ptrs.in != nil && !minimock.Equal(*mm_want_ptrs.in, mm_got.in) {
-				mmStartAnalysis.t.Errorf("AnalysisStorageMock.StartAnalysis got unexpected parameter in, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
-					mmStartAnalysis.StartAnalysisMock.defaultExpectation.expectationOrigins.originIn, *mm_want_ptrs.in, mm_got.in, minimock.Diff(*mm_want_ptrs.in, mm_got.in))
+				mmSaveAnalysis.t.Errorf("AnalysisStorageMock.SaveAnalysis got unexpected parameter in, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.expectationOrigins.originIn, *mm_want_ptrs.in, mm_got.in, minimock.Diff(*mm_want_ptrs.in, mm_got.in))
 			}
 
 		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmStartAnalysis.t.Errorf("AnalysisStorageMock.StartAnalysis got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
-				mmStartAnalysis.StartAnalysisMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmSaveAnalysis.t.Errorf("AnalysisStorageMock.SaveAnalysis got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
-		mm_results := mmStartAnalysis.StartAnalysisMock.defaultExpectation.results
+		mm_results := mmSaveAnalysis.SaveAnalysisMock.defaultExpectation.results
 		if mm_results == nil {
-			mmStartAnalysis.t.Fatal("No results are set for the AnalysisStorageMock.StartAnalysis")
+			mmSaveAnalysis.t.Fatal("No results are set for the AnalysisStorageMock.SaveAnalysis")
 		}
-		return (*mm_results).sp1, (*mm_results).err
+		return (*mm_results).err
 	}
-	if mmStartAnalysis.funcStartAnalysis != nil {
-		return mmStartAnalysis.funcStartAnalysis(ctx, in)
+	if mmSaveAnalysis.funcSaveAnalysis != nil {
+		return mmSaveAnalysis.funcSaveAnalysis(ctx, in)
 	}
-	mmStartAnalysis.t.Fatalf("Unexpected call to AnalysisStorageMock.StartAnalysis. %v %v", ctx, in)
+	mmSaveAnalysis.t.Fatalf("Unexpected call to AnalysisStorageMock.SaveAnalysis. %v %v", ctx, in)
 	return
 }
 
-// StartAnalysisAfterCounter returns a count of finished AnalysisStorageMock.StartAnalysis invocations
-func (mmStartAnalysis *AnalysisStorageMock) StartAnalysisAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmStartAnalysis.afterStartAnalysisCounter)
+// SaveAnalysisAfterCounter returns a count of finished AnalysisStorageMock.SaveAnalysis invocations
+func (mmSaveAnalysis *AnalysisStorageMock) SaveAnalysisAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmSaveAnalysis.afterSaveAnalysisCounter)
 }
 
-// StartAnalysisBeforeCounter returns a count of AnalysisStorageMock.StartAnalysis invocations
-func (mmStartAnalysis *AnalysisStorageMock) StartAnalysisBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmStartAnalysis.beforeStartAnalysisCounter)
+// SaveAnalysisBeforeCounter returns a count of AnalysisStorageMock.SaveAnalysis invocations
+func (mmSaveAnalysis *AnalysisStorageMock) SaveAnalysisBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmSaveAnalysis.beforeSaveAnalysisCounter)
 }
 
-// Calls returns a list of arguments used in each call to AnalysisStorageMock.StartAnalysis.
+// Calls returns a list of arguments used in each call to AnalysisStorageMock.SaveAnalysis.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmStartAnalysis *mAnalysisStorageMockStartAnalysis) Calls() []*AnalysisStorageMockStartAnalysisParams {
-	mmStartAnalysis.mutex.RLock()
+func (mmSaveAnalysis *mAnalysisStorageMockSaveAnalysis) Calls() []*AnalysisStorageMockSaveAnalysisParams {
+	mmSaveAnalysis.mutex.RLock()
 
-	argCopy := make([]*AnalysisStorageMockStartAnalysisParams, len(mmStartAnalysis.callArgs))
-	copy(argCopy, mmStartAnalysis.callArgs)
+	argCopy := make([]*AnalysisStorageMockSaveAnalysisParams, len(mmSaveAnalysis.callArgs))
+	copy(argCopy, mmSaveAnalysis.callArgs)
 
-	mmStartAnalysis.mutex.RUnlock()
+	mmSaveAnalysis.mutex.RUnlock()
 
 	return argCopy
 }
 
-// MinimockStartAnalysisDone returns true if the count of the StartAnalysis invocations corresponds
+// MinimockSaveAnalysisDone returns true if the count of the SaveAnalysis invocations corresponds
 // the number of defined expectations
-func (m *AnalysisStorageMock) MinimockStartAnalysisDone() bool {
-	if m.StartAnalysisMock.optional {
+func (m *AnalysisStorageMock) MinimockSaveAnalysisDone() bool {
+	if m.SaveAnalysisMock.optional {
 		// Optional methods provide '0 or more' call count restriction.
 		return true
 	}
 
-	for _, e := range m.StartAnalysisMock.expectations {
+	for _, e := range m.SaveAnalysisMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
 		}
 	}
 
-	return m.StartAnalysisMock.invocationsDone()
+	return m.SaveAnalysisMock.invocationsDone()
 }
 
-// MinimockStartAnalysisInspect logs each unmet expectation
-func (m *AnalysisStorageMock) MinimockStartAnalysisInspect() {
-	for _, e := range m.StartAnalysisMock.expectations {
+// MinimockSaveAnalysisInspect logs each unmet expectation
+func (m *AnalysisStorageMock) MinimockSaveAnalysisInspect() {
+	for _, e := range m.SaveAnalysisMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to AnalysisStorageMock.StartAnalysis at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+			m.t.Errorf("Expected call to AnalysisStorageMock.SaveAnalysis at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
 		}
 	}
 
-	afterStartAnalysisCounter := mm_atomic.LoadUint64(&m.afterStartAnalysisCounter)
+	afterSaveAnalysisCounter := mm_atomic.LoadUint64(&m.afterSaveAnalysisCounter)
 	// if default expectation was set then invocations count should be greater than zero
-	if m.StartAnalysisMock.defaultExpectation != nil && afterStartAnalysisCounter < 1 {
-		if m.StartAnalysisMock.defaultExpectation.params == nil {
-			m.t.Errorf("Expected call to AnalysisStorageMock.StartAnalysis at\n%s", m.StartAnalysisMock.defaultExpectation.returnOrigin)
+	if m.SaveAnalysisMock.defaultExpectation != nil && afterSaveAnalysisCounter < 1 {
+		if m.SaveAnalysisMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to AnalysisStorageMock.SaveAnalysis at\n%s", m.SaveAnalysisMock.defaultExpectation.returnOrigin)
 		} else {
-			m.t.Errorf("Expected call to AnalysisStorageMock.StartAnalysis at\n%s with params: %#v", m.StartAnalysisMock.defaultExpectation.expectationOrigins.origin, *m.StartAnalysisMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to AnalysisStorageMock.SaveAnalysis at\n%s with params: %#v", m.SaveAnalysisMock.defaultExpectation.expectationOrigins.origin, *m.SaveAnalysisMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
-	if m.funcStartAnalysis != nil && afterStartAnalysisCounter < 1 {
-		m.t.Errorf("Expected call to AnalysisStorageMock.StartAnalysis at\n%s", m.funcStartAnalysisOrigin)
+	if m.funcSaveAnalysis != nil && afterSaveAnalysisCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.SaveAnalysis at\n%s", m.funcSaveAnalysisOrigin)
 	}
 
-	if !m.StartAnalysisMock.invocationsDone() && afterStartAnalysisCounter > 0 {
-		m.t.Errorf("Expected %d calls to AnalysisStorageMock.StartAnalysis at\n%s but found %d calls",
-			mm_atomic.LoadUint64(&m.StartAnalysisMock.expectedInvocations), m.StartAnalysisMock.expectedInvocationsOrigin, afterStartAnalysisCounter)
+	if !m.SaveAnalysisMock.invocationsDone() && afterSaveAnalysisCounter > 0 {
+		m.t.Errorf("Expected %d calls to AnalysisStorageMock.SaveAnalysis at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.SaveAnalysisMock.expectedInvocations), m.SaveAnalysisMock.expectedInvocationsOrigin, afterSaveAnalysisCounter)
 	}
 }
 
@@ -1543,7 +2506,13 @@ func (m *AnalysisStorageMock) MinimockFinish() {
 
 			m.MinimockListCandidatesByVacancyInspect()
 
-			m.MinimockStartAnalysisInspect()
+			m.MinimockLoadResumeContextInspect()
+
+			m.MinimockLoadVacancySkillsInspect()
+
+			m.MinimockNewIDInspect()
+
+			m.MinimockSaveAnalysisInspect()
 
 			m.MinimockUpdateAIDecisionInspect()
 		}
@@ -1571,6 +2540,9 @@ func (m *AnalysisStorageMock) minimockDone() bool {
 	return done &&
 		m.MinimockGetAnalysisDone() &&
 		m.MinimockListCandidatesByVacancyDone() &&
-		m.MinimockStartAnalysisDone() &&
+		m.MinimockLoadResumeContextDone() &&
+		m.MinimockLoadVacancySkillsDone() &&
+		m.MinimockNewIDDone() &&
+		m.MinimockSaveAnalysisDone() &&
 		m.MinimockUpdateAIDecisionDone()
 }
