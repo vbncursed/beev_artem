@@ -86,6 +86,13 @@ func applyMigrations(ctx context.Context, connString string) error {
 	}
 
 	goose.SetBaseFS(embeddedMigrations)
+	// Per-service version tracking: every service in this monorepo shares
+	// the same `hr` postgres database. The default goose table name
+	// (`goose_db_version`) would collide across services — auth's v1 would
+	// make vacancy think its own v1 had already been applied, the ALTER
+	// in v2 would fire against a non-existent table, and the boot would
+	// fail. Each service keeps its own progress in its own table.
+	goose.SetTableName("resume_goose_db_version")
 	if err := goose.SetDialect("postgres"); err != nil {
 		return fmt.Errorf("goose dialect: %w", err)
 	}
