@@ -15,21 +15,25 @@ import (
 //	  └─ withClientIP
 //	        └─ withJSONContentType
 //	              └─ rootMux:
-//	                    /healthz       -> HealthHandler
-//	                    /swagger.json  -> SwaggerHandler
-//	                    /docs          -> SwaggerHandler
-//	                    /              -> withAuthContext(grpc-gateway mux)
+//	                    /healthz                -> HealthHandler
+//	                    /docs                   -> SwaggerHandler
+//	                    /openapi/<svc>.yaml     -> SwaggerHandler (per-service)
+//	                    /                       -> withAuthContext(grpc-gateway mux)
+//
+// SwaggerHandler is one sub-mux that owns both /docs and every
+// /openapi/<slug>.yaml path. We mount it at both /docs and the /openapi/
+// prefix so requests to either area dispatch into it.
 //
 // Order of decoration matters: logging is outermost so 401-out-at-edge
 // requests still get an access log line; clientIP runs before auth so
 // the auth check sees the populated header in case it ever needs IP-
 // scoped rate limiting.
-func InitHTTPHandler(authClient auth_api.AuthServiceClient, gwMux *runtime.ServeMux, swaggerSpec []byte) http.Handler {
+func InitHTTPHandler(authClient auth_api.AuthServiceClient, gwMux *runtime.ServeMux, swaggerSpecs []transport_http.SwaggerSpec) http.Handler {
 	root := http.NewServeMux()
 
-	swaggerH := transport_http.SwaggerHandler(swaggerSpec)
-	root.Handle("/swagger.json", swaggerH)
+	swaggerH := transport_http.SwaggerHandler(swaggerSpecs)
 	root.Handle("/docs", swaggerH)
+	root.Handle("/openapi/", swaggerH)
 	root.Handle("/healthz", transport_http.HealthHandler())
 	root.Handle("/", transport_http.WithAuthContext(authClient, gwMux))
 

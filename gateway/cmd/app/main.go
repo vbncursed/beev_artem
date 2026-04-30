@@ -43,13 +43,13 @@ func run() error {
 		return err
 	}
 
-	swaggerSpec, err := bootstrap.InitSwaggerSpec()
+	swaggerSpecs, err := bootstrap.InitSwaggerSpecs()
 	if err != nil {
 		authCleanup()
 		return err
 	}
 
-	handler := bootstrap.InitHTTPHandler(authClient, gwMux, swaggerSpec)
+	handler := bootstrap.InitHTTPHandler(authClient, gwMux, swaggerSpecs)
 
 	// Cleanup runs LIFO during shutdown — auth conn closes after the
 	// HTTP server stops accepting new requests.

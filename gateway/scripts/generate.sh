@@ -32,16 +32,32 @@ protoc -I ./api \
   ./api/resume_api/resume.proto \
   ./api/analysis_api/analysis.proto
 
-# OpenAPI 3.0 via gnostic's protoc-gen-openapi. One invocation across all
-# four service protos produces a single merged ./internal/pb/openapi/openapi.yaml,
-# so the gateway just reads + JSON-marshals it at boot — no per-service
-# merge logic.
-mkdir -p ./internal/pb/openapi
-protoc -I ./api \
-  -I ./api/google/api \
-  -I "${GATEWAY_PATH}" \
-  --openapi_out=title="Gateway API",version="1.0.0",description="Unified gateway API docs":./internal/pb/openapi \
-  ./api/auth_api/auth.proto \
-  ./api/vacancy_api/vacancy.proto \
-  ./api/resume_api/resume.proto \
-  ./api/analysis_api/analysis.proto
+# Per-service OpenAPI 3.0 specs via gnostic. One invocation per service so
+# Scalar UI can render a dropdown with each service as a separate source.
+# gnostic always names its output "openapi.yaml" — we emit each into a temp
+# subdir and rename to "<svc>.yaml" so the runtime resolves auth.yaml /
+# vacancy.yaml / etc. on its own URL.
+gen_openapi() {
+  local svc="$1"
+  local title="$2"
+  local proto="$3"
+  local tmp="./internal/pb/openapi/.${svc}_tmp"
+  rm -rf "${tmp}"
+  mkdir -p "${tmp}"
+  protoc -I ./api \
+    -I ./api/google/api \
+    -I "${GATEWAY_PATH}" \
+    --openapi_out=title="${title}",version="1.0.0":"${tmp}" \
+    "${proto}"
+  mv "${tmp}/openapi.yaml" "./internal/pb/openapi/${svc}.yaml"
+  rmdir "${tmp}"
+}
+
+# Drop stale specs first so a renamed/removed service doesn't leak its old
+# yaml into the dropdown.
+rm -f ./internal/pb/openapi/*.yaml
+
+gen_openapi auth     "Auth API"     ./api/auth_api/auth.proto
+gen_openapi vacancy  "Vacancy API"  ./api/vacancy_api/vacancy.proto
+gen_openapi resume   "Resume API"   ./api/resume_api/resume.proto
+gen_openapi analysis "Analysis API" ./api/analysis_api/analysis.proto
