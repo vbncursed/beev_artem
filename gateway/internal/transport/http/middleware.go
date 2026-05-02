@@ -31,6 +31,53 @@ func IncomingHeaderMatcher(key string) (string, bool) {
 	}
 }
 
+// WithCORS handles CORS preflight (OPTIONS) and decorates real responses
+// with Access-Control-Allow-* headers when the request Origin matches the
+// allowlist. allowedOrigins=["*"] enables a permissive mode that echoes
+// any origin BUT cannot be combined with credentials per the CORS spec —
+// we do not set Access-Control-Allow-Credentials because the frontend
+// does not send cookies (auth uses Authorization: Bearer).
+//
+// Empty allowedOrigins disables CORS (handler is a no-op pass-through).
+func WithCORS(allowedOrigins []string) func(http.Handler) http.Handler {
+	if len(allowedOrigins) == 0 {
+		return func(next http.Handler) http.Handler { return next }
+	}
+	wildcard := len(allowedOrigins) == 1 && allowedOrigins[0] == "*"
+	allowed := make(map[string]struct{}, len(allowedOrigins))
+	for _, o := range allowedOrigins {
+		allowed[strings.ToLower(o)] = struct{}{}
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				if wildcard || originAllowed(origin, allowed) {
+					if wildcard {
+						w.Header().Set("Access-Control-Allow-Origin", "*")
+					} else {
+						w.Header().Set("Access-Control-Allow-Origin", origin)
+					}
+					w.Header().Add("Vary", "Origin")
+					w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+					w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Client-IP, X-Requested-With")
+					w.Header().Set("Access-Control-Max-Age", "600")
+				}
+			}
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func originAllowed(origin string, allowed map[string]struct{}) bool {
+	_, ok := allowed[strings.ToLower(origin)]
+	return ok
+}
+
 // WithJSONContentType backfills Content-Type: application/json on writes
 // that arrive without one. grpc-gateway rejects bodies it can't parse,
 // and curl-style callers routinely forget the header.

@@ -49,7 +49,7 @@ func run() error {
 		return err
 	}
 
-	handler := bootstrap.InitHTTPHandler(authClient, gwMux, swaggerSpecs)
+	handler := bootstrap.InitHTTPHandler(authClient, gwMux, swaggerSpecs, cfg.Server.CORS.AllowedOrigins)
 
 	// Cleanup runs LIFO during shutdown — auth conn closes after the
 	// HTTP server stops accepting new requests.

@@ -1,5 +1,9 @@
 server:
   http_addr: ":8080"
+  cors:
+    # CHANGE_ME — explicit allowlist of frontend origins. Leave empty to
+    # disable CORS entirely. Do NOT use ["*"] in production.
+    allowed_origins: []
 
 auth:
   grpc_addr: "auth:50050"

@@ -16,7 +16,17 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	HTTPAddr string `yaml:"http_addr"`
+	HTTPAddr string     `yaml:"http_addr"`
+	CORS     CORSConfig `yaml:"cors"`
+}
+
+type CORSConfig struct {
+	// AllowedOrigins is the explicit allowlist of origins (scheme+host+port).
+	// Use ["*"] in dev to allow any origin (credentials cannot be used in
+	// that mode — browsers refuse Authorization headers with wildcard ACAO).
+	// Empty list disables CORS entirely (cross-origin requests will be
+	// blocked by the browser as before).
+	AllowedOrigins []string `yaml:"allowed_origins"`
 }
 
 type AuthConfig struct {
