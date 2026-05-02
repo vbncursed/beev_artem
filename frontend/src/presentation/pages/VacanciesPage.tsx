@@ -145,7 +145,11 @@ function EmptyState({
   return (
     <Card variant="feature" className="text-center">
       <div className="mx-auto flex max-w-[420px] flex-col items-center gap-3 py-12">
-        <BadgePill>{t('vacancies.empty.badge') || ''}</BadgePill>
+        <BadgePill>
+          {isFiltered
+            ? t('vacancies.empty.badgeFiltered')
+            : t('vacancies.empty.badge')}
+        </BadgePill>
         <h3 className="text-title-lg">
           {isFiltered
             ? t('vacancies.empty.filteredTitle')
