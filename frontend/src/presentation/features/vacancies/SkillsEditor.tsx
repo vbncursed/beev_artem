@@ -1,6 +1,11 @@
 import { useId } from 'react'
 import { useI18n } from '@/app/providers/I18nProvider'
-import { Button, TextInput } from '@/presentation/ui'
+import {
+  Button,
+  Checkbox,
+  TextInput,
+  WeightStepper,
+} from '@/presentation/ui'
 import { cn } from '@/shared/lib/cn'
 import type { SkillWeight } from '@/domain/vacancy/types'
 
@@ -25,7 +30,9 @@ export function SkillsEditor({ value, errors = [], onChange, disabled }: Props) 
   const headerId = useId()
 
   const update = (index: number, patch: Partial<SkillRow>) => {
-    const next = value.map((row, i) => (i === index ? { ...row, ...patch } : row))
+    const next = value.map((row, i) =>
+      i === index ? { ...row, ...patch } : row,
+    )
     onChange(next)
   }
 
@@ -68,7 +75,7 @@ export function SkillsEditor({ value, errors = [], onChange, disabled }: Props) 
               className="grid grid-cols-12 items-start gap-3 rounded-lg bg-surface-soft p-3"
             >
               <TextInput
-                className="col-span-12 md:col-span-6"
+                className="col-span-12 md:col-span-5"
                 placeholder={t('skills.namePlaceholder')}
                 value={row.name}
                 onChange={(e) => update(i, { name: e.target.value })}
@@ -76,45 +83,37 @@ export function SkillsEditor({ value, errors = [], onChange, disabled }: Props) 
                 aria-label={t('skills.skillNameAria', { index: i + 1 })}
               />
 
-              <TextInput
-                className="col-span-5 md:col-span-2"
-                type="number"
-                step="0.05"
-                min={0}
-                max={1}
-                placeholder={t('skills.weightPlaceholder')}
-                value={String(row.weight)}
-                onChange={(e) => {
-                  const raw = e.target.value
-                  const num = raw === '' ? 0 : Number(raw)
-                  update(i, {
-                    weight: Number.isFinite(num) ? num : row.weight,
-                  })
-                }}
+              <WeightStepper
+                className="col-span-6 md:col-span-3"
+                value={row.weight}
+                onChange={(weight) => update(i, { weight })}
                 error={err?.weight}
-                aria-label={t('skills.weightAria', { index: i + 1 })}
+                ariaLabel={t('skills.weightAria', { index: i + 1 })}
+                disabled={disabled}
               />
 
-              <div className="col-span-7 flex flex-wrap items-center gap-2 self-center md:col-span-3">
-                <ToggleChip
-                  active={Boolean(row.mustHave)}
-                  onClick={() =>
-                    update(i, {
-                      mustHave: !row.mustHave,
-                      niceToHave: row.mustHave ? row.niceToHave : false,
-                    })
-                  }
+              <div className="col-span-6 flex flex-col gap-2 self-center md:col-span-3">
+                <Checkbox
                   label={t('skills.must')}
-                />
-                <ToggleChip
-                  active={Boolean(row.niceToHave)}
-                  onClick={() =>
+                  checked={Boolean(row.mustHave)}
+                  onChange={(checked) =>
                     update(i, {
-                      niceToHave: !row.niceToHave,
-                      mustHave: row.niceToHave ? row.mustHave : false,
+                      mustHave: checked,
+                      // Must and Nice are mutually exclusive — flipping one
+                      // clears the other so the data shape stays sane.
+                      niceToHave: checked ? false : row.niceToHave,
                     })
                   }
+                />
+                <Checkbox
                   label={t('skills.nice')}
+                  checked={Boolean(row.niceToHave)}
+                  onChange={(checked) =>
+                    update(i, {
+                      niceToHave: checked,
+                      mustHave: checked ? false : row.mustHave,
+                    })
+                  }
                 />
               </div>
 
@@ -167,32 +166,5 @@ function TrashIcon() {
       <path d="M10 11v6" />
       <path d="M14 11v6" />
     </svg>
-  )
-}
-
-function ToggleChip({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean
-  label: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        'text-caption-strong inline-flex h-8 cursor-pointer items-center rounded-pill px-3 uppercase tracking-wide transition-colors',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-        active
-          ? 'bg-surface-dark text-on-dark'
-          : 'bg-surface-strong text-ink hover:bg-hairline',
-      )}
-    >
-      {label}
-    </button>
   )
 }
