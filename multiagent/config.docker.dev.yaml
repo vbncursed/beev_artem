@@ -11,7 +11,7 @@ server:
 
 yandex:
   folder_id: "b1g1hkasf7e08t5h6ae6"
-  model: "qwen3.6-35b-a3b/latest"
+  model: "aliceai-llm/latest"
   request_timeout: 60s
   max_output_tokens: 1500
 
