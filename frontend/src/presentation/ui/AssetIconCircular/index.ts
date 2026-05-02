@@ -1,0 +1,1 @@
+export { AssetIconCircular } from './AssetIconCircular'

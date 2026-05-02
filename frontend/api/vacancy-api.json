@@ -1,0 +1,440 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Vacancy API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/vacancies": {
+      "get": {
+        "tags": [
+          "VacancyService"
+        ],
+        "operationId": "VacancyService_ListVacancies",
+        "parameters": [
+          {
+            "name": "page.limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "page.offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListVacanciesResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Default error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VacancyService"
+        ],
+        "operationId": "VacancyService_CreateVacancy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVacancyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Default error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vacancies/{vacancyId}": {
+      "get": {
+        "tags": [
+          "VacancyService"
+        ],
+        "operationId": "VacancyService_GetVacancy",
+        "parameters": [
+          {
+            "name": "vacancyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Default error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "VacancyService"
+        ],
+        "operationId": "VacancyService_UpdateVacancy",
+        "parameters": [
+          {
+            "name": "vacancyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVacancyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Default error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/vacancies/{vacancyId}/archive": {
+      "post": {
+        "tags": [
+          "VacancyService"
+        ],
+        "operationId": "VacancyService_ArchiveVacancy",
+        "parameters": [
+          {
+            "name": "vacancyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveVacancyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArchiveVacancyResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Default error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArchiveVacancyRequest": {
+        "type": "object",
+        "properties": {
+          "vacancyId": {
+            "type": "string"
+          }
+        }
+      },
+      "ArchiveVacancyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateVacancyRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillWeight"
+            }
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "GoogleProtobufAny": {
+        "type": "object",
+        "properties": {
+          "@type": {
+            "type": "string",
+            "description": "The type of the serialized message."
+          }
+        },
+        "additionalProperties": true,
+        "description": "Contains an arbitrary serialized message along with a @type that describes the type of the serialized message."
+      },
+      "ListVacanciesResponse": {
+        "type": "object",
+        "properties": {
+          "vacancies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Vacancy"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageResponse"
+          }
+        }
+      },
+      "PageResponse": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "total": {
+            "type": "string"
+          }
+        }
+      },
+      "SkillWeight": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number",
+            "format": "float"
+          },
+          "mustHave": {
+            "type": "boolean"
+          },
+          "niceToHave": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string",
+            "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GoogleProtobufAny"
+            },
+            "description": "A list of messages that carry the error details.  There is a common set of message types for APIs to use."
+          }
+        },
+        "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors)."
+      },
+      "UpdateVacancyRequest": {
+        "type": "object",
+        "properties": {
+          "vacancyId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillWeight"
+            }
+          },
+          "role": {
+            "type": "string"
+          }
+        }
+      },
+      "Vacancy": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ownerUserId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkillWeight"
+            }
+          },
+          "status": {
+            "type": "integer",
+            "format": "enum"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "role": {
+            "type": "string",
+            "description": "role drives prompt selection in multiagent. Free-form string;\n multiagent looks up assets/prompts/<role>.txt and falls back to\n default.txt when no match is found."
+          }
+        }
+      },
+      "VacancyResponse": {
+        "type": "object",
+        "properties": {
+          "vacancy": {
+            "$ref": "#/components/schemas/Vacancy"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "VacancyService"
+    }
+  ]
+}

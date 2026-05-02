@@ -1,0 +1,246 @@
+@import 'tailwindcss';
+
+/* Fonts (Inter + JetBrains Mono) are imported from main.tsx so Vite
+   handles them via the JS module graph — no CSS @import ordering edge cases. */
+
+/* ========================================================================
+   Tailwind v4 design tokens — strict 1:1 mirror of /DESIGN.md (Coinbase
+   system). Literal values here so Tailwind generates utilities that
+   reference these via var(); theme-flip is just CSS-vars overriding the
+   color tokens on `[data-theme="dark"]` below.
+   ======================================================================== */
+
+@theme {
+  /* Type — Inter for everything human, JetBrains Mono on numbers. */
+  --font-sans:
+    'General Sans', -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-display:
+    'General Sans', -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', 'Geist Mono', ui-monospace,
+    monospace;
+
+  /* Brand & accent */
+  --color-primary: #0052ff;
+  --color-primary-active: #003ecc;
+  --color-primary-disabled: #a8b8cc;
+  --color-accent-yellow: #f4b000;
+
+  /* Surface (light defaults) */
+  --color-canvas: #ffffff;
+  --color-surface-soft: #f7f7f7;
+  --color-surface-card: #ffffff;
+  --color-surface-strong: #eef0f3;
+  --color-surface-dark: #0a0b0d;
+  --color-surface-dark-elevated: #16181c;
+
+  /* Hairlines */
+  --color-hairline: #dee1e6;
+  --color-hairline-soft: #eef0f3;
+
+  /* Text */
+  --color-ink: #0a0b0d;
+  --color-body: #5b616e;
+  --color-body-strong: #0a0b0d;
+  --color-muted: #7c828a;
+  --color-muted-soft: #a8acb3;
+  --color-on-primary: #ffffff;
+  --color-on-dark: #ffffff;
+  --color-on-dark-soft: #a8acb3;
+
+  /* Trading semantics — text-only, never as background fills */
+  --color-semantic-up: #05b169;
+  --color-semantic-down: #cf202f;
+
+  /* Radius — pill for interactive, xl for cards, full for icons */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 100px;
+  --radius-full: 9999px;
+
+  /* Single shadow tier — DESIGN.md elevation §. */
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Dark inversion. Tailwind utilities (`bg-canvas`, `text-ink`, etc.)
+   reference `var(--color-*)`, so flipping the vars at runtime is enough.
+   Primary stays #0052ff in both themes — DESIGN forbids a second brand color. */
+[data-theme='dark'] {
+  --color-canvas: #0a0b0d;
+  --color-surface-soft: #16181c;
+  --color-surface-card: #16181c;
+  --color-surface-strong: #16181c;
+  --color-surface-dark: #0a0b0d;
+  --color-surface-dark-elevated: #1f2229;
+
+  --color-hairline: #2a2d33;
+  --color-hairline-soft: #1f2229;
+
+  --color-ink: #ffffff;
+  --color-body: #a8acb3;
+  --color-body-strong: #ffffff;
+  --color-muted: #7c828a;
+  --color-muted-soft: #5b616e;
+}
+
+/* ========================================================================
+   Base
+   ======================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+/* Display headings — weight 400, negative tracking. Never bold per DESIGN.md. */
+.text-display-mega {
+  font-family: var(--font-display);
+  font-size: 80px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+.text-display-xl {
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -1.6px;
+}
+.text-display-lg {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -1.3px;
+}
+.text-display-md {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 400;
+  line-height: 1.09;
+  letter-spacing: -1px;
+}
+.text-display-sm {
+  font-family: var(--font-sans);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.11;
+  letter-spacing: -0.5px;
+}
+.text-title-lg {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.13;
+  letter-spacing: -0.4px;
+}
+.text-title-md {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.33;
+}
+.text-title-sm {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.text-body-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-body-strong {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.text-body-sm {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.text-caption-strong {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.text-number-display {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.text-button {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.text-nav-link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Inputs own their own focus appearance via the wrapper border. */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
