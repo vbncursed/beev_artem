@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-Multi-service HR platform written in Go 1.26. Each service is an independent Go module with its own `go.mod`, `Dockerfile`, configs, migrations, and `internal/` tree following clean architecture (domain / usecase / transport / infrastructure). Services communicate over gRPC; one of them (`gateway`) exposes HTTP/JSON to the outside world via grpc-gateway.
+Multi-service HR platform written in Go 1.26. Each service is an independent Go module with its own `go.mod`, `Dockerfile`, configs, migrations, and `internal/` tree following clean architecture (domain / usecase / transport / infrastructure). Services communicate over gRPC; one of them (`gateway`) exposes HTTP/JSON to the outside world via grpc-gateway. The repo also ships a single-page **`frontend/`** (React 19 + TypeScript 6 + Vite + Tailwind v4) that consumes the gateway exclusively — frontend has no per-service network knowledge, only the public OpenAPI contracts under `frontend/api/*.json`.
 
 Modules (top-level directories):
 
@@ -16,6 +16,7 @@ Modules (top-level directories):
 | `resume/` | Candidates & resume files (PDF/DOCX/TXT). PostgreSQL. | `:50052` | — |
 | `analysis/` | Resume scoring / candidate analysis. Calls `multiagent` for LLM-backed HR decisions. PostgreSQL. | `:50054` | — |
 | `multiagent/` | Generates HR decision (`hire/maybe/no`) + structured feedback via Yandex Cloud Foundation Models, role-aware prompts. PostgreSQL. | `:50055` | — |
+| `frontend/` | Vite-built SPA (Cadence brand) on gateway:8080. Clean-architecture mirror in TypeScript: domain → application → infrastructure → presentation. ru/en i18n, light/dark theme, drag&drop resume upload, AI analysis details. | — | — |
 
 Each Go module is named `github.com/artem13815/hr/<service>`. There is no Go workspace file — modules are independent and compiled separately.
 
@@ -361,6 +362,7 @@ For the `Inspect` callback, the function signature **must match the interface me
 - Multiagent: prompts live in `internal/infrastructure/prompts/templates/<role>.txt`. Adding a new role = drop a new `.txt` file + rebuild. No proto/schema/storage changes. Roles are case-insensitive, fall back to `default.txt` on miss.
 - Multiagent does NOT carry an internal heuristic fallback. If the LLM fails (provider down, malformed JSON), the error propagates to analysis, which keeps its **heuristic AI** as the authoritative answer in the analysis row.
 - READMEs inside each service are written in Russian and are kept reasonably up to date — they're a good source of method-level intent.
+- Each service ships a `SPEC.md` (Russian) at its root with the full technical specification: ports, endpoints, domain model, dependencies, configuration, deployment notes. Frontend has the same at `frontend/SPEC.md`. When a service contract changes, update the corresponding SPEC.md in the same commit.
 
 ## Recent significant decisions
 
@@ -370,6 +372,12 @@ For the `Inspect` callback, the function signature **must match the interface me
 - **2026-04-30:** Vacancy gains `Role string` field (proto + migration `00002_add_role.sql` + storage SQL + transport mapping). Analysis tunnels role through `ResumeContext.VacancyRole` to multiagent's `DecisionRequest.Role`.
 - **2026-04-30:** Multiagent heuristic stub replaced with Yandex Cloud Foundation Models adapter. New `usecase.LLM` and `usecase.PromptStore` ports, `infrastructure/llm/yandex/` adapter (rate-limited, ctx-aware, JSON-mode prompts, error mapping HTTP→domain), and `infrastructure/prompts/` (embed.FS templates per role: programmer / manager / accountant / default).
 - **2026-04-30:** Gateway clean refactor (transport-only edge: no domain/usecase). Added graceful shutdown, `/healthz`, full HTTP timeouts, config validate(). Removed dead `x-user-id` header injection — backends ignore those headers post-refactor.
+- **2026-05-02:** Multiagent prompts hard-pin Russian replies via `languageDirective` constant appended to every role prompt. `hr_recommendation` enum stays English (`hire`/`maybe`/`no`); rationale, feedback, soft-skills notes are RU. Vacancy auto-detects role from title+description via `usecase.DetectRole` (keyword tables for accountant / doctor / electrician / analyst / manager / programmer + `default` fallback).
+- **2026-05-02:** Cadence frontend shipped under `frontend/`. Coinbase-style design system locked in `DESIGN.md` (single accent #0052ff, type at weight 400, pill-rounded CTAs, 96px section rhythm). React 19 + Tailwind v4 with CSS-var theming, ru/en i18n with proper RU plural forms, no second brand color.
+- **2026-05-02:** Resume gains two endpoints — `GET /api/v1/resumes/:id/download` (returns original file bytes for manual review) and `DELETE /api/v1/candidates/:id` (cascades to resumes via FK). Frontend wires both to AnalysisDetails with inline-confirm delete UX.
+- **2026-05-02:** Analysis heuristic strings russified (HRRationale / CandidateFeedback / SoftSkillsNotes) and `Profile.YearsExperience` extracted via regex (`\d+ лет/год/year`). Extra-skills tokenizer trims trailing `-_.` and applies a 16-word stop-list to filter generic noise (tool / info / data / team …). `infrastructure/scorer/scorer.go` split by responsibility into `scorer.go` (algorithm) + `extras.go` (tokenization) + `profile.go` (years/summary helpers).
+- **2026-05-02:** Resume PDF extraction switched to external `pdftotext` from poppler-utils (Dockerfile installs `poppler-utils`). The in-process `ledongthuc/pdf` cannot recover word boundaries on PDFs without positional metadata in the content stream — typical for Cyrillic résumés where the result was gibberish like "ЭдуардКурочкинGo-разработчик". `extractViaLedongthuc` is kept as a best-effort fallback when the binary is missing.
+- **2026-05-02:** Per-service refactor — every source file ≤200 LOC. Three identical `middleware.go` (analysis/resume/vacancy, 209 LOC each) split into `middleware.go` (types) + `recovery.go` + `logging.go` + `auth.go`. `multiagent/internal/usecase/multiagent_service.go` (214 LOC) split into the service (with constants + GenerateDecision) and `decision_parser.go` (LLM wire-shape + JSON fence stripping).
 
 ## Help with feedback
 
