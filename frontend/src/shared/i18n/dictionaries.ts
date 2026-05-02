@@ -82,6 +82,8 @@ const ru: Dict = {
   'vacancies.empty.title': 'Пока ни одной вакансии.',
   'vacancies.empty.hint': 'Откройте первую позицию и собирайте кандидатов.',
   'vacancies.empty.cta': 'Создать вакансию',
+  'vacancies.empty.badgeFiltered': 'Не найдено',
+  'vacancies.empty.badge': 'Пусто',
   'vacancies.error.loadFailed': 'Не удалось загрузить вакансии.',
   'vacancies.error.title': 'Не получилось загрузить вакансии.',
 
@@ -308,6 +310,8 @@ const en: Dict = {
   'vacancies.empty.hint':
     'Open the first position and start collecting candidates.',
   'vacancies.empty.cta': 'Create vacancy',
+  'vacancies.empty.badgeFiltered': 'No results',
+  'vacancies.empty.badge': 'Empty',
   'vacancies.error.loadFailed': 'Failed to load vacancies',
   'vacancies.error.title': "We couldn't load vacancies.",
 
