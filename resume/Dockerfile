@@ -10,6 +10,12 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/resume-service ./cmd/
 
 FROM alpine:3.22
 
+# poppler-utils ships pdftotext, the production-grade PDF extractor we
+# shell out to from infrastructure/extractor. ledongthuc/pdf cannot
+# recover word boundaries on PDFs without positional metadata in the
+# content stream (typical for Cyrillic résumés).
+RUN apk add --no-cache poppler-utils
+
 WORKDIR /app
 
 COPY --from=builder /out/resume-service /usr/local/bin/resume-service

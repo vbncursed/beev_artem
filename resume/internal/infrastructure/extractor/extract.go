@@ -3,11 +3,15 @@ package extractor
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
+	"os/exec"
 	"strings"
+	"time"
 
 	pdf "github.com/ledongthuc/pdf"
 )
@@ -52,20 +56,74 @@ func ExtractText(fileType string, data []byte) (string, error) {
 	}
 }
 
+// pdftotextTimeout caps a single extraction. Generous: a 50-page CV
+// takes ~200ms; we allow 30s as the worst plausible case before the
+// process is forcibly killed.
+const pdftotextTimeout = 30 * time.Second
+
+// extractPDFText prefers the external `pdftotext` binary (poppler-utils)
+// because the in-process ledongthuc/pdf cannot recover word boundaries on
+// PDFs that lack positional metadata — common in Cyrillic résumés where
+// the result is gibberish like "ЭдуардКурочкинGo-разработчик".
+//
+// We fall back to ledongthuc/pdf if pdftotext is missing or errors out,
+// so dev environments without poppler installed still produce something.
+// The fallback is best-effort and may return joined-words; the primary
+// path is the source of truth.
 func extractPDFText(data []byte) (string, error) {
-	// In-memory only: pdf.NewReader(io.ReaderAt, size) avoids the os.CreateTemp
-	// dance the older code path used. No disk I/O, no leftover temp files if
-	// the process panics mid-extraction.
+	if text, err := extractViaPdftotext(data); err == nil {
+		return text, nil
+	} else {
+		slog.Warn("pdftotext failed, falling back to in-process pdf parser",
+			"err", err.Error())
+	}
+	return extractViaLedongthuc(data)
+}
+
+// extractViaPdftotext shells out to `pdftotext - -` (stdin → stdout).
+// The `-layout` flag preserves visual columns for tabular résumés;
+// `-enc UTF-8` forces UTF-8 output regardless of the PDF's encoding.
+func extractViaPdftotext(data []byte) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), pdftotextTimeout)
+	defer cancel()
+
+	// `-` for input + `-` for output → stream both via stdin/stdout, no
+	// temp files. -nopgbrk drops the form-feed page separators that would
+	// otherwise pollute the heuristic year/skill extractors downstream.
+	cmd := exec.CommandContext(ctx, "pdftotext",
+		"-layout", "-nopgbrk", "-enc", "UTF-8", "-", "-")
+	cmd.Stdin = bytes.NewReader(data)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("pdftotext: %w (stderr=%q)", err, stderr.String())
+	}
+
+	if stdout.Len() > MaxExtractedTextBytes {
+		return "", errExtractedTooLarge
+	}
+	out := strings.TrimSpace(stdout.String())
+	if out == "" {
+		return "", errors.New("pdftotext: empty output")
+	}
+	return out, nil
+}
+
+// extractViaLedongthuc is the fallback path used only when pdftotext is
+// unavailable. Returns whatever GetPlainText produces — often missing
+// spaces, but better than nothing while ops install poppler-utils.
+func extractViaLedongthuc(data []byte) (string, error) {
 	reader, err := pdf.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
 		return "", err
 	}
-
 	plainReader, err := reader.GetPlainText()
 	if err != nil {
 		return "", err
 	}
-
 	textBytes, err := io.ReadAll(io.LimitReader(plainReader, MaxExtractedTextBytes+1))
 	if err != nil {
 		return "", err
@@ -73,7 +131,6 @@ func extractPDFText(data []byte) (string, error) {
 	if len(textBytes) > MaxExtractedTextBytes {
 		return "", errExtractedTooLarge
 	}
-
 	return strings.TrimSpace(string(textBytes)), nil
 }
 
