@@ -19,6 +19,7 @@ func (s *VacancyService) UpdateVacancy(ctx context.Context, in domain.UpdateVaca
 	}
 
 	in.Skills = normalizeSkills(in.Skills)
+	in.Role = DetectRole(in.Title, in.Description)
 	updated, err := s.storage.UpdateVacancy(ctx, in)
 	if err != nil {
 		return nil, err

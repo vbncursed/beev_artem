@@ -30,9 +30,11 @@ func (s *CreateVacancySuite) TestSuccess() {
 		Description: "We build things.",
 		Skills:      validSkills(),
 	}
+	expected := in
+	expected.Role = "programmer"
 	want := &domain.Vacancy{ID: "v-1", OwnerUserID: 1, Title: in.Title}
 
-	s.storage.CreateVacancyMock.Expect(ctx, in).Return(want, nil)
+	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(want, nil)
 
 	got, err := s.svc.CreateVacancy(ctx, in)
 	assert.NilError(t, err)
@@ -59,6 +61,7 @@ func (s *CreateVacancySuite) TestNormalizesZeroWeightedSkills() {
 	expected := domain.CreateVacancyInput{
 		OwnerUserID: 1,
 		Title:       "Lead",
+		Role:        "default",
 		Skills: []domain.SkillWeight{
 			{Name: "Go", Weight: float32(1) / 3},
 			{Name: "SQL", Weight: float32(1) / 3},
@@ -158,9 +161,11 @@ func (s *CreateVacancySuite) TestStorageError() {
 		Title:       "ok",
 		Skills:      validSkills(),
 	}
+	expected := in
+	expected.Role = "default"
 	storageErr := errors.New("pgx: connection refused")
 
-	s.storage.CreateVacancyMock.Expect(ctx, in).Return(nil, storageErr)
+	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(nil, storageErr)
 
 	got, err := s.svc.CreateVacancy(ctx, in)
 	assert.ErrorIs(t, err, storageErr)

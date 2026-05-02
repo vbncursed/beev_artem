@@ -51,7 +51,12 @@ func (s *GenerateDecisionSuite) TestSuccess() {
 
 	s.prompts.GetMock.Expect("programmer").Return("PROGRAMMER PROMPT")
 	s.llm.CompleteMock.Inspect(func(_ context.Context, req domain.CompletionRequest) {
-		assert.Equal(t, req.Instructions, "PROGRAMMER PROMPT")
+		// Instructions are the role prompt with the hard language
+		// directive appended in code — both halves must reach the model.
+		assert.Assert(t, strings.HasPrefix(req.Instructions, "PROGRAMMER PROMPT"),
+			"instructions %q must start with role prompt", req.Instructions)
+		assert.Assert(t, strings.Contains(req.Instructions, "СТРОГО на русском"),
+			"instructions %q must carry the language directive", req.Instructions)
 		assert.Equal(t, req.Temperature, float32(completionTemperature))
 		assert.Equal(t, req.MaxOutputTokens, completionMaxTokens)
 		// Input is the JSON-rendered DecisionRequest — must carry the

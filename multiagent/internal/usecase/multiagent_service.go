@@ -23,6 +23,21 @@ const completionTemperature = 0.3
 // 2 agent_results) and keeps the bill bounded if the model misbehaves.
 const completionMaxTokens = 1500
 
+// languageDirective is appended to every role prompt as a hard,
+// non-negotiable rule. We pin it in code rather than in the per-role
+// templates so a new prompt file can never accidentally drop the
+// constraint. The exception list keeps enum values
+// (hr_recommendation: hire/maybe/no) and bare technology names readable
+// — translating "hire" or "PostgreSQL" makes the audit log unparseable
+// downstream.
+const languageDirective = `
+
+ВАЖНО — язык ответа:
+- Все текстовые поля JSON-ответа (hr_rationale, candidate_feedback, soft_skills_notes, agent_results[*].summary) пиши СТРОГО на русском языке.
+- Не используй английские слова и фразы в этих полях, кроме имён технологий, продуктов и аббревиатур (например: Go, PostgreSQL, gRPC, AWS, ИВЛ, МКБ-10).
+- Поле hr_recommendation — это enum, оставь одно из значений как есть: "hire", "maybe", "no". Не переводи.
+- Если в резюме встречаются английские формулировки — пересказывай их по-русски, не цитируй дословно.`
+
 // DecisionStorage is the persistence port. Implementations live under
 // internal/infrastructure/persistence — usecase MUST NOT import pgx, JSON
 // codecs, or anything else transport-specific.
@@ -57,7 +72,7 @@ func (s *MultiAgentService) GenerateDecision(ctx context.Context, req domain.Dec
 		return nil, ErrInvalidArgument
 	}
 
-	instructions := s.prompts.Get(req.Role)
+	instructions := s.prompts.Get(req.Role) + languageDirective
 	input := buildInput(req)
 
 	completion, err := s.llm.Complete(ctx, domain.CompletionRequest{
