@@ -103,3 +103,19 @@ message GetResumeRequest {
 message ResumeResponse {
   Resume resume = 1;
 }
+
+message DownloadResumeRequest {
+  string resume_id = 1;
+}
+
+message DownloadResumeResponse {
+  bytes file_data = 1;
+  string file_name = 2;
+  string file_type = 3;
+}
+
+message DeleteCandidateRequest {
+  string candidate_id = 1;
+}
+
+message DeleteCandidateResponse {}

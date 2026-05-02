@@ -258,6 +258,84 @@ func local_request_ResumeService_GetResume_0(ctx context.Context, marshaler runt
 	return msg, metadata, err
 }
 
+func request_ResumeService_DownloadResume_0(ctx context.Context, marshaler runtime.Marshaler, client ResumeServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq models.DownloadResumeRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["resume_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "resume_id")
+	}
+	protoReq.ResumeId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "resume_id", err)
+	}
+	msg, err := client.DownloadResume(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ResumeService_DownloadResume_0(ctx context.Context, marshaler runtime.Marshaler, server ResumeServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq models.DownloadResumeRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["resume_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "resume_id")
+	}
+	protoReq.ResumeId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "resume_id", err)
+	}
+	msg, err := server.DownloadResume(ctx, &protoReq)
+	return msg, metadata, err
+}
+
+func request_ResumeService_DeleteCandidate_0(ctx context.Context, marshaler runtime.Marshaler, client ResumeServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq models.DeleteCandidateRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	val, ok := pathParams["candidate_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "candidate_id")
+	}
+	protoReq.CandidateId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "candidate_id", err)
+	}
+	msg, err := client.DeleteCandidate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ResumeService_DeleteCandidate_0(ctx context.Context, marshaler runtime.Marshaler, server ResumeServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq models.DeleteCandidateRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["candidate_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "candidate_id")
+	}
+	protoReq.CandidateId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "candidate_id", err)
+	}
+	msg, err := server.DeleteCandidate(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterResumeServiceHandlerServer registers the http handlers for service ResumeService to "mux".
 // UnaryRPC     :call ResumeServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -383,6 +461,46 @@ func RegisterResumeServiceHandlerServer(ctx context.Context, mux *runtime.ServeM
 			return
 		}
 		forward_ResumeService_GetResume_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_ResumeService_DownloadResume_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/resume.service.v1.ResumeService/DownloadResume", runtime.WithHTTPPathPattern("/api/v1/resumes/{resume_id}/download"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ResumeService_DownloadResume_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ResumeService_DownloadResume_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_ResumeService_DeleteCandidate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/resume.service.v1.ResumeService/DeleteCandidate", runtime.WithHTTPPathPattern("/api/v1/candidates/{candidate_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ResumeService_DeleteCandidate_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ResumeService_DeleteCandidate_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -526,6 +644,40 @@ func RegisterResumeServiceHandlerClient(ctx context.Context, mux *runtime.ServeM
 		}
 		forward_ResumeService_GetResume_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_ResumeService_DownloadResume_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/resume.service.v1.ResumeService/DownloadResume", runtime.WithHTTPPathPattern("/api/v1/resumes/{resume_id}/download"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ResumeService_DownloadResume_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ResumeService_DownloadResume_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodDelete, pattern_ResumeService_DeleteCandidate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/resume.service.v1.ResumeService/DeleteCandidate", runtime.WithHTTPPathPattern("/api/v1/candidates/{candidate_id}"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ResumeService_DeleteCandidate_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ResumeService_DeleteCandidate_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
@@ -536,6 +688,8 @@ var (
 	pattern_ResumeService_IngestResume_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"api", "v1", "resumes", "intake"}, ""))
 	pattern_ResumeService_IngestResumeBatch_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"api", "v1", "resumes", "intake", "batch"}, ""))
 	pattern_ResumeService_GetResume_0                 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "resumes", "resume_id"}, ""))
+	pattern_ResumeService_DownloadResume_0            = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"api", "v1", "resumes", "resume_id", "download"}, ""))
+	pattern_ResumeService_DeleteCandidate_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "candidates", "candidate_id"}, ""))
 )
 
 var (
@@ -545,4 +699,6 @@ var (
 	forward_ResumeService_IngestResume_0              = runtime.ForwardResponseMessage
 	forward_ResumeService_IngestResumeBatch_0         = runtime.ForwardResponseMessage
 	forward_ResumeService_GetResume_0                 = runtime.ForwardResponseMessage
+	forward_ResumeService_DownloadResume_0            = runtime.ForwardResponseMessage
+	forward_ResumeService_DeleteCandidate_0           = runtime.ForwardResponseMessage
 )

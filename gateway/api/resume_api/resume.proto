@@ -107,6 +107,34 @@ service ResumeService {
       }
     };
   }
+
+  rpc DownloadResume(resume.models.v1.DownloadResumeRequest) returns (resume.models.v1.DownloadResumeResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/resumes/{resume_id}/download"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+
+  rpc DeleteCandidate(resume.models.v1.DeleteCandidateRequest) returns (resume.models.v1.DeleteCandidateResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/candidates/{candidate_id}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
 }
 
 option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {

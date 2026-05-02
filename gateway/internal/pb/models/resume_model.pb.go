@@ -1024,6 +1024,190 @@ func (x *ResumeResponse) GetResume() *Resume {
 	return nil
 }
 
+type DownloadResumeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ResumeId      string                 `protobuf:"bytes,1,opt,name=resume_id,json=resumeId,proto3" json:"resume_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DownloadResumeRequest) Reset() {
+	*x = DownloadResumeRequest{}
+	mi := &file_models_resume_model_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DownloadResumeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DownloadResumeRequest) ProtoMessage() {}
+
+func (x *DownloadResumeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_models_resume_model_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DownloadResumeRequest.ProtoReflect.Descriptor instead.
+func (*DownloadResumeRequest) Descriptor() ([]byte, []int) {
+	return file_models_resume_model_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *DownloadResumeRequest) GetResumeId() string {
+	if x != nil {
+		return x.ResumeId
+	}
+	return ""
+}
+
+type DownloadResumeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FileData      []byte                 `protobuf:"bytes,1,opt,name=file_data,json=fileData,proto3" json:"file_data,omitempty"`
+	FileName      string                 `protobuf:"bytes,2,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
+	FileType      string                 `protobuf:"bytes,3,opt,name=file_type,json=fileType,proto3" json:"file_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DownloadResumeResponse) Reset() {
+	*x = DownloadResumeResponse{}
+	mi := &file_models_resume_model_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DownloadResumeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DownloadResumeResponse) ProtoMessage() {}
+
+func (x *DownloadResumeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_models_resume_model_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DownloadResumeResponse.ProtoReflect.Descriptor instead.
+func (*DownloadResumeResponse) Descriptor() ([]byte, []int) {
+	return file_models_resume_model_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DownloadResumeResponse) GetFileData() []byte {
+	if x != nil {
+		return x.FileData
+	}
+	return nil
+}
+
+func (x *DownloadResumeResponse) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
+func (x *DownloadResumeResponse) GetFileType() string {
+	if x != nil {
+		return x.FileType
+	}
+	return ""
+}
+
+type DeleteCandidateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CandidateId   string                 `protobuf:"bytes,1,opt,name=candidate_id,json=candidateId,proto3" json:"candidate_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteCandidateRequest) Reset() {
+	*x = DeleteCandidateRequest{}
+	mi := &file_models_resume_model_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteCandidateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteCandidateRequest) ProtoMessage() {}
+
+func (x *DeleteCandidateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_models_resume_model_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteCandidateRequest.ProtoReflect.Descriptor instead.
+func (*DeleteCandidateRequest) Descriptor() ([]byte, []int) {
+	return file_models_resume_model_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *DeleteCandidateRequest) GetCandidateId() string {
+	if x != nil {
+		return x.CandidateId
+	}
+	return ""
+}
+
+type DeleteCandidateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteCandidateResponse) Reset() {
+	*x = DeleteCandidateResponse{}
+	mi := &file_models_resume_model_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteCandidateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteCandidateResponse) ProtoMessage() {}
+
+func (x *DeleteCandidateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_models_resume_model_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteCandidateResponse.ProtoReflect.Descriptor instead.
+func (*DeleteCandidateResponse) Descriptor() ([]byte, []int) {
+	return file_models_resume_model_proto_rawDescGZIP(), []int{20}
+}
+
 var File_models_resume_model_proto protoreflect.FileDescriptor
 
 const file_models_resume_model_proto_rawDesc = "" +
@@ -1098,7 +1282,16 @@ const file_models_resume_model_proto_rawDesc = "" +
 	"\x10GetResumeRequest\x12\x1b\n" +
 	"\tresume_id\x18\x01 \x01(\tR\bresumeId\"B\n" +
 	"\x0eResumeResponse\x120\n" +
-	"\x06resume\x18\x01 \x01(\v2\x18.resume.models.v1.ResumeR\x06resumeB5Z3github.com/artem13815/hr/gateway/internal/pb/modelsb\x06proto3"
+	"\x06resume\x18\x01 \x01(\v2\x18.resume.models.v1.ResumeR\x06resume\"4\n" +
+	"\x15DownloadResumeRequest\x12\x1b\n" +
+	"\tresume_id\x18\x01 \x01(\tR\bresumeId\"o\n" +
+	"\x16DownloadResumeResponse\x12\x1b\n" +
+	"\tfile_data\x18\x01 \x01(\fR\bfileData\x12\x1b\n" +
+	"\tfile_name\x18\x02 \x01(\tR\bfileName\x12\x1b\n" +
+	"\tfile_type\x18\x03 \x01(\tR\bfileType\";\n" +
+	"\x16DeleteCandidateRequest\x12!\n" +
+	"\fcandidate_id\x18\x01 \x01(\tR\vcandidateId\"\x19\n" +
+	"\x17DeleteCandidateResponseB5Z3github.com/artem13815/hr/gateway/internal/pb/modelsb\x06proto3"
 
 var (
 	file_models_resume_model_proto_rawDescOnce sync.Once
@@ -1112,7 +1305,7 @@ func file_models_resume_model_proto_rawDescGZIP() []byte {
 	return file_models_resume_model_proto_rawDescData
 }
 
-var file_models_resume_model_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_models_resume_model_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_models_resume_model_proto_goTypes = []any{
 	(*Candidate)(nil),                        // 0: resume.models.v1.Candidate
 	(*Resume)(nil),                           // 1: resume.models.v1.Resume
@@ -1131,11 +1324,15 @@ var file_models_resume_model_proto_goTypes = []any{
 	(*UploadResumeResponse)(nil),             // 14: resume.models.v1.UploadResumeResponse
 	(*GetResumeRequest)(nil),                 // 15: resume.models.v1.GetResumeRequest
 	(*ResumeResponse)(nil),                   // 16: resume.models.v1.ResumeResponse
-	(*timestamppb.Timestamp)(nil),            // 17: google.protobuf.Timestamp
+	(*DownloadResumeRequest)(nil),            // 17: resume.models.v1.DownloadResumeRequest
+	(*DownloadResumeResponse)(nil),           // 18: resume.models.v1.DownloadResumeResponse
+	(*DeleteCandidateRequest)(nil),           // 19: resume.models.v1.DeleteCandidateRequest
+	(*DeleteCandidateResponse)(nil),          // 20: resume.models.v1.DeleteCandidateResponse
+	(*timestamppb.Timestamp)(nil),            // 21: google.protobuf.Timestamp
 }
 var file_models_resume_model_proto_depIdxs = []int32{
-	17, // 0: resume.models.v1.Candidate.created_at:type_name -> google.protobuf.Timestamp
-	17, // 1: resume.models.v1.Resume.created_at:type_name -> google.protobuf.Timestamp
+	21, // 0: resume.models.v1.Candidate.created_at:type_name -> google.protobuf.Timestamp
+	21, // 1: resume.models.v1.Resume.created_at:type_name -> google.protobuf.Timestamp
 	0,  // 2: resume.models.v1.CandidateResponse.candidate:type_name -> resume.models.v1.Candidate
 	0,  // 3: resume.models.v1.CandidateResumeResponse.candidate:type_name -> resume.models.v1.Candidate
 	1,  // 4: resume.models.v1.CandidateResumeResponse.resume:type_name -> resume.models.v1.Resume
@@ -1169,7 +1366,7 @@ func file_models_resume_model_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_models_resume_model_proto_rawDesc), len(file_models_resume_model_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

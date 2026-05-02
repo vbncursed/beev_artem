@@ -15,6 +15,8 @@ type ResumeStorage interface {
 	GetCandidate(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) (*domain.Candidate, error)
 	UploadResume(ctx context.Context, in domain.UploadResumeInput) (*domain.Resume, error)
 	GetResume(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (*domain.Resume, error)
+	DownloadResume(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (*domain.ResumeFile, error)
+	DeleteCandidate(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) error
 
 	// CreateCandidateWithResume inserts a candidate and its first resume in a
 	// single transaction. Either both rows land or neither does — protects

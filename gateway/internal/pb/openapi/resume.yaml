@@ -30,6 +30,29 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - ResumeService
+            operationId: ResumeService_DeleteCandidate
+            parameters:
+                - name: candidateId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DeleteCandidateResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/resumes/intake:
         post:
             tags:
@@ -96,6 +119,30 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ResumeResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/resumes/{resumeId}/download:
+        get:
+            tags:
+                - ResumeService
+            operationId: ResumeService_DownloadResume
+            parameters:
+                - name: resumeId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/DownloadResumeResponse'
                 default:
                     description: Default error response
                     content:
@@ -243,6 +290,19 @@ components:
                 source:
                     type: string
                 comment:
+                    type: string
+        DeleteCandidateResponse:
+            type: object
+            properties: {}
+        DownloadResumeResponse:
+            type: object
+            properties:
+                fileData:
+                    type: string
+                    format: bytes
+                fileName:
+                    type: string
+                fileType:
                     type: string
         GoogleProtobufAny:
             type: object

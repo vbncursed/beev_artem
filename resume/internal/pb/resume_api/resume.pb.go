@@ -27,7 +27,7 @@ var File_resume_api_resume_proto protoreflect.FileDescriptor
 
 const file_resume_api_resume_proto_rawDesc = "" +
 	"\n" +
-	"\x17resume_api/resume.proto\x12\x11resume.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x19models/resume_model.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\x89\t\n" +
+	"\x17resume_api/resume.proto\x12\x11resume.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x19models/resume_model.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\xdb\v\n" +
 	"\rResumeService\x12\xab\x01\n" +
 	"\x0fCreateCandidate\x12(.resume.models.v1.CreateCandidateRequest\x1a#.resume.models.v1.CandidateResponse\"I\x92A\x12b\x10\n" +
 	"\x0e\n" +
@@ -56,7 +56,15 @@ const file_resume_api_resume_proto_rawDesc = "" +
 	"\tGetResume\x12\".resume.models.v1.GetResumeRequest\x1a .resume.models.v1.ResumeResponse\"8\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x1d\x12\x1b/api/v1/resumes/{resume_id}B\xd1\x01\x92A\x95\x01\x12D\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x1d\x12\x1b/api/v1/resumes/{resume_id}\x12\xa6\x01\n" +
+	"\x0eDownloadResume\x12'.resume.models.v1.DownloadResumeRequest\x1a(.resume.models.v1.DownloadResumeResponse\"A\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02&\x12$/api/v1/resumes/{resume_id}/download\x12\xa6\x01\n" +
+	"\x0fDeleteCandidate\x12(.resume.models.v1.DeleteCandidateRequest\x1a).resume.models.v1.DeleteCandidateResponse\">\x92A\x12b\x10\n" +
+	"\x0e\n" +
+	"\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02#*!/api/v1/candidates/{candidate_id}B\xd1\x01\x92A\x95\x01\x12D\n" +
 	"\x12Resume Service API\x12'Candidate and resume management service2\x051.0.0ZM\n" +
 	"K\n" +
 	"\n" +
@@ -69,11 +77,15 @@ var file_resume_api_resume_proto_goTypes = []any{
 	(*models.BatchIngestResumeRequest)(nil),         // 3: resume.models.v1.BatchIngestResumeRequest
 	(*models.UploadResumeRequest)(nil),              // 4: resume.models.v1.UploadResumeRequest
 	(*models.GetResumeRequest)(nil),                 // 5: resume.models.v1.GetResumeRequest
-	(*models.CandidateResponse)(nil),                // 6: resume.models.v1.CandidateResponse
-	(*models.CandidateResumeResponse)(nil),          // 7: resume.models.v1.CandidateResumeResponse
-	(*models.BatchIngestResumeResponse)(nil),        // 8: resume.models.v1.BatchIngestResumeResponse
-	(*models.UploadResumeResponse)(nil),             // 9: resume.models.v1.UploadResumeResponse
-	(*models.ResumeResponse)(nil),                   // 10: resume.models.v1.ResumeResponse
+	(*models.DownloadResumeRequest)(nil),            // 6: resume.models.v1.DownloadResumeRequest
+	(*models.DeleteCandidateRequest)(nil),           // 7: resume.models.v1.DeleteCandidateRequest
+	(*models.CandidateResponse)(nil),                // 8: resume.models.v1.CandidateResponse
+	(*models.CandidateResumeResponse)(nil),          // 9: resume.models.v1.CandidateResumeResponse
+	(*models.BatchIngestResumeResponse)(nil),        // 10: resume.models.v1.BatchIngestResumeResponse
+	(*models.UploadResumeResponse)(nil),             // 11: resume.models.v1.UploadResumeResponse
+	(*models.ResumeResponse)(nil),                   // 12: resume.models.v1.ResumeResponse
+	(*models.DownloadResumeResponse)(nil),           // 13: resume.models.v1.DownloadResumeResponse
+	(*models.DeleteCandidateResponse)(nil),          // 14: resume.models.v1.DeleteCandidateResponse
 }
 var file_resume_api_resume_proto_depIdxs = []int32{
 	0,  // 0: resume.service.v1.ResumeService.CreateCandidate:input_type -> resume.models.v1.CreateCandidateRequest
@@ -83,15 +95,19 @@ var file_resume_api_resume_proto_depIdxs = []int32{
 	3,  // 4: resume.service.v1.ResumeService.IngestResumeBatch:input_type -> resume.models.v1.BatchIngestResumeRequest
 	4,  // 5: resume.service.v1.ResumeService.UploadResume:input_type -> resume.models.v1.UploadResumeRequest
 	5,  // 6: resume.service.v1.ResumeService.GetResume:input_type -> resume.models.v1.GetResumeRequest
-	6,  // 7: resume.service.v1.ResumeService.CreateCandidate:output_type -> resume.models.v1.CandidateResponse
-	6,  // 8: resume.service.v1.ResumeService.GetCandidate:output_type -> resume.models.v1.CandidateResponse
-	7,  // 9: resume.service.v1.ResumeService.CreateCandidateFromResume:output_type -> resume.models.v1.CandidateResumeResponse
-	7,  // 10: resume.service.v1.ResumeService.IngestResume:output_type -> resume.models.v1.CandidateResumeResponse
-	8,  // 11: resume.service.v1.ResumeService.IngestResumeBatch:output_type -> resume.models.v1.BatchIngestResumeResponse
-	9,  // 12: resume.service.v1.ResumeService.UploadResume:output_type -> resume.models.v1.UploadResumeResponse
-	10, // 13: resume.service.v1.ResumeService.GetResume:output_type -> resume.models.v1.ResumeResponse
-	7,  // [7:14] is the sub-list for method output_type
-	0,  // [0:7] is the sub-list for method input_type
+	6,  // 7: resume.service.v1.ResumeService.DownloadResume:input_type -> resume.models.v1.DownloadResumeRequest
+	7,  // 8: resume.service.v1.ResumeService.DeleteCandidate:input_type -> resume.models.v1.DeleteCandidateRequest
+	8,  // 9: resume.service.v1.ResumeService.CreateCandidate:output_type -> resume.models.v1.CandidateResponse
+	8,  // 10: resume.service.v1.ResumeService.GetCandidate:output_type -> resume.models.v1.CandidateResponse
+	9,  // 11: resume.service.v1.ResumeService.CreateCandidateFromResume:output_type -> resume.models.v1.CandidateResumeResponse
+	9,  // 12: resume.service.v1.ResumeService.IngestResume:output_type -> resume.models.v1.CandidateResumeResponse
+	10, // 13: resume.service.v1.ResumeService.IngestResumeBatch:output_type -> resume.models.v1.BatchIngestResumeResponse
+	11, // 14: resume.service.v1.ResumeService.UploadResume:output_type -> resume.models.v1.UploadResumeResponse
+	12, // 15: resume.service.v1.ResumeService.GetResume:output_type -> resume.models.v1.ResumeResponse
+	13, // 16: resume.service.v1.ResumeService.DownloadResume:output_type -> resume.models.v1.DownloadResumeResponse
+	14, // 17: resume.service.v1.ResumeService.DeleteCandidate:output_type -> resume.models.v1.DeleteCandidateResponse
+	9,  // [9:18] is the sub-list for method output_type
+	0,  // [0:9] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

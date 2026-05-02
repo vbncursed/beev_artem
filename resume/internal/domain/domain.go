@@ -57,6 +57,35 @@ type GetResumeInput struct {
 	ResumeID      string
 }
 
+// DownloadResumeInput drives the file-bytes fetch path. Same authz shape
+// as GetResume; we keep it as a separate type so the heavy `Data` payload
+// is never returned by the lighter GetResume read.
+type DownloadResumeInput struct {
+	RequestUserID uint64
+	IsAdmin       bool
+	ResumeID      string
+}
+
+// ResumeFile is the binary payload returned by DownloadResume — only the
+// bits needed to write a file response (filename + content-type + bytes).
+// Distinct from Resume so callers can't accidentally surface the full
+// extracted text alongside the blob.
+type ResumeFile struct {
+	FileName string
+	FileType string
+	Data     []byte
+}
+
+// DeleteCandidateInput drives the destructive remove path. The DB schema
+// declares ON DELETE CASCADE on resumes.candidate_id, so a single DELETE
+// against `candidates` clears both rows in one statement. Authorization is
+// the same shape as GetCandidate.
+type DeleteCandidateInput struct {
+	RequestUserID uint64
+	IsAdmin       bool
+	CandidateID   string
+}
+
 type CreateCandidateFromResumeInput struct {
 	RequestUserID uint64
 	VacancyID     string

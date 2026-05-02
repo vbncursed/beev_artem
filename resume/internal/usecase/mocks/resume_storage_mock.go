@@ -31,6 +31,20 @@ type ResumeStorageMock struct {
 	beforeCreateCandidateWithResumeCounter uint64
 	CreateCandidateWithResumeMock          mResumeStorageMockCreateCandidateWithResume
 
+	funcDeleteCandidate          func(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) (err error)
+	funcDeleteCandidateOrigin    string
+	inspectFuncDeleteCandidate   func(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool)
+	afterDeleteCandidateCounter  uint64
+	beforeDeleteCandidateCounter uint64
+	DeleteCandidateMock          mResumeStorageMockDeleteCandidate
+
+	funcDownloadResume          func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (rp1 *domain.ResumeFile, err error)
+	funcDownloadResumeOrigin    string
+	inspectFuncDownloadResume   func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool)
+	afterDownloadResumeCounter  uint64
+	beforeDownloadResumeCounter uint64
+	DownloadResumeMock          mResumeStorageMockDownloadResume
+
 	funcGetCandidate          func(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) (cp1 *domain.Candidate, err error)
 	funcGetCandidateOrigin    string
 	inspectFuncGetCandidate   func(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool)
@@ -66,6 +80,12 @@ func NewResumeStorageMock(t minimock.Tester) *ResumeStorageMock {
 
 	m.CreateCandidateWithResumeMock = mResumeStorageMockCreateCandidateWithResume{mock: m}
 	m.CreateCandidateWithResumeMock.callArgs = []*ResumeStorageMockCreateCandidateWithResumeParams{}
+
+	m.DeleteCandidateMock = mResumeStorageMockDeleteCandidate{mock: m}
+	m.DeleteCandidateMock.callArgs = []*ResumeStorageMockDeleteCandidateParams{}
+
+	m.DownloadResumeMock = mResumeStorageMockDownloadResume{mock: m}
+	m.DownloadResumeMock.callArgs = []*ResumeStorageMockDownloadResumeParams{}
 
 	m.GetCandidateMock = mResumeStorageMockGetCandidate{mock: m}
 	m.GetCandidateMock.callArgs = []*ResumeStorageMockGetCandidateParams{}
@@ -796,6 +816,815 @@ func (m *ResumeStorageMock) MinimockCreateCandidateWithResumeInspect() {
 	if !m.CreateCandidateWithResumeMock.invocationsDone() && afterCreateCandidateWithResumeCounter > 0 {
 		m.t.Errorf("Expected %d calls to ResumeStorageMock.CreateCandidateWithResume at\n%s but found %d calls",
 			mm_atomic.LoadUint64(&m.CreateCandidateWithResumeMock.expectedInvocations), m.CreateCandidateWithResumeMock.expectedInvocationsOrigin, afterCreateCandidateWithResumeCounter)
+	}
+}
+
+type mResumeStorageMockDeleteCandidate struct {
+	optional           bool
+	mock               *ResumeStorageMock
+	defaultExpectation *ResumeStorageMockDeleteCandidateExpectation
+	expectations       []*ResumeStorageMockDeleteCandidateExpectation
+
+	callArgs []*ResumeStorageMockDeleteCandidateParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// ResumeStorageMockDeleteCandidateExpectation specifies expectation struct of the ResumeStorage.DeleteCandidate
+type ResumeStorageMockDeleteCandidateExpectation struct {
+	mock               *ResumeStorageMock
+	params             *ResumeStorageMockDeleteCandidateParams
+	paramPtrs          *ResumeStorageMockDeleteCandidateParamPtrs
+	expectationOrigins ResumeStorageMockDeleteCandidateExpectationOrigins
+	results            *ResumeStorageMockDeleteCandidateResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// ResumeStorageMockDeleteCandidateParams contains parameters of the ResumeStorage.DeleteCandidate
+type ResumeStorageMockDeleteCandidateParams struct {
+	ctx           context.Context
+	candidateID   string
+	requestUserID uint64
+	isAdmin       bool
+}
+
+// ResumeStorageMockDeleteCandidateParamPtrs contains pointers to parameters of the ResumeStorage.DeleteCandidate
+type ResumeStorageMockDeleteCandidateParamPtrs struct {
+	ctx           *context.Context
+	candidateID   *string
+	requestUserID *uint64
+	isAdmin       *bool
+}
+
+// ResumeStorageMockDeleteCandidateResults contains results of the ResumeStorage.DeleteCandidate
+type ResumeStorageMockDeleteCandidateResults struct {
+	err error
+}
+
+// ResumeStorageMockDeleteCandidateOrigins contains origins of expectations of the ResumeStorage.DeleteCandidate
+type ResumeStorageMockDeleteCandidateExpectationOrigins struct {
+	origin              string
+	originCtx           string
+	originCandidateID   string
+	originRequestUserID string
+	originIsAdmin       string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Optional() *mResumeStorageMockDeleteCandidate {
+	mmDeleteCandidate.optional = true
+	return mmDeleteCandidate
+}
+
+// Expect sets up expected params for ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Expect(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) *mResumeStorageMockDeleteCandidate {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	if mmDeleteCandidate.defaultExpectation == nil {
+		mmDeleteCandidate.defaultExpectation = &ResumeStorageMockDeleteCandidateExpectation{}
+	}
+
+	if mmDeleteCandidate.defaultExpectation.paramPtrs != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by ExpectParams functions")
+	}
+
+	mmDeleteCandidate.defaultExpectation.params = &ResumeStorageMockDeleteCandidateParams{ctx, candidateID, requestUserID, isAdmin}
+	mmDeleteCandidate.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmDeleteCandidate.expectations {
+		if minimock.Equal(e.params, mmDeleteCandidate.defaultExpectation.params) {
+			mmDeleteCandidate.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDeleteCandidate.defaultExpectation.params)
+		}
+	}
+
+	return mmDeleteCandidate
+}
+
+// ExpectCtxParam1 sets up expected param ctx for ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) ExpectCtxParam1(ctx context.Context) *mResumeStorageMockDeleteCandidate {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	if mmDeleteCandidate.defaultExpectation == nil {
+		mmDeleteCandidate.defaultExpectation = &ResumeStorageMockDeleteCandidateExpectation{}
+	}
+
+	if mmDeleteCandidate.defaultExpectation.params != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Expect")
+	}
+
+	if mmDeleteCandidate.defaultExpectation.paramPtrs == nil {
+		mmDeleteCandidate.defaultExpectation.paramPtrs = &ResumeStorageMockDeleteCandidateParamPtrs{}
+	}
+	mmDeleteCandidate.defaultExpectation.paramPtrs.ctx = &ctx
+	mmDeleteCandidate.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmDeleteCandidate
+}
+
+// ExpectCandidateIDParam2 sets up expected param candidateID for ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) ExpectCandidateIDParam2(candidateID string) *mResumeStorageMockDeleteCandidate {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	if mmDeleteCandidate.defaultExpectation == nil {
+		mmDeleteCandidate.defaultExpectation = &ResumeStorageMockDeleteCandidateExpectation{}
+	}
+
+	if mmDeleteCandidate.defaultExpectation.params != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Expect")
+	}
+
+	if mmDeleteCandidate.defaultExpectation.paramPtrs == nil {
+		mmDeleteCandidate.defaultExpectation.paramPtrs = &ResumeStorageMockDeleteCandidateParamPtrs{}
+	}
+	mmDeleteCandidate.defaultExpectation.paramPtrs.candidateID = &candidateID
+	mmDeleteCandidate.defaultExpectation.expectationOrigins.originCandidateID = minimock.CallerInfo(1)
+
+	return mmDeleteCandidate
+}
+
+// ExpectRequestUserIDParam3 sets up expected param requestUserID for ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) ExpectRequestUserIDParam3(requestUserID uint64) *mResumeStorageMockDeleteCandidate {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	if mmDeleteCandidate.defaultExpectation == nil {
+		mmDeleteCandidate.defaultExpectation = &ResumeStorageMockDeleteCandidateExpectation{}
+	}
+
+	if mmDeleteCandidate.defaultExpectation.params != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Expect")
+	}
+
+	if mmDeleteCandidate.defaultExpectation.paramPtrs == nil {
+		mmDeleteCandidate.defaultExpectation.paramPtrs = &ResumeStorageMockDeleteCandidateParamPtrs{}
+	}
+	mmDeleteCandidate.defaultExpectation.paramPtrs.requestUserID = &requestUserID
+	mmDeleteCandidate.defaultExpectation.expectationOrigins.originRequestUserID = minimock.CallerInfo(1)
+
+	return mmDeleteCandidate
+}
+
+// ExpectIsAdminParam4 sets up expected param isAdmin for ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) ExpectIsAdminParam4(isAdmin bool) *mResumeStorageMockDeleteCandidate {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	if mmDeleteCandidate.defaultExpectation == nil {
+		mmDeleteCandidate.defaultExpectation = &ResumeStorageMockDeleteCandidateExpectation{}
+	}
+
+	if mmDeleteCandidate.defaultExpectation.params != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Expect")
+	}
+
+	if mmDeleteCandidate.defaultExpectation.paramPtrs == nil {
+		mmDeleteCandidate.defaultExpectation.paramPtrs = &ResumeStorageMockDeleteCandidateParamPtrs{}
+	}
+	mmDeleteCandidate.defaultExpectation.paramPtrs.isAdmin = &isAdmin
+	mmDeleteCandidate.defaultExpectation.expectationOrigins.originIsAdmin = minimock.CallerInfo(1)
+
+	return mmDeleteCandidate
+}
+
+// Inspect accepts an inspector function that has same arguments as the ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Inspect(f func(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool)) *mResumeStorageMockDeleteCandidate {
+	if mmDeleteCandidate.mock.inspectFuncDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("Inspect function is already set for ResumeStorageMock.DeleteCandidate")
+	}
+
+	mmDeleteCandidate.mock.inspectFuncDeleteCandidate = f
+
+	return mmDeleteCandidate
+}
+
+// Return sets up results that will be returned by ResumeStorage.DeleteCandidate
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Return(err error) *ResumeStorageMock {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	if mmDeleteCandidate.defaultExpectation == nil {
+		mmDeleteCandidate.defaultExpectation = &ResumeStorageMockDeleteCandidateExpectation{mock: mmDeleteCandidate.mock}
+	}
+	mmDeleteCandidate.defaultExpectation.results = &ResumeStorageMockDeleteCandidateResults{err}
+	mmDeleteCandidate.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmDeleteCandidate.mock
+}
+
+// Set uses given function f to mock the ResumeStorage.DeleteCandidate method
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Set(f func(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) (err error)) *ResumeStorageMock {
+	if mmDeleteCandidate.defaultExpectation != nil {
+		mmDeleteCandidate.mock.t.Fatalf("Default expectation is already set for the ResumeStorage.DeleteCandidate method")
+	}
+
+	if len(mmDeleteCandidate.expectations) > 0 {
+		mmDeleteCandidate.mock.t.Fatalf("Some expectations are already set for the ResumeStorage.DeleteCandidate method")
+	}
+
+	mmDeleteCandidate.mock.funcDeleteCandidate = f
+	mmDeleteCandidate.mock.funcDeleteCandidateOrigin = minimock.CallerInfo(1)
+	return mmDeleteCandidate.mock
+}
+
+// When sets expectation for the ResumeStorage.DeleteCandidate which will trigger the result defined by the following
+// Then helper
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) When(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) *ResumeStorageMockDeleteCandidateExpectation {
+	if mmDeleteCandidate.mock.funcDeleteCandidate != nil {
+		mmDeleteCandidate.mock.t.Fatalf("ResumeStorageMock.DeleteCandidate mock is already set by Set")
+	}
+
+	expectation := &ResumeStorageMockDeleteCandidateExpectation{
+		mock:               mmDeleteCandidate.mock,
+		params:             &ResumeStorageMockDeleteCandidateParams{ctx, candidateID, requestUserID, isAdmin},
+		expectationOrigins: ResumeStorageMockDeleteCandidateExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmDeleteCandidate.expectations = append(mmDeleteCandidate.expectations, expectation)
+	return expectation
+}
+
+// Then sets up ResumeStorage.DeleteCandidate return parameters for the expectation previously defined by the When method
+func (e *ResumeStorageMockDeleteCandidateExpectation) Then(err error) *ResumeStorageMock {
+	e.results = &ResumeStorageMockDeleteCandidateResults{err}
+	return e.mock
+}
+
+// Times sets number of times ResumeStorage.DeleteCandidate should be invoked
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Times(n uint64) *mResumeStorageMockDeleteCandidate {
+	if n == 0 {
+		mmDeleteCandidate.mock.t.Fatalf("Times of ResumeStorageMock.DeleteCandidate mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmDeleteCandidate.expectedInvocations, n)
+	mmDeleteCandidate.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmDeleteCandidate
+}
+
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) invocationsDone() bool {
+	if len(mmDeleteCandidate.expectations) == 0 && mmDeleteCandidate.defaultExpectation == nil && mmDeleteCandidate.mock.funcDeleteCandidate == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmDeleteCandidate.mock.afterDeleteCandidateCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmDeleteCandidate.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// DeleteCandidate implements mm_usecase.ResumeStorage
+func (mmDeleteCandidate *ResumeStorageMock) DeleteCandidate(ctx context.Context, candidateID string, requestUserID uint64, isAdmin bool) (err error) {
+	mm_atomic.AddUint64(&mmDeleteCandidate.beforeDeleteCandidateCounter, 1)
+	defer mm_atomic.AddUint64(&mmDeleteCandidate.afterDeleteCandidateCounter, 1)
+
+	mmDeleteCandidate.t.Helper()
+
+	if mmDeleteCandidate.inspectFuncDeleteCandidate != nil {
+		mmDeleteCandidate.inspectFuncDeleteCandidate(ctx, candidateID, requestUserID, isAdmin)
+	}
+
+	mm_params := ResumeStorageMockDeleteCandidateParams{ctx, candidateID, requestUserID, isAdmin}
+
+	// Record call args
+	mmDeleteCandidate.DeleteCandidateMock.mutex.Lock()
+	mmDeleteCandidate.DeleteCandidateMock.callArgs = append(mmDeleteCandidate.DeleteCandidateMock.callArgs, &mm_params)
+	mmDeleteCandidate.DeleteCandidateMock.mutex.Unlock()
+
+	for _, e := range mmDeleteCandidate.DeleteCandidateMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.err
+		}
+	}
+
+	if mmDeleteCandidate.DeleteCandidateMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.Counter, 1)
+		mm_want := mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.params
+		mm_want_ptrs := mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.paramPtrs
+
+		mm_got := ResumeStorageMockDeleteCandidateParams{ctx, candidateID, requestUserID, isAdmin}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmDeleteCandidate.t.Errorf("ResumeStorageMock.DeleteCandidate got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.candidateID != nil && !minimock.Equal(*mm_want_ptrs.candidateID, mm_got.candidateID) {
+				mmDeleteCandidate.t.Errorf("ResumeStorageMock.DeleteCandidate got unexpected parameter candidateID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.expectationOrigins.originCandidateID, *mm_want_ptrs.candidateID, mm_got.candidateID, minimock.Diff(*mm_want_ptrs.candidateID, mm_got.candidateID))
+			}
+
+			if mm_want_ptrs.requestUserID != nil && !minimock.Equal(*mm_want_ptrs.requestUserID, mm_got.requestUserID) {
+				mmDeleteCandidate.t.Errorf("ResumeStorageMock.DeleteCandidate got unexpected parameter requestUserID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.expectationOrigins.originRequestUserID, *mm_want_ptrs.requestUserID, mm_got.requestUserID, minimock.Diff(*mm_want_ptrs.requestUserID, mm_got.requestUserID))
+			}
+
+			if mm_want_ptrs.isAdmin != nil && !minimock.Equal(*mm_want_ptrs.isAdmin, mm_got.isAdmin) {
+				mmDeleteCandidate.t.Errorf("ResumeStorageMock.DeleteCandidate got unexpected parameter isAdmin, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.expectationOrigins.originIsAdmin, *mm_want_ptrs.isAdmin, mm_got.isAdmin, minimock.Diff(*mm_want_ptrs.isAdmin, mm_got.isAdmin))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmDeleteCandidate.t.Errorf("ResumeStorageMock.DeleteCandidate got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmDeleteCandidate.DeleteCandidateMock.defaultExpectation.results
+		if mm_results == nil {
+			mmDeleteCandidate.t.Fatal("No results are set for the ResumeStorageMock.DeleteCandidate")
+		}
+		return (*mm_results).err
+	}
+	if mmDeleteCandidate.funcDeleteCandidate != nil {
+		return mmDeleteCandidate.funcDeleteCandidate(ctx, candidateID, requestUserID, isAdmin)
+	}
+	mmDeleteCandidate.t.Fatalf("Unexpected call to ResumeStorageMock.DeleteCandidate. %v %v %v %v", ctx, candidateID, requestUserID, isAdmin)
+	return
+}
+
+// DeleteCandidateAfterCounter returns a count of finished ResumeStorageMock.DeleteCandidate invocations
+func (mmDeleteCandidate *ResumeStorageMock) DeleteCandidateAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDeleteCandidate.afterDeleteCandidateCounter)
+}
+
+// DeleteCandidateBeforeCounter returns a count of ResumeStorageMock.DeleteCandidate invocations
+func (mmDeleteCandidate *ResumeStorageMock) DeleteCandidateBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDeleteCandidate.beforeDeleteCandidateCounter)
+}
+
+// Calls returns a list of arguments used in each call to ResumeStorageMock.DeleteCandidate.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmDeleteCandidate *mResumeStorageMockDeleteCandidate) Calls() []*ResumeStorageMockDeleteCandidateParams {
+	mmDeleteCandidate.mutex.RLock()
+
+	argCopy := make([]*ResumeStorageMockDeleteCandidateParams, len(mmDeleteCandidate.callArgs))
+	copy(argCopy, mmDeleteCandidate.callArgs)
+
+	mmDeleteCandidate.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockDeleteCandidateDone returns true if the count of the DeleteCandidate invocations corresponds
+// the number of defined expectations
+func (m *ResumeStorageMock) MinimockDeleteCandidateDone() bool {
+	if m.DeleteCandidateMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.DeleteCandidateMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.DeleteCandidateMock.invocationsDone()
+}
+
+// MinimockDeleteCandidateInspect logs each unmet expectation
+func (m *ResumeStorageMock) MinimockDeleteCandidateInspect() {
+	for _, e := range m.DeleteCandidateMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to ResumeStorageMock.DeleteCandidate at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterDeleteCandidateCounter := mm_atomic.LoadUint64(&m.afterDeleteCandidateCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DeleteCandidateMock.defaultExpectation != nil && afterDeleteCandidateCounter < 1 {
+		if m.DeleteCandidateMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to ResumeStorageMock.DeleteCandidate at\n%s", m.DeleteCandidateMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to ResumeStorageMock.DeleteCandidate at\n%s with params: %#v", m.DeleteCandidateMock.defaultExpectation.expectationOrigins.origin, *m.DeleteCandidateMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDeleteCandidate != nil && afterDeleteCandidateCounter < 1 {
+		m.t.Errorf("Expected call to ResumeStorageMock.DeleteCandidate at\n%s", m.funcDeleteCandidateOrigin)
+	}
+
+	if !m.DeleteCandidateMock.invocationsDone() && afterDeleteCandidateCounter > 0 {
+		m.t.Errorf("Expected %d calls to ResumeStorageMock.DeleteCandidate at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.DeleteCandidateMock.expectedInvocations), m.DeleteCandidateMock.expectedInvocationsOrigin, afterDeleteCandidateCounter)
+	}
+}
+
+type mResumeStorageMockDownloadResume struct {
+	optional           bool
+	mock               *ResumeStorageMock
+	defaultExpectation *ResumeStorageMockDownloadResumeExpectation
+	expectations       []*ResumeStorageMockDownloadResumeExpectation
+
+	callArgs []*ResumeStorageMockDownloadResumeParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// ResumeStorageMockDownloadResumeExpectation specifies expectation struct of the ResumeStorage.DownloadResume
+type ResumeStorageMockDownloadResumeExpectation struct {
+	mock               *ResumeStorageMock
+	params             *ResumeStorageMockDownloadResumeParams
+	paramPtrs          *ResumeStorageMockDownloadResumeParamPtrs
+	expectationOrigins ResumeStorageMockDownloadResumeExpectationOrigins
+	results            *ResumeStorageMockDownloadResumeResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// ResumeStorageMockDownloadResumeParams contains parameters of the ResumeStorage.DownloadResume
+type ResumeStorageMockDownloadResumeParams struct {
+	ctx           context.Context
+	resumeID      string
+	requestUserID uint64
+	isAdmin       bool
+}
+
+// ResumeStorageMockDownloadResumeParamPtrs contains pointers to parameters of the ResumeStorage.DownloadResume
+type ResumeStorageMockDownloadResumeParamPtrs struct {
+	ctx           *context.Context
+	resumeID      *string
+	requestUserID *uint64
+	isAdmin       *bool
+}
+
+// ResumeStorageMockDownloadResumeResults contains results of the ResumeStorage.DownloadResume
+type ResumeStorageMockDownloadResumeResults struct {
+	rp1 *domain.ResumeFile
+	err error
+}
+
+// ResumeStorageMockDownloadResumeOrigins contains origins of expectations of the ResumeStorage.DownloadResume
+type ResumeStorageMockDownloadResumeExpectationOrigins struct {
+	origin              string
+	originCtx           string
+	originResumeID      string
+	originRequestUserID string
+	originIsAdmin       string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Optional() *mResumeStorageMockDownloadResume {
+	mmDownloadResume.optional = true
+	return mmDownloadResume
+}
+
+// Expect sets up expected params for ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Expect(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) *mResumeStorageMockDownloadResume {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	if mmDownloadResume.defaultExpectation == nil {
+		mmDownloadResume.defaultExpectation = &ResumeStorageMockDownloadResumeExpectation{}
+	}
+
+	if mmDownloadResume.defaultExpectation.paramPtrs != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by ExpectParams functions")
+	}
+
+	mmDownloadResume.defaultExpectation.params = &ResumeStorageMockDownloadResumeParams{ctx, resumeID, requestUserID, isAdmin}
+	mmDownloadResume.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmDownloadResume.expectations {
+		if minimock.Equal(e.params, mmDownloadResume.defaultExpectation.params) {
+			mmDownloadResume.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmDownloadResume.defaultExpectation.params)
+		}
+	}
+
+	return mmDownloadResume
+}
+
+// ExpectCtxParam1 sets up expected param ctx for ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) ExpectCtxParam1(ctx context.Context) *mResumeStorageMockDownloadResume {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	if mmDownloadResume.defaultExpectation == nil {
+		mmDownloadResume.defaultExpectation = &ResumeStorageMockDownloadResumeExpectation{}
+	}
+
+	if mmDownloadResume.defaultExpectation.params != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Expect")
+	}
+
+	if mmDownloadResume.defaultExpectation.paramPtrs == nil {
+		mmDownloadResume.defaultExpectation.paramPtrs = &ResumeStorageMockDownloadResumeParamPtrs{}
+	}
+	mmDownloadResume.defaultExpectation.paramPtrs.ctx = &ctx
+	mmDownloadResume.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmDownloadResume
+}
+
+// ExpectResumeIDParam2 sets up expected param resumeID for ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) ExpectResumeIDParam2(resumeID string) *mResumeStorageMockDownloadResume {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	if mmDownloadResume.defaultExpectation == nil {
+		mmDownloadResume.defaultExpectation = &ResumeStorageMockDownloadResumeExpectation{}
+	}
+
+	if mmDownloadResume.defaultExpectation.params != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Expect")
+	}
+
+	if mmDownloadResume.defaultExpectation.paramPtrs == nil {
+		mmDownloadResume.defaultExpectation.paramPtrs = &ResumeStorageMockDownloadResumeParamPtrs{}
+	}
+	mmDownloadResume.defaultExpectation.paramPtrs.resumeID = &resumeID
+	mmDownloadResume.defaultExpectation.expectationOrigins.originResumeID = minimock.CallerInfo(1)
+
+	return mmDownloadResume
+}
+
+// ExpectRequestUserIDParam3 sets up expected param requestUserID for ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) ExpectRequestUserIDParam3(requestUserID uint64) *mResumeStorageMockDownloadResume {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	if mmDownloadResume.defaultExpectation == nil {
+		mmDownloadResume.defaultExpectation = &ResumeStorageMockDownloadResumeExpectation{}
+	}
+
+	if mmDownloadResume.defaultExpectation.params != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Expect")
+	}
+
+	if mmDownloadResume.defaultExpectation.paramPtrs == nil {
+		mmDownloadResume.defaultExpectation.paramPtrs = &ResumeStorageMockDownloadResumeParamPtrs{}
+	}
+	mmDownloadResume.defaultExpectation.paramPtrs.requestUserID = &requestUserID
+	mmDownloadResume.defaultExpectation.expectationOrigins.originRequestUserID = minimock.CallerInfo(1)
+
+	return mmDownloadResume
+}
+
+// ExpectIsAdminParam4 sets up expected param isAdmin for ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) ExpectIsAdminParam4(isAdmin bool) *mResumeStorageMockDownloadResume {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	if mmDownloadResume.defaultExpectation == nil {
+		mmDownloadResume.defaultExpectation = &ResumeStorageMockDownloadResumeExpectation{}
+	}
+
+	if mmDownloadResume.defaultExpectation.params != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Expect")
+	}
+
+	if mmDownloadResume.defaultExpectation.paramPtrs == nil {
+		mmDownloadResume.defaultExpectation.paramPtrs = &ResumeStorageMockDownloadResumeParamPtrs{}
+	}
+	mmDownloadResume.defaultExpectation.paramPtrs.isAdmin = &isAdmin
+	mmDownloadResume.defaultExpectation.expectationOrigins.originIsAdmin = minimock.CallerInfo(1)
+
+	return mmDownloadResume
+}
+
+// Inspect accepts an inspector function that has same arguments as the ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Inspect(f func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool)) *mResumeStorageMockDownloadResume {
+	if mmDownloadResume.mock.inspectFuncDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("Inspect function is already set for ResumeStorageMock.DownloadResume")
+	}
+
+	mmDownloadResume.mock.inspectFuncDownloadResume = f
+
+	return mmDownloadResume
+}
+
+// Return sets up results that will be returned by ResumeStorage.DownloadResume
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Return(rp1 *domain.ResumeFile, err error) *ResumeStorageMock {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	if mmDownloadResume.defaultExpectation == nil {
+		mmDownloadResume.defaultExpectation = &ResumeStorageMockDownloadResumeExpectation{mock: mmDownloadResume.mock}
+	}
+	mmDownloadResume.defaultExpectation.results = &ResumeStorageMockDownloadResumeResults{rp1, err}
+	mmDownloadResume.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmDownloadResume.mock
+}
+
+// Set uses given function f to mock the ResumeStorage.DownloadResume method
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Set(f func(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (rp1 *domain.ResumeFile, err error)) *ResumeStorageMock {
+	if mmDownloadResume.defaultExpectation != nil {
+		mmDownloadResume.mock.t.Fatalf("Default expectation is already set for the ResumeStorage.DownloadResume method")
+	}
+
+	if len(mmDownloadResume.expectations) > 0 {
+		mmDownloadResume.mock.t.Fatalf("Some expectations are already set for the ResumeStorage.DownloadResume method")
+	}
+
+	mmDownloadResume.mock.funcDownloadResume = f
+	mmDownloadResume.mock.funcDownloadResumeOrigin = minimock.CallerInfo(1)
+	return mmDownloadResume.mock
+}
+
+// When sets expectation for the ResumeStorage.DownloadResume which will trigger the result defined by the following
+// Then helper
+func (mmDownloadResume *mResumeStorageMockDownloadResume) When(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) *ResumeStorageMockDownloadResumeExpectation {
+	if mmDownloadResume.mock.funcDownloadResume != nil {
+		mmDownloadResume.mock.t.Fatalf("ResumeStorageMock.DownloadResume mock is already set by Set")
+	}
+
+	expectation := &ResumeStorageMockDownloadResumeExpectation{
+		mock:               mmDownloadResume.mock,
+		params:             &ResumeStorageMockDownloadResumeParams{ctx, resumeID, requestUserID, isAdmin},
+		expectationOrigins: ResumeStorageMockDownloadResumeExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmDownloadResume.expectations = append(mmDownloadResume.expectations, expectation)
+	return expectation
+}
+
+// Then sets up ResumeStorage.DownloadResume return parameters for the expectation previously defined by the When method
+func (e *ResumeStorageMockDownloadResumeExpectation) Then(rp1 *domain.ResumeFile, err error) *ResumeStorageMock {
+	e.results = &ResumeStorageMockDownloadResumeResults{rp1, err}
+	return e.mock
+}
+
+// Times sets number of times ResumeStorage.DownloadResume should be invoked
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Times(n uint64) *mResumeStorageMockDownloadResume {
+	if n == 0 {
+		mmDownloadResume.mock.t.Fatalf("Times of ResumeStorageMock.DownloadResume mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmDownloadResume.expectedInvocations, n)
+	mmDownloadResume.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmDownloadResume
+}
+
+func (mmDownloadResume *mResumeStorageMockDownloadResume) invocationsDone() bool {
+	if len(mmDownloadResume.expectations) == 0 && mmDownloadResume.defaultExpectation == nil && mmDownloadResume.mock.funcDownloadResume == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmDownloadResume.mock.afterDownloadResumeCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmDownloadResume.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// DownloadResume implements mm_usecase.ResumeStorage
+func (mmDownloadResume *ResumeStorageMock) DownloadResume(ctx context.Context, resumeID string, requestUserID uint64, isAdmin bool) (rp1 *domain.ResumeFile, err error) {
+	mm_atomic.AddUint64(&mmDownloadResume.beforeDownloadResumeCounter, 1)
+	defer mm_atomic.AddUint64(&mmDownloadResume.afterDownloadResumeCounter, 1)
+
+	mmDownloadResume.t.Helper()
+
+	if mmDownloadResume.inspectFuncDownloadResume != nil {
+		mmDownloadResume.inspectFuncDownloadResume(ctx, resumeID, requestUserID, isAdmin)
+	}
+
+	mm_params := ResumeStorageMockDownloadResumeParams{ctx, resumeID, requestUserID, isAdmin}
+
+	// Record call args
+	mmDownloadResume.DownloadResumeMock.mutex.Lock()
+	mmDownloadResume.DownloadResumeMock.callArgs = append(mmDownloadResume.DownloadResumeMock.callArgs, &mm_params)
+	mmDownloadResume.DownloadResumeMock.mutex.Unlock()
+
+	for _, e := range mmDownloadResume.DownloadResumeMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.rp1, e.results.err
+		}
+	}
+
+	if mmDownloadResume.DownloadResumeMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmDownloadResume.DownloadResumeMock.defaultExpectation.Counter, 1)
+		mm_want := mmDownloadResume.DownloadResumeMock.defaultExpectation.params
+		mm_want_ptrs := mmDownloadResume.DownloadResumeMock.defaultExpectation.paramPtrs
+
+		mm_got := ResumeStorageMockDownloadResumeParams{ctx, resumeID, requestUserID, isAdmin}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmDownloadResume.t.Errorf("ResumeStorageMock.DownloadResume got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDownloadResume.DownloadResumeMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.resumeID != nil && !minimock.Equal(*mm_want_ptrs.resumeID, mm_got.resumeID) {
+				mmDownloadResume.t.Errorf("ResumeStorageMock.DownloadResume got unexpected parameter resumeID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDownloadResume.DownloadResumeMock.defaultExpectation.expectationOrigins.originResumeID, *mm_want_ptrs.resumeID, mm_got.resumeID, minimock.Diff(*mm_want_ptrs.resumeID, mm_got.resumeID))
+			}
+
+			if mm_want_ptrs.requestUserID != nil && !minimock.Equal(*mm_want_ptrs.requestUserID, mm_got.requestUserID) {
+				mmDownloadResume.t.Errorf("ResumeStorageMock.DownloadResume got unexpected parameter requestUserID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDownloadResume.DownloadResumeMock.defaultExpectation.expectationOrigins.originRequestUserID, *mm_want_ptrs.requestUserID, mm_got.requestUserID, minimock.Diff(*mm_want_ptrs.requestUserID, mm_got.requestUserID))
+			}
+
+			if mm_want_ptrs.isAdmin != nil && !minimock.Equal(*mm_want_ptrs.isAdmin, mm_got.isAdmin) {
+				mmDownloadResume.t.Errorf("ResumeStorageMock.DownloadResume got unexpected parameter isAdmin, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmDownloadResume.DownloadResumeMock.defaultExpectation.expectationOrigins.originIsAdmin, *mm_want_ptrs.isAdmin, mm_got.isAdmin, minimock.Diff(*mm_want_ptrs.isAdmin, mm_got.isAdmin))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmDownloadResume.t.Errorf("ResumeStorageMock.DownloadResume got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmDownloadResume.DownloadResumeMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmDownloadResume.DownloadResumeMock.defaultExpectation.results
+		if mm_results == nil {
+			mmDownloadResume.t.Fatal("No results are set for the ResumeStorageMock.DownloadResume")
+		}
+		return (*mm_results).rp1, (*mm_results).err
+	}
+	if mmDownloadResume.funcDownloadResume != nil {
+		return mmDownloadResume.funcDownloadResume(ctx, resumeID, requestUserID, isAdmin)
+	}
+	mmDownloadResume.t.Fatalf("Unexpected call to ResumeStorageMock.DownloadResume. %v %v %v %v", ctx, resumeID, requestUserID, isAdmin)
+	return
+}
+
+// DownloadResumeAfterCounter returns a count of finished ResumeStorageMock.DownloadResume invocations
+func (mmDownloadResume *ResumeStorageMock) DownloadResumeAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDownloadResume.afterDownloadResumeCounter)
+}
+
+// DownloadResumeBeforeCounter returns a count of ResumeStorageMock.DownloadResume invocations
+func (mmDownloadResume *ResumeStorageMock) DownloadResumeBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmDownloadResume.beforeDownloadResumeCounter)
+}
+
+// Calls returns a list of arguments used in each call to ResumeStorageMock.DownloadResume.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmDownloadResume *mResumeStorageMockDownloadResume) Calls() []*ResumeStorageMockDownloadResumeParams {
+	mmDownloadResume.mutex.RLock()
+
+	argCopy := make([]*ResumeStorageMockDownloadResumeParams, len(mmDownloadResume.callArgs))
+	copy(argCopy, mmDownloadResume.callArgs)
+
+	mmDownloadResume.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockDownloadResumeDone returns true if the count of the DownloadResume invocations corresponds
+// the number of defined expectations
+func (m *ResumeStorageMock) MinimockDownloadResumeDone() bool {
+	if m.DownloadResumeMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.DownloadResumeMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.DownloadResumeMock.invocationsDone()
+}
+
+// MinimockDownloadResumeInspect logs each unmet expectation
+func (m *ResumeStorageMock) MinimockDownloadResumeInspect() {
+	for _, e := range m.DownloadResumeMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to ResumeStorageMock.DownloadResume at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterDownloadResumeCounter := mm_atomic.LoadUint64(&m.afterDownloadResumeCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.DownloadResumeMock.defaultExpectation != nil && afterDownloadResumeCounter < 1 {
+		if m.DownloadResumeMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to ResumeStorageMock.DownloadResume at\n%s", m.DownloadResumeMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to ResumeStorageMock.DownloadResume at\n%s with params: %#v", m.DownloadResumeMock.defaultExpectation.expectationOrigins.origin, *m.DownloadResumeMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcDownloadResume != nil && afterDownloadResumeCounter < 1 {
+		m.t.Errorf("Expected call to ResumeStorageMock.DownloadResume at\n%s", m.funcDownloadResumeOrigin)
+	}
+
+	if !m.DownloadResumeMock.invocationsDone() && afterDownloadResumeCounter > 0 {
+		m.t.Errorf("Expected %d calls to ResumeStorageMock.DownloadResume at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.DownloadResumeMock.expectedInvocations), m.DownloadResumeMock.expectedInvocationsOrigin, afterDownloadResumeCounter)
 	}
 }
 
@@ -1960,6 +2789,10 @@ func (m *ResumeStorageMock) MinimockFinish() {
 
 			m.MinimockCreateCandidateWithResumeInspect()
 
+			m.MinimockDeleteCandidateInspect()
+
+			m.MinimockDownloadResumeInspect()
+
 			m.MinimockGetCandidateInspect()
 
 			m.MinimockGetResumeInspect()
@@ -1990,6 +2823,8 @@ func (m *ResumeStorageMock) minimockDone() bool {
 	return done &&
 		m.MinimockCreateCandidateDone() &&
 		m.MinimockCreateCandidateWithResumeDone() &&
+		m.MinimockDeleteCandidateDone() &&
+		m.MinimockDownloadResumeDone() &&
 		m.MinimockGetCandidateDone() &&
 		m.MinimockGetResumeDone() &&
 		m.MinimockUploadResumeDone()

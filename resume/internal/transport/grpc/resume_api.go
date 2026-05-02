@@ -14,6 +14,8 @@ type resumeService interface {
 	GetCandidate(ctx context.Context, in domain.GetCandidateInput) (*domain.Candidate, error)
 	UploadResume(ctx context.Context, in domain.UploadResumeInput) (*domain.Resume, error)
 	GetResume(ctx context.Context, in domain.GetResumeInput) (*domain.Resume, error)
+	DownloadResume(ctx context.Context, in domain.DownloadResumeInput) (*domain.ResumeFile, error)
+	DeleteCandidate(ctx context.Context, in domain.DeleteCandidateInput) error
 }
 
 type ResumeServiceAPI struct {

@@ -27,6 +27,8 @@ const (
 	ResumeService_IngestResumeBatch_FullMethodName         = "/resume.service.v1.ResumeService/IngestResumeBatch"
 	ResumeService_UploadResume_FullMethodName              = "/resume.service.v1.ResumeService/UploadResume"
 	ResumeService_GetResume_FullMethodName                 = "/resume.service.v1.ResumeService/GetResume"
+	ResumeService_DownloadResume_FullMethodName            = "/resume.service.v1.ResumeService/DownloadResume"
+	ResumeService_DeleteCandidate_FullMethodName           = "/resume.service.v1.ResumeService/DeleteCandidate"
 )
 
 // ResumeServiceClient is the client API for ResumeService service.
@@ -40,6 +42,8 @@ type ResumeServiceClient interface {
 	IngestResumeBatch(ctx context.Context, in *models.BatchIngestResumeRequest, opts ...grpc.CallOption) (*models.BatchIngestResumeResponse, error)
 	UploadResume(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[models.UploadResumeRequest, models.UploadResumeResponse], error)
 	GetResume(ctx context.Context, in *models.GetResumeRequest, opts ...grpc.CallOption) (*models.ResumeResponse, error)
+	DownloadResume(ctx context.Context, in *models.DownloadResumeRequest, opts ...grpc.CallOption) (*models.DownloadResumeResponse, error)
+	DeleteCandidate(ctx context.Context, in *models.DeleteCandidateRequest, opts ...grpc.CallOption) (*models.DeleteCandidateResponse, error)
 }
 
 type resumeServiceClient struct {
@@ -123,6 +127,26 @@ func (c *resumeServiceClient) GetResume(ctx context.Context, in *models.GetResum
 	return out, nil
 }
 
+func (c *resumeServiceClient) DownloadResume(ctx context.Context, in *models.DownloadResumeRequest, opts ...grpc.CallOption) (*models.DownloadResumeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(models.DownloadResumeResponse)
+	err := c.cc.Invoke(ctx, ResumeService_DownloadResume_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *resumeServiceClient) DeleteCandidate(ctx context.Context, in *models.DeleteCandidateRequest, opts ...grpc.CallOption) (*models.DeleteCandidateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(models.DeleteCandidateResponse)
+	err := c.cc.Invoke(ctx, ResumeService_DeleteCandidate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ResumeServiceServer is the server API for ResumeService service.
 // All implementations must embed UnimplementedResumeServiceServer
 // for forward compatibility.
@@ -134,6 +158,8 @@ type ResumeServiceServer interface {
 	IngestResumeBatch(context.Context, *models.BatchIngestResumeRequest) (*models.BatchIngestResumeResponse, error)
 	UploadResume(grpc.ClientStreamingServer[models.UploadResumeRequest, models.UploadResumeResponse]) error
 	GetResume(context.Context, *models.GetResumeRequest) (*models.ResumeResponse, error)
+	DownloadResume(context.Context, *models.DownloadResumeRequest) (*models.DownloadResumeResponse, error)
+	DeleteCandidate(context.Context, *models.DeleteCandidateRequest) (*models.DeleteCandidateResponse, error)
 	mustEmbedUnimplementedResumeServiceServer()
 }
 
@@ -164,6 +190,12 @@ func (UnimplementedResumeServiceServer) UploadResume(grpc.ClientStreamingServer[
 }
 func (UnimplementedResumeServiceServer) GetResume(context.Context, *models.GetResumeRequest) (*models.ResumeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetResume not implemented")
+}
+func (UnimplementedResumeServiceServer) DownloadResume(context.Context, *models.DownloadResumeRequest) (*models.DownloadResumeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DownloadResume not implemented")
+}
+func (UnimplementedResumeServiceServer) DeleteCandidate(context.Context, *models.DeleteCandidateRequest) (*models.DeleteCandidateResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteCandidate not implemented")
 }
 func (UnimplementedResumeServiceServer) mustEmbedUnimplementedResumeServiceServer() {}
 func (UnimplementedResumeServiceServer) testEmbeddedByValue()                       {}
@@ -301,6 +333,42 @@ func _ResumeService_GetResume_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ResumeService_DownloadResume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(models.DownloadResumeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResumeServiceServer).DownloadResume(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ResumeService_DownloadResume_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResumeServiceServer).DownloadResume(ctx, req.(*models.DownloadResumeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ResumeService_DeleteCandidate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(models.DeleteCandidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ResumeServiceServer).DeleteCandidate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ResumeService_DeleteCandidate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ResumeServiceServer).DeleteCandidate(ctx, req.(*models.DeleteCandidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ResumeService_ServiceDesc is the grpc.ServiceDesc for ResumeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -331,6 +399,14 @@ var ResumeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetResume",
 			Handler:    _ResumeService_GetResume_Handler,
+		},
+		{
+			MethodName: "DownloadResume",
+			Handler:    _ResumeService_DownloadResume_Handler,
+		},
+		{
+			MethodName: "DeleteCandidate",
+			Handler:    _ResumeService_DeleteCandidate_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
