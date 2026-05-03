@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package admin.models.v1;
+
+option go_package = "github.com/artem13815/hr/gateway/internal/pb/models";
+
+import "google/protobuf/timestamp.proto";
+
+// SystemStats is the dashboard headline — total counts across the
+// platform. Computed via SELECT COUNT(*) per table; cheap on a 1-instance
+// shared DB, would need batch aggregation if services move to per-DB.
+message SystemStats {
+  uint64 users_total = 1;
+  uint64 admins_total = 2;
+  uint64 vacancies_total = 3;
+  uint64 candidates_total = 4;
+  uint64 analyses_total = 5;
+  uint64 analyses_done = 6;
+  uint64 analyses_failed = 7;
+}
+
+message GetOverviewRequest {}
+
+message OverviewResponse {
+  SystemStats stats = 1;
+}
+
+// AdminUserView mirrors auth's User but adds activity metrics that
+// require cross-table joins (vacancies owned, candidates uploaded).
+message AdminUserView {
+  uint64 id = 1;
+  string email = 2;
+  string role = 3;
+  google.protobuf.Timestamp created_at = 4;
+  uint64 vacancies_owned = 5;
+  uint64 candidates_uploaded = 6;
+}
+
+message ListUsersRequest {}
+
+message ListUsersResponse {
+  repeated AdminUserView users = 1;
+}
+
+message PromoteUserRequest {
+  uint64 user_id = 1;
+}
+
+message DemoteUserRequest {
+  uint64 user_id = 1;
+}
+
+message UpdateRoleResponse {
+  uint64 user_id = 1;
+  string new_role = 2;
+}

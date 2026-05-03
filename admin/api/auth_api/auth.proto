@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+// Narrow contract: admin needs ValidateAccessToken (middleware) and
+// UpdateUserRole (proxy target). Package + service names match auth's
+// FQDN (auth.service.v1.AuthService) so wire calls reach the same
+// handler. Field tags MUST stay in sync with auth's auth_model.proto.
+package auth.service.v1;
+
+option go_package = "github.com/artem13815/hr/admin/internal/pb/auth_api";
+
+service AuthService {
+  rpc ValidateAccessToken(ValidateAccessTokenRequest) returns (ValidateAccessTokenResponse) {}
+  rpc UpdateUserRole(UpdateUserRoleRequest) returns (UpdateUserRoleResponse) {}
+}
+
+message ValidateAccessTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateAccessTokenResponse {
+  bool valid = 1;
+  uint64 user_id = 2;
+  string email = 3;
+  string role = 4;
+}
+
+message UpdateUserRoleRequest {
+  uint64 user_id = 1;
+  string new_role = 2;
+}
+
+message UpdateUserRoleResponse {
+  uint64 user_id = 1;
+  string new_role = 2;
+}

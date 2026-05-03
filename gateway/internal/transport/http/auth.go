@@ -64,6 +64,8 @@ func requiresAuth(method, path string) bool {
 		return true
 	case strings.HasPrefix(path, "/api/v1/analyses"):
 		return true
+	case strings.HasPrefix(path, "/api/v1/admin"):
+		return true
 	case method == http.MethodGet && path == "/api/v1/auth/me":
 		return true
 	case method == http.MethodPost && (path == "/api/v1/auth/logout" || path == "/api/v1/auth/logout-all"):

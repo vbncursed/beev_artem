@@ -1,0 +1,16 @@
+database:
+  host: CHANGE_ME
+  port: 5432
+  username: CHANGE_ME
+  password: ""        # injected via ADMIN_DB_PASSWORD env var (secret manager)
+  name: hr
+  ssl_mode: require
+
+auth:
+  grpc_addr: "CHANGE_ME:50050"
+
+server:
+  grpc_addr: ":50056"
+  tls:
+    cert_file: ""
+    key_file: ""

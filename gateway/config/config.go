@@ -13,6 +13,7 @@ type Config struct {
 	Vacancy  VacancyConfig  `yaml:"vacancy"`
 	Resume   ResumeConfig   `yaml:"resume"`
 	Analysis AnalysisConfig `yaml:"analysis"`
+	Admin    AdminConfig    `yaml:"admin"`
 }
 
 type ServerConfig struct {
@@ -42,6 +43,10 @@ type ResumeConfig struct {
 }
 
 type AnalysisConfig struct {
+	GRPCAddr string `yaml:"grpc_addr"`
+}
+
+type AdminConfig struct {
 	GRPCAddr string `yaml:"grpc_addr"`
 }
 
@@ -78,6 +83,8 @@ func (c *Config) validate() error {
 		return fmt.Errorf("resume.grpc_addr is required")
 	case c.Analysis.GRPCAddr == "":
 		return fmt.Errorf("analysis.grpc_addr is required")
+	case c.Admin.GRPCAddr == "":
+		return fmt.Errorf("admin.grpc_addr is required")
 	}
 	return nil
 }

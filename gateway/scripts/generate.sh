@@ -16,10 +16,12 @@ protoc -I ./api \
   ./api/models/vacancy_model.proto \
   ./api/models/resume_model.proto \
   ./api/models/analysis_model.proto \
+  ./api/models/admin_model.proto \
   ./api/auth_api/auth.proto \
   ./api/vacancy_api/vacancy.proto \
   ./api/resume_api/resume.proto \
-  ./api/analysis_api/analysis.proto
+  ./api/analysis_api/analysis.proto \
+  ./api/admin_api/admin.proto
 
 protoc -I ./api \
   -I ./api/google/api \
@@ -30,7 +32,8 @@ protoc -I ./api \
   ./api/auth_api/auth.proto \
   ./api/vacancy_api/vacancy.proto \
   ./api/resume_api/resume.proto \
-  ./api/analysis_api/analysis.proto
+  ./api/analysis_api/analysis.proto \
+  ./api/admin_api/admin.proto
 
 # Per-service OpenAPI 3.0 specs via gnostic. One invocation per service so
 # Scalar UI can render a dropdown with each service as a separate source.
@@ -61,3 +64,4 @@ gen_openapi auth     "Auth API"     ./api/auth_api/auth.proto
 gen_openapi vacancy  "Vacancy API"  ./api/vacancy_api/vacancy.proto
 gen_openapi resume   "Resume API"   ./api/resume_api/resume.proto
 gen_openapi analysis "Analysis API" ./api/analysis_api/analysis.proto
+gen_openapi admin    "Admin API"    ./api/admin_api/admin.proto

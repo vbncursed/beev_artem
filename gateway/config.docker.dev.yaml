@@ -26,3 +26,6 @@ resume:
 
 analysis:
   grpc_addr: "analysis:50054"
+
+admin:
+  grpc_addr: "admin:50056"

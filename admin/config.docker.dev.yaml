@@ -1,0 +1,16 @@
+database:
+  host: postgres
+  port: 5432
+  username: admin
+  password: admin
+  name: hr
+  ssl_mode: disable
+
+auth:
+  grpc_addr: "auth:50050"
+
+server:
+  grpc_addr: ":50056"
+  tls:
+    cert_file: ""
+    key_file: ""

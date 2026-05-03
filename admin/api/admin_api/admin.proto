@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package admin.service.v1;
+
+option go_package = "github.com/artem13815/hr/admin/internal/pb/admin_api";
+
+import "google/api/annotations.proto";
+import "models/admin_model.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+// AdminService is the operational dashboard contract — admin-only by
+// transport interceptor. Every RPC requires a JWT with role=admin;
+// non-admin callers see Unauthenticated/PermissionDenied.
+service AdminService {
+  // GetOverview returns aggregated platform statistics.
+  rpc GetOverview(admin.models.v1.GetOverviewRequest) returns (admin.models.v1.OverviewResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/admin/overview"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+
+  // ListUsers enumerates every HR account with their role and activity
+  // counters (vacancies owned, candidates uploaded).
+  rpc ListUsers(admin.models.v1.ListUsersRequest) returns (admin.models.v1.ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/admin/users"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+
+  // PromoteUser sets role = "admin" via the auth service.
+  rpc PromoteUser(admin.models.v1.PromoteUserRequest) returns (admin.models.v1.UpdateRoleResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/admin/users/{user_id}/promote"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+
+  // DemoteUser sets role = "user".
+  rpc DemoteUser(admin.models.v1.DemoteUserRequest) returns (admin.models.v1.UpdateRoleResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/admin/users/{user_id}/demote"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {
+        security_requirement: {
+          key: "BearerAuth"
+          value: {}
+        }
+      }
+    };
+  }
+}
