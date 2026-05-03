@@ -5,6 +5,7 @@ import { AuthPage } from '@/presentation/pages/AuthPage'
 import { VacanciesPage } from '@/presentation/pages/VacanciesPage'
 import { VacancyCreatePage } from '@/presentation/pages/VacancyCreatePage'
 import { VacancyDetailsPage } from '@/presentation/pages/VacancyDetailsPage'
+import { AdminPage } from '@/presentation/pages/AdminPage'
 import { PrivacyPage } from '@/presentation/pages/legal/PrivacyPage'
 import { TermsPage } from '@/presentation/pages/legal/TermsPage'
 import { SupportPage } from '@/presentation/pages/legal/SupportPage'
@@ -44,6 +45,14 @@ export function AppRouter() {
         <Route path="/vacancies" element={<VacanciesPage />} />
         <Route path="/vacancies/new" element={<VacancyCreatePage />} />
         <Route path="/vacancies/:id" element={<VacancyDetailsPage />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminOnly>
+              <AdminPage />
+            </AdminOnly>
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -62,6 +71,17 @@ function PublicOnly({ children }: { children: ReactNode }) {
   const { status } = useAuth()
   if (status === 'loading') return <FullPageLoader />
   if (status === 'authenticated') return <Navigate to="/vacancies" replace />
+  return <>{children}</>
+}
+
+// AdminOnly wraps AdminPage. If the caller is not authenticated → /auth;
+// if authenticated but role !== 'admin' → silently redirect to /vacancies
+// (no error toast — non-admins shouldn't even know this route exists).
+function AdminOnly({ children }: { children: ReactNode }) {
+  const { status, user } = useAuth()
+  if (status === 'loading') return <FullPageLoader />
+  if (status === 'anonymous') return <Navigate to="/auth" replace />
+  if (user?.role !== 'admin') return <Navigate to="/vacancies" replace />
   return <>{children}</>
 }
 

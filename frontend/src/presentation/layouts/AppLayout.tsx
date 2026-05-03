@@ -12,7 +12,10 @@ import {
   Wordmark,
 } from '@/presentation/ui'
 
-const NAV_ITEMS = [{ to: '/vacancies', labelKey: 'nav.vacancies' }] as const
+const NAV_ITEMS = [
+  { to: '/vacancies', labelKey: 'nav.vacancies', adminOnly: false },
+  { to: '/admin', labelKey: 'nav.admin', adminOnly: true },
+] as const
 
 /**
  * Authenticated app shell. SkipLink → TopNav → main → Footer.
@@ -32,7 +35,9 @@ export function AppLayout() {
             <Wordmark />
           </Link>
         }
-        links={NAV_ITEMS.map((item) => (
+        links={NAV_ITEMS.filter(
+          (item) => !item.adminOnly || user?.role === 'admin',
+        ).map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

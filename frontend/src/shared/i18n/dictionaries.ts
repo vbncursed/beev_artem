@@ -235,6 +235,31 @@ const ru: Dict = {
   'a11y.openMenu': 'Открыть меню',
   'a11y.closeMenu': 'Закрыть меню',
 
+  // Admin dashboard
+  'admin.eyebrow': 'Контроль',
+  'admin.title': 'Платформа в целом.',
+  'admin.subtitle':
+    'Сводная статистика, список HR-аккаунтов, управление ролями.',
+  'admin.stats.users': 'Пользователи',
+  'admin.stats.usersSub': 'из них admin: {admins}',
+  'admin.stats.vacancies': 'Вакансии',
+  'admin.stats.candidates': 'Кандидаты',
+  'admin.stats.analyses': 'Анализы',
+  'admin.stats.analysesSub': 'готовы: {done} · ошибок: {failed}',
+  'admin.users.eyebrow': 'HR-пользователи',
+  'admin.users.subtitle': 'все аккаунты системы',
+  'admin.users.empty': 'Пользователей пока нет.',
+  'admin.users.vacancies': 'вакансий',
+  'admin.users.candidates': 'кандидатов',
+  'admin.users.role.admin': 'Admin',
+  'admin.users.role.user': 'User',
+  'admin.users.promote': 'Сделать admin',
+  'admin.users.demote': 'Снять admin',
+  'admin.errors.stats': 'Не удалось загрузить статистику.',
+  'admin.errors.users': 'Не удалось загрузить пользователей.',
+  'admin.errors.role': 'Не удалось изменить роль.',
+  'nav.admin': 'Контроль',
+
   // Legal pages
   'legal.lastUpdated': 'Обновлено: {date}',
   'legal.eyebrow.privacy': 'Политика',
@@ -474,6 +499,31 @@ const en: Dict = {
   'a11y.skipToMain': 'Skip to main content',
   'a11y.openMenu': 'Open menu',
   'a11y.closeMenu': 'Close menu',
+
+  // Admin dashboard
+  'admin.eyebrow': 'Control',
+  'admin.title': 'Platform overview.',
+  'admin.subtitle':
+    'Aggregate stats, HR accounts, role management.',
+  'admin.stats.users': 'Users',
+  'admin.stats.usersSub': '{admins} admins',
+  'admin.stats.vacancies': 'Vacancies',
+  'admin.stats.candidates': 'Candidates',
+  'admin.stats.analyses': 'Analyses',
+  'admin.stats.analysesSub': '{done} done · {failed} failed',
+  'admin.users.eyebrow': 'HR users',
+  'admin.users.subtitle': 'every account on the platform',
+  'admin.users.empty': 'No users yet.',
+  'admin.users.vacancies': 'vacancies',
+  'admin.users.candidates': 'candidates',
+  'admin.users.role.admin': 'Admin',
+  'admin.users.role.user': 'User',
+  'admin.users.promote': 'Make admin',
+  'admin.users.demote': 'Demote',
+  'admin.errors.stats': 'Failed to load stats.',
+  'admin.errors.users': 'Failed to load users.',
+  'admin.errors.role': 'Failed to change role.',
+  'nav.admin': 'Control',
 
   // Legal pages
   'legal.lastUpdated': 'Updated: {date}',
