@@ -52,8 +52,8 @@ vacancy/internal/
 type Vacancy struct {
     ID            string         // varchar(64) UUID
     OwnerUserID   uint64
-    Title         string         // ≤255 chars
-    Description   string         // ≤4000 chars
+    Title         string         // ≤255 рун (utf8.RuneCountInString)
+    Description   string         // ≤4000 рун
     Skills        []SkillWeight  // ≥1
     Role          string         // авто-determined; источник для multiagent
     Status        Status         // draft / open / archived
@@ -74,8 +74,9 @@ type SkillWeight struct {
 
 Источник истины — backend, frontend дублирует через zod на стороне UX:
 
-- `title`: trim non-empty, len ≤255
-- `description`: optional, len ≤4000
+- `title`: trim non-empty, ≤255 рун (`utf8.RuneCountInString`, не байт)
+- `description`: optional, ≤4000 рун — соответствует counter'у на фронте,
+  Cyrillic не "съедает" лимит вдвое
 - `skills`: ≥1 элемент
 - `skill.name`: trim non-empty
 - `skill.weight`: ∈ [0, 1]
