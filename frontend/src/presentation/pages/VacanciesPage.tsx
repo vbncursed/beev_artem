@@ -5,6 +5,7 @@ import {
   BadgePill,
   Button,
   Card,
+  ErrorCard,
   SearchInput,
   Spinner,
 } from '@/presentation/ui'
@@ -77,7 +78,10 @@ export function VacanciesPage() {
           </div>
 
           {error ? (
-            <ErrorState message={error} />
+            <ErrorCard
+              message={error}
+              title={t('vacancies.error.title')}
+            />
           ) : filtered.length === 0 && !isLoading ? (
             <EmptyState query={debouncedQuery} role={role} />
           ) : (
@@ -170,15 +174,3 @@ function EmptyState({
   )
 }
 
-function ErrorState({ message }: { message: string }) {
-  const { t } = useI18n()
-  return (
-    <Card variant="feature" className="text-center">
-      <div className="mx-auto flex max-w-[420px] flex-col items-center gap-3 py-12">
-        <BadgePill tone="down">{t('common.error')}</BadgePill>
-        <h3 className="text-title-lg">{t('vacancies.error.title')}</h3>
-        <p className="text-body-md text-body">{message}</p>
-      </div>
-    </Card>
-  )
-}

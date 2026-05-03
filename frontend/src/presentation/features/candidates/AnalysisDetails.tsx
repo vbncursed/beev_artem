@@ -2,9 +2,20 @@ import { useEffect, useState } from 'react'
 import { useGateways } from '@/app/providers/GatewaysProvider'
 import { useI18n } from '@/app/providers/I18nProvider'
 import { ApiError } from '@/infrastructure/http/errors'
-import { BadgePill, Button, Card, PriceCell, Spinner } from '@/presentation/ui'
+import {
+  BadgePill,
+  Button,
+  Card,
+  DownloadIcon,
+  ErrorCard,
+  PriceCell,
+  Section,
+  Spinner,
+  TrashIcon,
+} from '@/presentation/ui'
 import type { Analysis } from '@/domain/analysis/types'
 import { pluralKey } from '@/shared/i18n/dictionaries'
+import { CandidateStatusBadge } from './CandidateStatusBadge'
 
 export function AnalysisDetails({
   analysisId,
@@ -102,12 +113,7 @@ export function AnalysisDetails({
   }
 
   if (state.phase === 'error') {
-    return (
-      <Card variant="feature">
-        <BadgePill tone="down">{t('common.error')}</BadgePill>
-        <p className="text-body-md text-body mt-3">{state.message}</p>
-      </Card>
-    )
+    return <ErrorCard message={state.message} />
   }
 
   const a = state.analysis
@@ -134,7 +140,7 @@ export function AnalysisDetails({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge status={a.status} />
+          <CandidateStatusBadge status={a.status} />
           {a.resumeId && (
             <Button
               variant="secondary-light"
@@ -154,7 +160,7 @@ export function AnalysisDetails({
                 setConfirmingDelete(true)
                 setDeleteError(null)
               }}
-              iconLeft={<TrashSmall />}
+              iconLeft={<TrashIcon size={14} />}
               className="text-body hover:text-semantic-down"
             >
               {t('analysis.deleteCandidate')}
@@ -298,21 +304,6 @@ export function AnalysisDetails({
   )
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="flex flex-col gap-2 border-t border-hairline pt-4 first:border-t-0 first:pt-0">
-      <p className="text-caption-strong text-muted uppercase">{title}</p>
-      {children}
-    </section>
-  )
-}
-
 function RecommendationBadge({ value }: { value: string }) {
   const { t } = useI18n()
   const v = value.toLowerCase()
@@ -373,58 +364,3 @@ function formatYears(
   return t(key, { n: display })
 }
 
-function TrashSmall() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M3 6h18" />
-      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-    </svg>
-  )
-}
-
-function DownloadIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <path d="M7 10l5 5 5-5" />
-      <path d="M12 15V3" />
-    </svg>
-  )
-}
-
-function StatusBadge({ status }: { status: Analysis['status'] }) {
-  const { t } = useI18n()
-  switch (status) {
-    case 'done':
-      return <BadgePill tone="up">{t('analysis.status.done')}</BadgePill>
-    case 'failed':
-      return <BadgePill tone="down">{t('analysis.status.failed')}</BadgePill>
-    case 'queued':
-      return <BadgePill>{t('analysis.status.queued')}</BadgePill>
-    case 'running':
-      return <BadgePill>{t('analysis.status.running')}</BadgePill>
-    default:
-      return <BadgePill>{t('analysis.status.unknown')}</BadgePill>
-  }
-}

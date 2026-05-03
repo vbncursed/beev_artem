@@ -1,14 +1,12 @@
 import { useI18n } from '@/app/providers/I18nProvider'
-import {
-  AssetIconCircular,
-  BadgePill,
-  PriceCell,
-} from '@/presentation/ui'
+import { AssetIconCircular, PriceCell } from '@/presentation/ui'
 import type {
   AnalysisStatus,
   CandidateWithAnalysis,
 } from '@/domain/analysis/types'
 import { cn } from '@/shared/lib/cn'
+import { initials } from '@/shared/lib/format'
+import { CandidateStatusBadge } from './CandidateStatusBadge'
 
 type Props = {
   candidate: CandidateWithAnalysis
@@ -45,31 +43,9 @@ export function CandidateRow({ candidate, selected, onSelect }: Props) {
           {t('candidate.match')}
         </span>
       </div>
-      <StatusBadge status={candidate.analysisStatus} />
+      <CandidateStatusBadge status={candidate.analysisStatus} />
     </button>
   )
-}
-
-function StatusBadge({ status }: { status: AnalysisStatus }) {
-  const { t } = useI18n()
-  switch (status) {
-    case 'done':
-      return <BadgePill tone="up">{t('analysis.status.done')}</BadgePill>
-    case 'failed':
-      return <BadgePill tone="down">{t('analysis.status.failed')}</BadgePill>
-    case 'queued':
-      return <BadgePill>{t('analysis.status.queued')}</BadgePill>
-    case 'running':
-      return <BadgePill>{t('analysis.status.running')}</BadgePill>
-    default:
-      return <BadgePill>{t('analysis.status.unknown')}</BadgePill>
-  }
-}
-
-function initials(name: string): string {
-  if (!name) return '?'
-  const parts = name.trim().split(/\s+/).slice(0, 2)
-  return parts.map((p) => p[0]?.toUpperCase() ?? '').join('') || '?'
 }
 
 function formatScore(score: number): string {

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { useI18n } from '@/app/providers/I18nProvider'
 import { BadgePill, Card } from '@/presentation/ui'
 import { KNOWN_ROLE_VALUES, type Vacancy } from '@/domain/vacancy/types'
+import { formatDate } from '@/shared/lib/format'
+import { VacancyStatusBadge } from './VacancyStatusBadge'
 
 export function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
   const { t, locale } = useI18n()
@@ -22,7 +24,7 @@ export function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
       >
         <div className="flex items-start justify-between gap-3">
           <BadgePill>{roleLabel}</BadgePill>
-          <StatusBadge status={vacancy.status} />
+          <VacancyStatusBadge status={vacancy.status} />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -57,30 +59,4 @@ export function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
       </Card>
     </Link>
   )
-}
-
-function StatusBadge({ status }: { status: Vacancy['status'] }) {
-  const { t } = useI18n()
-  switch (status) {
-    case 'open':
-      return <BadgePill tone="up">{t('status.open')}</BadgePill>
-    case 'archived':
-      return <BadgePill tone="down">{t('status.archived')}</BadgePill>
-    case 'draft':
-      return <BadgePill>{t('status.draft')}</BadgePill>
-    default:
-      return null
-  }
-}
-
-function formatDate(iso: string, locale: string): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  const lang = locale === 'ru' ? 'ru-RU' : 'en-GB'
-  return d.toLocaleDateString(lang, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
 }

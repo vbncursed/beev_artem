@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useGateways } from '@/app/providers/GatewaysProvider'
 import { useI18n } from '@/app/providers/I18nProvider'
-import { BadgePill, Button, Card, Spinner } from '@/presentation/ui'
+import { BadgePill, Button, Card, ErrorCard, Spinner } from '@/presentation/ui'
 import { KNOWN_ROLE_VALUES, type SkillWeight } from '@/domain/vacancy/types'
 import { ApiError } from '@/infrastructure/http/errors'
 import { ResumeUploader } from '@/presentation/features/resume/ResumeUploader'
@@ -10,6 +10,7 @@ import { CandidateRow } from '@/presentation/features/candidates/CandidateRow'
 import { AnalysisDetails } from '@/presentation/features/candidates/AnalysisDetails'
 import { useCandidates } from '@/presentation/features/candidates/useCandidates'
 import { useVacancyDetails } from '@/presentation/features/vacancies/useVacancyDetails'
+import { VacancyStatusBadge } from '@/presentation/features/vacancies/VacancyStatusBadge'
 
 export function VacancyDetailsPage() {
   const { t } = useI18n()
@@ -75,19 +76,16 @@ export function VacancyDetailsPage() {
           )}
 
           {vacancyState.phase === 'error' && (
-            <Card variant="feature" className="mt-8">
-              <BadgePill tone="down">{t('common.error')}</BadgePill>
-              <p className="text-body-md text-body mt-3">
-                {vacancyState.message}
-              </p>
-            </Card>
+            <div className="mt-8">
+              <ErrorCard message={vacancyState.message} />
+            </div>
           )}
 
           {vacancyState.phase === 'ready' && (
             <div className="mt-8 flex flex-col gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 <BadgePill>{roleLabel}</BadgePill>
-                <StatusBadge status={vacancyState.vacancy.status} />
+                <VacancyStatusBadge status={vacancyState.vacancy.status} />
               </div>
               <h1 className="text-display-md">{vacancyState.vacancy.title}</h1>
               {vacancyState.vacancy.description && (
@@ -135,10 +133,7 @@ export function VacancyDetailsPage() {
           </div>
 
           {error ? (
-            <Card variant="feature">
-              <BadgePill tone="down">{t('common.error')}</BadgePill>
-              <p className="text-body-md text-body mt-3">{error}</p>
-            </Card>
+            <ErrorCard message={error} />
           ) : candidates.length === 0 && !loading ? (
             <Card variant="feature" className="text-center">
               <div className="mx-auto flex max-w-[420px] flex-col items-center gap-3 py-12">
@@ -222,20 +217,3 @@ function SkillsSummary({ skills }: { skills: SkillWeight[] }) {
   )
 }
 
-function StatusBadge({
-  status,
-}: {
-  status: 'open' | 'archived' | 'draft' | 'unknown'
-}) {
-  const { t } = useI18n()
-  switch (status) {
-    case 'open':
-      return <BadgePill tone="up">{t('status.open')}</BadgePill>
-    case 'archived':
-      return <BadgePill tone="down">{t('status.archived')}</BadgePill>
-    case 'draft':
-      return <BadgePill>{t('status.draft')}</BadgePill>
-    default:
-      return null
-  }
-}

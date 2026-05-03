@@ -6,11 +6,13 @@ import {
   BadgePill,
   Button,
   Card,
+  ErrorCard,
   PriceCell,
   Spinner,
 } from '@/presentation/ui'
 import type { AdminUserView, SystemStats } from '@/domain/admin/types'
 import { ApiError } from '@/infrastructure/http/errors'
+import { formatDate, initials } from '@/shared/lib/format'
 
 /**
  * Admin dashboard at /admin. Two sections:
@@ -266,32 +268,6 @@ function UserRow({
       )}
     </div>
   )
-}
-
-function ErrorCard({ message }: { message: string }) {
-  const { t } = useI18n()
-  return (
-    <Card variant="feature">
-      <BadgePill tone="down">{t('common.error')}</BadgePill>
-      <p className="text-body-md text-body mt-3">{message}</p>
-    </Card>
-  )
-}
-
-function initials(email: string): string {
-  if (!email) return '?'
-  return email[0]?.toUpperCase() ?? '?'
-}
-
-function formatDate(iso: string): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString(undefined, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
 }
 
 function messageOf(cause: unknown, fallback: string): string {
