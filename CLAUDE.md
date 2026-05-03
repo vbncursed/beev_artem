@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-Multi-service HR platform written in Go 1.26. Each service is an independent Go module with its own `go.mod`, `Dockerfile`, configs, migrations, and `internal/` tree following clean architecture (domain / usecase / transport / infrastructure). Services communicate over gRPC; one of them (`gateway`) exposes HTTP/JSON to the outside world via grpc-gateway. The repo also ships a single-page **`frontend/`** (React 19 + TypeScript 6 + Vite + Tailwind v4) that consumes the gateway exclusively — frontend has no per-service network knowledge, only the public OpenAPI contracts under `frontend/api/*.json`.
+Multi-service HR platform written in Go 1.26. Each service is an independent Go module with its own `go.mod`, `Dockerfile`, configs, migrations, and `internal/` tree following clean architecture (domain / usecase / transport / infrastructure). Services communicate over gRPC; one of them (`gateway`) exposes HTTP/JSON to the outside world via grpc-gateway. The repo also ships a single-page **`frontend/`** (React 19 + TypeScript 6 + Vite + Tailwind v4) that consumes the gateway exclusively — frontend has no per-service network knowledge. The live API contract lives at `gateway:8080/swagger.json` (Scalar UI at `/docs`); we don't mirror it as static files in the repo.
 
 Modules (top-level directories):
 
