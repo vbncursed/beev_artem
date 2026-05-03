@@ -1,5 +1,55 @@
+# =========================================================================
+#  Secrets — never commit
+# =========================================================================
+# `.env` files hold real credentials in dev (AUTH_JWT_SECRET, YANDEX_API_KEY,
+# DB passwords); only the `.env.example` template is committed. The negate
+# pattern keeps the example whitelisted.
+.env
+.env.*
+*.env
+!.env.example
+!**/.env.example
+
+# Local-only YAML overrides for non-prod tweaking.
+config.local.yaml
+*.local.yaml
+
+# Per-service "secrets" overrides (config_secrets.yaml, etc.)
+*secrets.yaml
+*secrets.json
+secrets/
+
+# Cryptographic material — TLS / SSH / GPG keys, certs, keystores
+*.pem
+*.key
+*.crt
+*.cert
+*.cer
+*.p12
+*.pfx
+*.jks
+*.keystore
+*_rsa
+*_rsa.pub
+*_ed25519
+*_ed25519.pub
+id_rsa*
+id_ed25519*
+.ssh/
+
+# Common secret-stash filenames developers create then forget
+credentials
+credentials.json
+credentials.yaml
+service-account*.json
+*-credentials.*
+
+# =========================================================================
+#  Build artifacts & local state
+# =========================================================================
 # IDE
 .idea/
+.vscode/
 *.iml
 
 # Go
@@ -7,20 +57,32 @@
 *.exe
 *.test
 *.out
-
-# Build binaries
 **/bin/
+coverage.out
+coverage.html
 
-# Generated proto code (rebuild with make generate-api)
-# Keep generated code in git for CI builds
-# internal/pb/ is committed
+# Generated proto code lives in internal/pb/ — committed on purpose so CI
+# can build without protoc; rebuild with `make generate-api`.
 
-# Config secrets
-config.local.yaml
-*.env
-test.md
-instruction.md
+# Frontend (frontend/.gitignore covers node_modules/dist/.vite per-package
+# but mirror the most important entries here so a global `git clean -ndX`
+# from repo root behaves as expected).
+**/node_modules/
+**/dist/
+**/.vite/
+**/.next/
+**/.cache/
+
+# Logs
+*.log
+logs/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Scratch — files engineers create while debugging that shouldn't ship
+test.md
+instruction.md
+scratch/
+tmp/
