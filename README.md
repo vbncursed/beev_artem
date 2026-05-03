@@ -73,6 +73,25 @@ make down                   # остановить
 make down-v                 # остановить + удалить данные (postgres + redis)
 ```
 
+## Admin
+
+`Register` всегда создаёт пользователя с `role="user"`. Промоутить
+кого-то в admin может только другой admin через `UpdateUserRole` RPC —
+chicken-and-egg. Для bootstrap первого admin'а в auth-контейнере вшита
+операционная CLI:
+
+```bash
+make admin-promote EMAIL=you@example.com    # обёртка над docker exec hr-auth admin promote
+make admin-demote  EMAIL=you@example.com    # вернуть обратно в "user"
+```
+
+После смены роли существующий JWT всё ещё несёт старую — нужно
+sign out + log in заново, чтобы получить токен с обновлёнными claims.
+Admin видит **все** вакансии и резюме всех пользователей через те же
+эндпоинты — отдельных admin-ручек нет, persistence-слой проверяет
+`($isAdmin OR owner_user_id = $caller)`. Подробнее — в
+[`auth/README.md`](auth/README.md#admin-cli).
+
 ## Тестирование
 
 Юнит-тесты только для `internal/usecase` каждого сервиса (политика
