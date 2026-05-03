@@ -39,6 +39,13 @@ type TLSConfig struct {
 	KeyFile  string `yaml:"key_file"`
 }
 
+// Enabled reports whether both halves of a usable TLS keypair are configured.
+// Both empty → plaintext gRPC (default inside the docker network, where the
+// network boundary is the trust boundary).
+func (t TLSConfig) Enabled() bool {
+	return t.CertFile != "" && t.KeyFile != ""
+}
+
 func LoadConfig(filename string) (*Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {

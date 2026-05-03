@@ -9,13 +9,13 @@ import "time"
 // entity exist platform-wide. All fields are uint64 because the underlying
 // COUNT(*) returns BIGINT and we never decrement.
 type SystemStats struct {
-	UsersTotal       uint64
-	AdminsTotal      uint64
-	VacanciesTotal   uint64
-	CandidatesTotal  uint64
-	AnalysesTotal    uint64
-	AnalysesDone     uint64
-	AnalysesFailed   uint64
+	UsersTotal      uint64
+	AdminsTotal     uint64
+	VacanciesTotal  uint64
+	CandidatesTotal uint64
+	AnalysesTotal   uint64
+	AnalysesDone    uint64
+	AnalysesFailed  uint64
 }
 
 // AdminUserView is one row of the user-management table the dashboard

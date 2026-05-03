@@ -10,7 +10,7 @@ import (
 // ListUsers joins auth_users with vacancy/candidate counts so the table
 // can render activity metrics inline. LEFT JOIN + GROUP BY keeps users
 // who never created anything (counter shows 0).
-func (s *StatsStorage) ListUsers(ctx context.Context) ([]domain.AdminUserView, error) {
+func (s *AdminStorage) ListUsers(ctx context.Context) ([]domain.AdminUserView, error) {
 	const query = `
 SELECT
   u.id, u.email, u.role, u.created_at,

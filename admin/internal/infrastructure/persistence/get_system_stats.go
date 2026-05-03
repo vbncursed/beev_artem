@@ -11,7 +11,7 @@ import (
 // via UNION ALL so the dashboard fetch is one network hop. PG plans
 // each as a sequential scan on a single column → cheap until tens of
 // millions of rows, at which point we'd add a materialised view.
-func (s *StatsStorage) GetSystemStats(ctx context.Context) (*domain.SystemStats, error) {
+func (s *AdminStorage) GetSystemStats(ctx context.Context) (*domain.SystemStats, error) {
 	const query = `
 SELECT
   (SELECT count(*) FROM auth_users)                                   AS users_total,

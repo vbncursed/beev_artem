@@ -36,6 +36,31 @@ func UnaryAuthInterceptor(authClient authValidator) grpc.UnaryServerInterceptor 
 	}
 }
 
+// StreamAuthInterceptor mirrors UnaryAuthInterceptor for streaming RPCs. Wraps
+// the ServerStream so wrapped handlers see the authenticated context via
+// stream.Context().
+func StreamAuthInterceptor(authClient authValidator) grpc.StreamServerInterceptor {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		uc, err := authenticate(ss.Context(), authClient)
+		if err != nil {
+			return err
+		}
+		if !uc.IsAdmin {
+			return status.Error(codes.PermissionDenied, "admin only")
+		}
+		return handler(srv, &authedServerStream{ServerStream: ss, ctx: set(ss.Context(), uc)})
+	}
+}
+
+// authedServerStream overrides Context so wrapped handlers receive the
+// authenticated context instead of the raw incoming one.
+type authedServerStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+func (a *authedServerStream) Context() context.Context { return a.ctx }
+
 // authenticate extracts the bearer token, calls auth.ValidateAccessToken,
 // and returns the identity. Single source of truth for who the caller is.
 func authenticate(ctx context.Context, authClient authValidator) (*UserContext, error) {
