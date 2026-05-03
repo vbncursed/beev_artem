@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/artem13815/hr/admin/config"
 	"github.com/artem13815/hr/admin/internal/pb/auth_api"
@@ -56,9 +57,12 @@ func NewRoleUpdater(client auth_api.AuthServiceClient) *RoleUpdater {
 	return &RoleUpdater{client: client}
 }
 
-// UpdateUserRole proxies the role change with a bounded timeout.
+// UpdateUserRole proxies the role change with a bounded timeout. The incoming
+// Authorization metadata is forwarded as outgoing so auth's interceptor can
+// validate the calling admin's JWT — without this, auth sees no bearer and
+// rejects the call with codes.Unauthenticated.
 func (r *RoleUpdater) UpdateUserRole(ctx context.Context, userID uint64, newRole string) error {
-	callCtx, cancel := context.WithTimeout(ctx, roleUpdateTimeout)
+	callCtx, cancel := context.WithTimeout(forwardAuthMetadata(ctx), roleUpdateTimeout)
 	defer cancel()
 
 	if _, err := r.client.UpdateUserRole(callCtx, &auth_api.UpdateUserRoleRequest{
@@ -68,4 +72,19 @@ func (r *RoleUpdater) UpdateUserRole(ctx context.Context, userID uint64, newRole
 		return fmt.Errorf("auth.UpdateUserRole: %w", err)
 	}
 	return nil
+}
+
+// forwardAuthMetadata copies the Authorization header from the incoming gRPC
+// metadata into the outgoing context. gRPC does not auto-propagate metadata
+// across hops — without this, the downstream auth interceptor sees no token.
+func forwardAuthMetadata(ctx context.Context) context.Context {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return ctx
+	}
+	auth := md.Get("authorization")
+	if len(auth) == 0 {
+		return ctx
+	}
+	return metadata.AppendToOutgoingContext(ctx, "authorization", auth[0])
 }

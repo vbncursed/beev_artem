@@ -42,6 +42,7 @@ export function AdminUserRow({ user, onRefresh }: Props) {
       const message =
         cause instanceof ApiError ? cause.message : t('admin.errors.role')
       setErr(message)
+    } finally {
       setBusy(false)
     }
   }
