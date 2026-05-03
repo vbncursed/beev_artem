@@ -6,7 +6,7 @@ SERVICES := auth gateway vacancy resume analysis multiagent
 # edge with no business logic, so test/cov/race are scoped here.
 USECASE_SERVICES := auth vacancy resume analysis multiagent
 
-.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild test cov race lint generate-api mock clean
+.PHONY: help up up-prod up-build up-build-prod down down-v restart restart-prod ps logs pull rebuild admin-promote admin-demote test cov race lint generate-api mock clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -56,6 +56,17 @@ rebuild: ## Rebuild and restart one service: make rebuild SVC=auth [ENV=prod]
 	else \
 		APP_ENV=dev COMPOSE_PROFILES=dev $(DOCKER_COMPOSE) up -d --build $(SVC); \
 	fi
+
+# admin-promote / admin-demote: shells into the running auth container and
+# invokes the in-image `admin` CLI. Use to bootstrap the first admin (the
+# UpdateUserRole RPC requires an existing admin to call it).
+admin-promote: ## Promote a user to admin: make admin-promote EMAIL=user@example.com
+	@if [ -z "$(EMAIL)" ]; then echo "Usage: make admin-promote EMAIL=<email>"; exit 1; fi
+	@docker exec hr-auth admin promote --email=$(EMAIL)
+
+admin-demote: ## Demote an admin back to user: make admin-demote EMAIL=user@example.com
+	@if [ -z "$(EMAIL)" ]; then echo "Usage: make admin-demote EMAIL=<email>"; exit 1; fi
+	@docker exec hr-auth admin demote --email=$(EMAIL)
 
 test: ## go test -count=1 against each service's internal/usecase
 	@for s in $(USECASE_SERVICES); do echo "=== $$s ==="; (cd $$s && go test -count=1 ./internal/usecase) || exit 1; done

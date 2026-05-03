@@ -133,6 +133,35 @@ docker exec hr-auth psql ... # подключиться к БД
 Локальный запуск без compose не предусмотрен (нет `make run`) — сервис
 зависит от postgres+redis, поднимаемых compose-профилем `dev`.
 
+## Admin CLI
+
+В образ auth-сервиса вшита операционная утилита `admin` для управления
+ролями напрямую через persistence-слой. Нужна для **bootstrap первого
+admin'а** (chicken-and-egg: `UpdateUserRole` RPC требует уже существующего
+admin'а, чтобы кого-то промоутить).
+
+```bash
+# Из репо-корня — обёртки в Makefile:
+make admin-promote EMAIL=you@example.com
+make admin-demote  EMAIL=you@example.com
+
+# Или напрямую внутри контейнера:
+docker exec hr-auth admin promote --email=you@example.com
+docker exec hr-auth admin demote  --email=you@example.com
+docker exec hr-auth admin help
+
+# Посмотреть всех пользователей с ролями:
+docker exec hr-postgres psql -U admin -d hr -c \
+  "SELECT id, email, role FROM auth_users ORDER BY id;"
+```
+
+После смены роли существующие JWT всё ещё несут старый `role` в claims
+— нужно sign out + log in заново, чтобы `auth.Login` выдал новый токен
+с обновлённой ролью.
+
+Утилита читает тот же `config.docker.{dev,prod}.yaml`, что и
+auth-service: переменные `configPath` / `APP_ENV` уважаются.
+
 ## Тестирование
 
 Unit-тесты только для `internal/usecase` (`package usecase`, white-box):
