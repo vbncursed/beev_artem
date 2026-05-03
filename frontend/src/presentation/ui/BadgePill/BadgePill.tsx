@@ -16,9 +16,13 @@ type BadgePillOwnProps = {
 export type BadgePillProps = BadgePillOwnProps &
   Omit<HTMLAttributes<HTMLSpanElement>, keyof BadgePillOwnProps>
 
+// `inverse` uses `surface-dark-elevated` (not `surface-dark`) so the badge
+// stays visible on the dark theme — `surface-dark` collapses to the same
+// hex as the dark canvas, making the badge invisible. The elevated tier
+// is one step lighter in both themes, giving contrast either way.
 const TONE_CLASSES: Record<BadgeTone, string> = {
   default: 'bg-surface-strong text-ink',
-  inverse: 'bg-surface-dark text-on-dark',
+  inverse: 'bg-surface-dark-elevated text-on-dark',
   up: 'bg-surface-strong text-semantic-up',
   down: 'bg-surface-strong text-semantic-down',
 }
