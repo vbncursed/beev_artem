@@ -73,8 +73,13 @@ gateway/internal/
 | `POST /api/v1/resumes/{id}/analyze` | analysis |
 | `GET /api/v1/analyses/{id}` | analysis |
 | `GET /api/v1/vacancies/{id}/candidates` | analysis |
+| `GET /api/v1/admin/overview` | admin |
+| `GET /api/v1/admin/users` | admin |
+| `POST /api/v1/admin/users/{id}/promote` | admin |
+| `POST /api/v1/admin/users/{id}/demote` | admin |
 
 multiagent **не выставлен** — internal-only, доступен только analysis.
+admin требует `role=admin` в JWT (повторно проверяется внутри сервиса).
 
 ## Auth flow на edge
 

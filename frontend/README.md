@@ -45,7 +45,8 @@ src/
 │   ├── auth/useCases.ts          loginUseCase / registerUseCase / logoutUseCase
 │   ├── vacancy/ports.ts          interface VacancyGateway
 │   ├── resume/ports.ts           interface ResumeGateway + ResumeFile
-│   └── analysis/ports.ts         interface AnalysisGateway
+│   ├── analysis/ports.ts         interface AnalysisGateway
+│   └── admin/ports.ts            interface AdminGateway
 ├── infrastructure/               адаптеры портов
 │   ├── http/
 │   │   ├── client.ts             fetch wrapper, single-flight refresh,
@@ -149,6 +150,30 @@ decorative product-mockup stack под текстом. Полная инверс
   candidate profile (years с правильным склонением через `pluralKey`),
   candidate feedback. Действия: **Скачать резюме** + **Удалить кандидата**
   (с inline-confirm)
+
+### `/admin` (admin-only)
+- Доступна только при `user.role === 'admin'` через `<AdminOnly>` guard:
+  anon → `/auth`, не-admin → silent redirect на `/vacancies` (non-admin
+  не должен знать что route существует).
+- Light hero band с display-md "Платформа в целом."
+- Soft-gray band с 4 stat-card'ами (Users / Vacancies / Candidates /
+  Analyses) — числа в `display-sm` с tabular-nums; sub-line с
+  admins-count и done/failed split.
+- Canvas band с user-table в asset-row стиле: avatar (инициал email) +
+  email + ID/created + vacanciesOwned + candidatesUploaded + role
+  badge + кнопка Promote/Demote (mutex visual: Promote = primary,
+  Demote = secondary).
+- Per-section error-states: упавший `GetOverview` не прячет user list,
+  и наоборот.
+- Admin-link в TopNav рендерится только при `role=admin` (фильтр в
+  `AppLayout.NAV_ITEMS.adminOnly`).
+
+### `/privacy`, `/terms`, `/support` (public)
+- Доступны без авторизации.
+- Общий `LegalLayout` со SkipLink + TopNav + 760px content-card +
+  Footer. Контент билингвальный: каждая страница рендерит `<BodyRu/>`
+  или `<BodyEn/>` по `locale` (длинные параграфы через i18n-ключи —
+  brittle).
 
 ## i18n
 

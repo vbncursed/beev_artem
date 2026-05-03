@@ -19,6 +19,7 @@ gateway.
 | [`resume/`](resume/README.md) | Кандидаты + резюме (PDF/DOCX/TXT), `pdftotext` | `:50052` | — | [README](resume/README.md) |
 | [`analysis/`](analysis/README.md) | Скоринг + аудит-аналитика | `:50054` | — | [README](analysis/README.md) |
 | [`multiagent/`](multiagent/README.md) | LLM-вердикт через Yandex Cloud, role-aware промпты | `:50055` | — | [README](multiagent/README.md) |
+| [`admin/`](admin/README.md) | Operational dashboard: aggregate stats, user management, role changes | `:50056` | — | [README](admin/README.md) |
 | [`gateway/`](gateway/README.md) | HTTP edge (`grpc-gateway`), CORS, OpenAPI на `/docs` | — | **`:8080`** | [README](gateway/README.md) |
 | [`frontend/`](frontend/README.md) | Cadence — React 19 + TS 6 + Vite + Tailwind v4 | — | **`:3000`** | [README](frontend/README.md) |
 
@@ -88,9 +89,14 @@ make admin-demote  EMAIL=you@example.com    # вернуть обратно в "
 После смены роли существующий JWT всё ещё несёт старую — нужно
 sign out + log in заново, чтобы получить токен с обновлёнными claims.
 Admin видит **все** вакансии и резюме всех пользователей через те же
-эндпоинты — отдельных admin-ручек нет, persistence-слой проверяет
-`($isAdmin OR owner_user_id = $caller)`. Подробнее — в
-[`auth/README.md`](auth/README.md#admin-cli).
+эндпоинты — persistence-слой проверяет `($isAdmin OR owner_user_id =
+$caller)`. Сверх этого есть отдельный сервис [`admin/`](admin/README.md)
+с aggregate-статистикой, листингом пользователей и proxy-эндпоинтами
+для смены роли (`POST /api/v1/admin/users/{id}/promote`); на фронте —
+страница **`/admin`** с stat-card'ами и таблицей юзеров (видна только
+при `role=admin`). Подробнее — в
+[`auth/README.md`](auth/README.md#admin-cli) и
+[`admin/README.md`](admin/README.md).
 
 ## Тестирование
 
