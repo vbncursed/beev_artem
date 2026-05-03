@@ -1,7 +1,15 @@
 server:
   http_addr: ":8080"
   cors:
+    # In our default setup the frontend (nginx) proxies /api/* to gateway
+    # over the docker-net, so the browser sees a same-origin app and CORS
+    # never kicks in. The list below covers the edge cases:
+    #   :3000  — dockerized frontend (compose default)
+    #   :5173  — Vite dev (`yarn dev` on host, hits gateway directly)
+    #   :4173  — Vite preview (`yarn preview`)
     allowed_origins:
+      - "http://localhost:3000"
+      - "http://127.0.0.1:3000"
       - "http://localhost:5173"
       - "http://127.0.0.1:5173"
       - "http://localhost:4173"
