@@ -9,9 +9,6 @@ import (
 	"github.com/artem13815/hr/admin/config"
 	"github.com/artem13815/hr/admin/internal/bootstrap"
 	"github.com/artem13815/hr/admin/internal/infrastructure/auth_client"
-
-	// Register google.rpc errdetails types for grpc-gateway JSON marshaling.
-	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 )
 
 func main() {

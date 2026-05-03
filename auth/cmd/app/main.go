@@ -11,21 +11,25 @@ import (
 )
 
 func main() {
-	// Resolve config path: explicit configPath env wins; otherwise pick by
-	// APP_ENV. cmp.Or picks the first non-zero string.
+	if err := run(); err != nil {
+		slog.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	configPath := cmp.Or(os.Getenv("configPath"), defaultConfigPathByEnv(os.Getenv("APP_ENV")))
 
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
-		slog.Error("failed to load config", "err", err)
-		os.Exit(1)
+		return err
 	}
 
 	authStorage, err := bootstrap.InitPGStorage(cfg)
 	if err != nil {
-		slog.Error("init pg storage", "err", err)
-		os.Exit(1)
+		return err
 	}
+
 	redisClient := bootstrap.InitRedis(cfg)
 	sessionStorage := bootstrap.InitSessionStorage(redisClient)
 
@@ -36,18 +40,16 @@ func main() {
 	jwtValidator := bootstrap.InitJWTValidator(cfg)
 	authAPI := bootstrap.InitAuthServiceAPI(authService, jwtValidator, loginLimiter, registerLimiter, refreshLimiter)
 
-	if err := bootstrap.AppRun(authAPI, jwtValidator, cfg,
-		// Cleanups run LIFO in bootstrap.runShutdown — order matches construction.
+	// Cleanups run LIFO during shutdown — close redis after the pgxpool,
+	// mirroring construction order.
+	return bootstrap.AppRun(authAPI, jwtValidator, cfg,
 		authStorage.Close,
 		func() {
 			if err := redisClient.Close(); err != nil {
 				slog.Warn("redis close failed", "err", err)
 			}
 		},
-	); err != nil {
-		slog.Error("server exited with error", "err", err)
-		os.Exit(1)
-	}
+	)
 }
 
 func defaultConfigPathByEnv(appEnv string) string {
