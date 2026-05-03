@@ -234,6 +234,21 @@ const ru: Dict = {
   'a11y.skipToMain': 'Перейти к содержимому',
   'a11y.openMenu': 'Открыть меню',
   'a11y.closeMenu': 'Закрыть меню',
+
+  // Legal pages
+  'legal.lastUpdated': 'Обновлено: {date}',
+  'legal.eyebrow.privacy': 'Политика',
+  'legal.eyebrow.terms': 'Соглашение',
+  'legal.eyebrow.support': 'Поддержка',
+  'legal.privacy.title': 'Конфиденциальность.',
+  'legal.privacy.subtitle':
+    'Как Cadence обрабатывает данные HR-пользователей и кандидатов.',
+  'legal.terms.title': 'Условия использования.',
+  'legal.terms.subtitle':
+    'Правила работы с сервисом — что разрешено, что запрещено, что мы гарантируем.',
+  'legal.support.title': 'Поддержка.',
+  'legal.support.subtitle':
+    'Вопросы по сервису, помощь с настройкой, баг-репорты.',
 }
 
 const en: Dict = {
@@ -459,6 +474,21 @@ const en: Dict = {
   'a11y.skipToMain': 'Skip to main content',
   'a11y.openMenu': 'Open menu',
   'a11y.closeMenu': 'Close menu',
+
+  // Legal pages
+  'legal.lastUpdated': 'Updated: {date}',
+  'legal.eyebrow.privacy': 'Policy',
+  'legal.eyebrow.terms': 'Agreement',
+  'legal.eyebrow.support': 'Support',
+  'legal.privacy.title': 'Privacy.',
+  'legal.privacy.subtitle':
+    'How Cadence handles data from HR users and candidates.',
+  'legal.terms.title': 'Terms of service.',
+  'legal.terms.subtitle':
+    'Rules for using the service — what is allowed, what is not, what we promise.',
+  'legal.support.title': 'Support.',
+  'legal.support.subtitle':
+    'Questions about the product, setup help, bug reports.',
 }
 
 export const dictionaries: Record<Locale, Dict> = { ru, en }

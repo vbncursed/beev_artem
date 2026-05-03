@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useI18n } from '@/app/providers/I18nProvider'
 import { BrandMark } from '@/presentation/ui/BrandMark'
 import { cn } from '@/shared/lib/cn'
@@ -33,9 +34,9 @@ export function Footer({ className }: { className?: string }) {
           aria-label={t('footer.navAria')}
           className="text-body-sm text-body flex flex-wrap gap-x-6 gap-y-2 md:justify-self-center"
         >
-          <FooterLink href="#">{t('footer.privacy')}</FooterLink>
-          <FooterLink href="#">{t('footer.terms')}</FooterLink>
-          <FooterLink href="#">{t('footer.help')}</FooterLink>
+          <FooterLink to="/privacy">{t('footer.privacy')}</FooterLink>
+          <FooterLink to="/terms">{t('footer.terms')}</FooterLink>
+          <FooterLink to="/support">{t('footer.help')}</FooterLink>
         </nav>
 
         <p className="text-caption text-muted md:justify-self-end">
@@ -47,15 +48,15 @@ export function Footer({ className }: { className?: string }) {
 }
 
 function FooterLink({
-  href,
+  to,
   children,
 }: {
-  href: string
+  to: string
   children: React.ReactNode
 }) {
   return (
-    <a
-      href={href}
+    <Link
+      to={to}
       className={cn(
         'cursor-pointer rounded-sm transition-colors',
         'hover:text-ink',
@@ -63,6 +64,6 @@ function FooterLink({
       )}
     >
       {children}
-    </a>
+    </Link>
   )
 }

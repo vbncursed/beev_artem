@@ -10,7 +10,7 @@ server:
   grpc_addr: ":50055"
 
 yandex:
-  folder_id: "b1g1hkasf7e08t5h6ae6"
+  folder_id: "b1gckm5d086akki1jbth"
   model: "aliceai-llm/latest"
   request_timeout: 60s
   max_output_tokens: 1500

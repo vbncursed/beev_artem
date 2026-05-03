@@ -5,6 +5,9 @@ import { AuthPage } from '@/presentation/pages/AuthPage'
 import { VacanciesPage } from '@/presentation/pages/VacanciesPage'
 import { VacancyCreatePage } from '@/presentation/pages/VacancyCreatePage'
 import { VacancyDetailsPage } from '@/presentation/pages/VacancyDetailsPage'
+import { PrivacyPage } from '@/presentation/pages/legal/PrivacyPage'
+import { TermsPage } from '@/presentation/pages/legal/TermsPage'
+import { SupportPage } from '@/presentation/pages/legal/SupportPage'
 import { Spinner } from '@/presentation/ui'
 import { type ReactNode } from 'react'
 
@@ -23,6 +26,12 @@ export function AppRouter() {
           </PublicOnly>
         }
       />
+
+      {/* Legal pages — public, accessible without auth so they can be
+          linked from emails / external sites without forcing a login. */}
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/support" element={<SupportPage />} />
 
       <Route
         element={
