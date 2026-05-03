@@ -134,6 +134,26 @@ services:
     networks:
       - hr-net
 
+  admin:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+    container_name: hr-admin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      auth:
+        condition: service_started
+        required: true
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+    expose:
+      - "50056"
+    networks:
+      - hr-net
+
   gateway:
     build:
       context: .
@@ -154,6 +174,9 @@ services:
         condition: service_started
         required: true
       multiagent:
+        condition: service_started
+        required: true
+      admin:
         condition: service_started
         required: true
     environment:
