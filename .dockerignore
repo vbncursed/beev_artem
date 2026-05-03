@@ -1,0 +1,14 @@
+# Keeps the build context lean. Patterns are global — they apply to
+# every per-service Dockerfile in the repo. Go services don't use any
+# of these paths, so excluding them is safe and only saves frontend
+# build time.
+**/node_modules
+**/dist
+**/.vite
+**/.next
+**/.cache
+.git
+.idea
+.vscode
+.DS_Store
+*.log

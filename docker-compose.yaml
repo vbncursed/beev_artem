@@ -163,6 +163,24 @@ services:
     networks:
       - hr-net
 
+  # Cadence frontend — Vite SPA built into a static bundle, served by
+  # nginx. nginx proxies /api → gateway over the compose network so the
+  # browser sees a same-origin app and never hits CORS at runtime.
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: hr-frontend
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_started
+        required: true
+    ports:
+      - "5173:80"
+    networks:
+      - hr-net
+
 volumes:
   postgres_data:
     name: hr_postgres_data
