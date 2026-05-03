@@ -1,0 +1,271 @@
+import type { Dict } from '../types'
+
+export const ru: Dict = {
+  // Common
+  'common.signIn': 'Войти',
+  'common.signOut': 'Выйти',
+  'common.cancel': 'Отмена',
+  'common.error': 'Ошибка',
+  'common.loading': 'Загрузка',
+  'common.back': '← Назад',
+  'common.create': 'Создать',
+  'common.save': 'Сохранить',
+  'common.search': 'Поиск',
+  'common.email': 'Email',
+  'common.password': 'Пароль',
+
+  // Nav
+  'nav.vacancies': 'Вакансии',
+
+  // Theme toggle (a11y)
+  'theme.toLight': 'Светлая тема',
+  'theme.toDark': 'Тёмная тема',
+
+  // Locale toggle (a11y)
+  'locale.label': 'Язык интерфейса',
+  'locale.ru': 'Русский',
+  'locale.en': 'Английский',
+
+  // Auth page — marketing
+  'auth.eyebrow': 'Институциональный найм',
+  'auth.titleLogin': 'С возвращением в Cadence.',
+  'auth.titleRegister': 'Найм в ровном ритме.',
+  'auth.subtitle':
+    'Приём вакансий, AI-скоринг резюме и решения, которые можно защитить — на одном спокойном холсте.',
+  'auth.modeLogin': 'Войти',
+  'auth.modeRegister': 'Регистрация',
+  'auth.formTitleLogin': 'Вход',
+  'auth.formTitleRegister': 'Создание аккаунта',
+  'auth.formHintLogin': 'Используйте рабочий email и пароль.',
+  'auth.formHintRegister':
+    'Минимум восемь символов. Используйте парольную фразу, которую сможете запомнить.',
+  'auth.confirmPassword': 'Подтвердите пароль',
+  'auth.passwordHintRegister': 'Не короче 8 символов',
+  'auth.submitLogin': 'Войти',
+  'auth.submitRegister': 'Создать аккаунт',
+
+  // Auth — validation + server errors
+  'auth.error.emailRequired': 'Email обязателен',
+  'auth.error.emailInvalid': 'Неверный формат email',
+  'auth.error.passwordShort': 'Не короче 8 символов',
+  'auth.error.passwordLong': 'Не длиннее 72 символов',
+  'auth.error.passwordsNoMatch': 'Пароли не совпадают',
+  'auth.error.invalidCreds': 'Неверный email или пароль',
+  'auth.error.exists': 'Аккаунт с таким email уже существует',
+  'auth.error.invalidArg': 'Проверьте введённые данные',
+  'auth.error.rateLimited': 'Слишком много попыток — попробуйте позже',
+  'auth.error.network': 'Не удаётся связаться с сервером',
+  'auth.error.fallbackLogin': 'Не удалось войти. Попробуйте ещё раз.',
+  'auth.error.fallbackRegister':
+    'Не удалось зарегистрироваться. Попробуйте ещё раз.',
+
+  // Vacancies list
+  'vacancies.eyebrow': 'Воронка',
+  'vacancies.title': 'Вакансии',
+  'vacancies.subtitle':
+    'Открытые позиции, оценённые кандидаты, решения, которые можно защитить.',
+  'vacancies.new': 'Новая вакансия',
+  'vacancies.searchPlaceholder': 'Поиск по названию, описанию',
+  'vacancies.countOne': '{n} вакансия',
+  'vacancies.countFew': '{n} вакансии',
+  'vacancies.countMany': '{n} вакансий',
+  'vacancies.empty.filteredTitle': 'По фильтрам ничего не найдено.',
+  'vacancies.empty.filteredHint':
+    'Попробуйте другую роль или очистите поиск.',
+  'vacancies.empty.title': 'Пока ни одной вакансии.',
+  'vacancies.empty.hint': 'Откройте первую позицию и собирайте кандидатов.',
+  'vacancies.empty.cta': 'Создать вакансию',
+  'vacancies.empty.badgeFiltered': 'Не найдено',
+  'vacancies.empty.badge': 'Пусто',
+  'vacancies.error.loadFailed': 'Не удалось загрузить вакансии.',
+  'vacancies.error.title': 'Не получилось загрузить вакансии.',
+
+  // Roles
+  'roles.all': 'Все роли',
+  'roles.accountant': 'Бухгалтер',
+  'roles.doctor': 'Врач',
+  'roles.electrician': 'Электрик',
+  'roles.analyst': 'Аналитик',
+  'roles.manager': 'Менеджер',
+  'roles.programmer': 'Программист',
+  'roles.default': 'Другое',
+
+  // Vacancy status
+  'status.open': 'Открыта',
+  'status.archived': 'В архиве',
+  'status.draft': 'Черновик',
+
+  // Vacancy create
+  'create.back': '← Вакансии',
+  'create.eyebrow': 'Новая',
+  'create.title': 'Откройте позицию.',
+  'create.subtitle':
+    'Название, бриф и взвешенные навыки. Cadence сам определит роль и направит кандидатов к нужному ревьюеру.',
+
+  // Vacancy form
+  'form.titleLabel': 'Название',
+  'form.titlePlaceholder': 'Например, Senior Go Engineer',
+  'form.descriptionLabel': 'Описание',
+  'form.descriptionPlaceholder':
+    'За что отвечает роль, ожидания, стек.',
+  'form.descriptionCounter': '{count} / 4000',
+  'form.roleLabel': 'Роль (необязательно)',
+  'form.rolePlaceholder':
+    'programmer / manager / accountant — определится автоматически',
+  'form.roleHint':
+    'Оставьте пустым, чтобы Cadence сам определил роль по названию и описанию.',
+  'form.submit': 'Опубликовать',
+
+  // Form validation + server errors
+  'form.error.titleRequired': 'Название обязательно',
+  'form.error.titleMax': 'Не длиннее 255 символов',
+  'form.error.descriptionMax': 'Не длиннее 4000 символов',
+  'form.error.skillsMin': 'Добавьте хотя бы один навык',
+  'form.error.skillNameRequired': 'Название навыка обязательно',
+  'form.error.skillNameMax': 'Не длиннее 64 символов',
+  'form.error.weightRange': 'Число от 0 до 1',
+  'form.error.weightMin': 'Минимум 0',
+  'form.error.weightMax': 'Максимум 1',
+  'form.error.invalidArg': 'Некоторые поля заполнены неверно. Проверьте форму.',
+  'form.error.unauthorized': 'Сессия истекла. Войдите снова.',
+  'form.error.rateLimited':
+    'Слишком много запросов — попробуйте чуть позже.',
+  'form.error.network': 'Не удаётся связаться с сервером.',
+  'form.error.fallback': 'Не удалось создать вакансию.',
+
+  // Skills editor
+  'skills.legend': 'Навыки и веса',
+  'skills.hint': 'Вес 0–1 · обязательный или желательный',
+  'skills.namePlaceholder': 'Например, Go, PostgreSQL, gRPC',
+  'skills.weightPlaceholder': '0,00',
+  'skills.must': 'Обяз.',
+  'skills.nice': 'Желат.',
+  'skills.add': '+ Добавить навык',
+  'skills.remove': 'Удалить',
+  'skills.empty': 'Навыков пока нет.',
+  'skills.allZero':
+    'Все веса равны 0 — backend распределит их поровну.',
+  'skills.skillNameAria': 'Название навыка {index}',
+  'skills.weightAria': 'Вес навыка {index}',
+  'skills.removeAria': 'Удалить навык {index}',
+
+  // Vacancy details
+  'details.skillsHeader': 'Навыки · {n}',
+  'details.skillsHeaderWithMust': 'Навыки · {n} (обяз. {m})',
+  'details.uploadSuccess': '✓ {name} загружен — анализ запущен.',
+  'details.uploadFailure': 'Не удалось загрузить резюме.',
+  'details.candidates': 'Кандидаты',
+  'details.candidatesSubtitle': 'отсортированы по match score',
+  'details.empty.title': 'Загрузите первое резюме сверху.',
+  'details.empty.hint':
+    'Cadence создаст кандидата, извлечёт профиль и запустит анализ автоматически.',
+  'details.empty.badge': 'Нет кандидатов',
+  'details.selectPrompt.badge': 'Выберите кандидата',
+  'details.selectPrompt.text':
+    'Кликните по кандидату слева, чтобы увидеть полный анализ, разбор скоринга и обоснование AI.',
+  'details.error.loadVacancy': 'Не удалось загрузить вакансию.',
+  'details.error.loadCandidates': 'Не удалось загрузить кандидатов.',
+
+  // Resume uploader
+  'upload.title': 'Перетащите резюме, чтобы добавить кандидата',
+  'upload.subtitle':
+    'PDF, DOC, DOCX или TXT до 10 МБ. Cadence создаст кандидата, извлечёт профиль и запустит анализ автоматически.',
+  'upload.cta': 'Выбрать файл',
+  'upload.uploading': 'Загрузка',
+  'upload.tooLarge': 'Файл больше 10 МБ. Выберите PDF или DOCX поменьше.',
+
+  // Analysis details
+  'analysis.matchScore': 'Match score',
+  'analysis.recommendation': 'Рекомендация HR',
+  'analysis.breakdown': 'Разбор навыков',
+  'analysis.matched': 'Совпали',
+  'analysis.missing': 'Не хватает',
+  'analysis.extra': 'Сверх',
+  'analysis.profile': 'Профиль кандидата',
+  'analysis.feedback': 'Фидбэк кандидату',
+  'analysis.experience': 'Опыт',
+  'analysis.positions': 'Должности',
+  'analysis.technologies': 'Технологии',
+  'analysis.education': 'Образование',
+  'analysis.yearsOne': '{n} год',
+  'analysis.yearsFew': '{n} года',
+  'analysis.yearsMany': '{n} лет',
+  'analysis.error.load': 'Не удалось загрузить анализ.',
+  'analysis.downloadResume': 'Скачать резюме',
+  'analysis.downloadFailed': 'Не удалось скачать резюме.',
+  'analysis.deleteCandidate': 'Удалить кандидата',
+  'analysis.deleteConfirm': 'Точно удалить?',
+  'analysis.deleteCancel': 'Отмена',
+  'analysis.deleteConfirmCta': 'Удалить',
+  'analysis.deleteFailed': 'Не удалось удалить кандидата.',
+
+  // Analysis status
+  'analysis.status.queued': 'В очереди',
+  'analysis.status.running': 'Идёт',
+  'analysis.status.done': 'Готово',
+  'analysis.status.failed': 'Ошибка',
+  'analysis.status.unknown': '—',
+
+  // Recommendation badges
+  'rec.hire': 'Нанимать',
+  'rec.maybe': 'Возможно',
+  'rec.no': 'Нет',
+
+  // Candidate row
+  'candidate.unnamed': 'Кандидат без имени',
+  'candidate.match': 'мэтч',
+
+  // Footer
+  'footer.tagline': 'Найм в спокойном ритме.',
+  'footer.privacy': 'Конфиденциальность',
+  'footer.terms': 'Условия',
+  'footer.help': 'Поддержка',
+  'footer.navAria': 'Навигация в подвале',
+  'footer.copyright': '© {year} Cadence',
+
+  // a11y
+  'a11y.skipToMain': 'Перейти к содержимому',
+  'a11y.openMenu': 'Открыть меню',
+  'a11y.closeMenu': 'Закрыть меню',
+
+  // Admin dashboard
+  'admin.eyebrow': 'Контроль',
+  'admin.title': 'Платформа в целом.',
+  'admin.subtitle':
+    'Сводная статистика, список HR-аккаунтов, управление ролями.',
+  'admin.stats.users': 'Пользователи',
+  'admin.stats.usersSub': 'из них admin: {admins}',
+  'admin.stats.vacancies': 'Вакансии',
+  'admin.stats.candidates': 'Кандидаты',
+  'admin.stats.analyses': 'Анализы',
+  'admin.stats.analysesSub': 'готовы: {done} · ошибок: {failed}',
+  'admin.users.eyebrow': 'HR-пользователи',
+  'admin.users.subtitle': 'все аккаунты системы',
+  'admin.users.empty': 'Пользователей пока нет.',
+  'admin.users.vacancies': 'вакансий',
+  'admin.users.candidates': 'кандидатов',
+  'admin.users.role.admin': 'Admin',
+  'admin.users.role.user': 'User',
+  'admin.users.promote': 'Сделать admin',
+  'admin.users.demote': 'Снять admin',
+  'admin.errors.stats': 'Не удалось загрузить статистику.',
+  'admin.errors.users': 'Не удалось загрузить пользователей.',
+  'admin.errors.role': 'Не удалось изменить роль.',
+  'nav.admin': 'Контроль',
+
+  // Legal pages
+  'legal.lastUpdated': 'Обновлено: {date}',
+  'legal.eyebrow.privacy': 'Политика',
+  'legal.eyebrow.terms': 'Соглашение',
+  'legal.eyebrow.support': 'Поддержка',
+  'legal.privacy.title': 'Конфиденциальность.',
+  'legal.privacy.subtitle':
+    'Как Cadence обрабатывает данные HR-пользователей и кандидатов.',
+  'legal.terms.title': 'Условия использования.',
+  'legal.terms.subtitle':
+    'Правила работы с сервисом — что разрешено, что запрещено, что мы гарантируем.',
+  'legal.support.title': 'Поддержка.',
+  'legal.support.subtitle':
+    'Вопросы по сервису, помощь с настройкой, баг-репорты.',
+}
+

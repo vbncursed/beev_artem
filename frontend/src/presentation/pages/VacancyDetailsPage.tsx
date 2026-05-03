@@ -3,13 +3,14 @@ import { Link, useParams } from 'react-router-dom'
 import { useGateways } from '@/app/providers/GatewaysProvider'
 import { useI18n } from '@/app/providers/I18nProvider'
 import { BadgePill, Button, Card, ErrorCard, Spinner } from '@/presentation/ui'
-import { KNOWN_ROLE_VALUES, type SkillWeight } from '@/domain/vacancy/types'
+import { KNOWN_ROLE_VALUES } from '@/domain/vacancy/types'
 import { ApiError } from '@/infrastructure/http/errors'
 import { ResumeUploader } from '@/presentation/features/resume/ResumeUploader'
 import { CandidateRow } from '@/presentation/features/candidates/CandidateRow'
 import { AnalysisDetails } from '@/presentation/features/candidates/AnalysisDetails'
 import { useCandidates } from '@/presentation/features/candidates/useCandidates'
 import { useVacancyDetails } from '@/presentation/features/vacancies/useVacancyDetails'
+import { SkillsSummary } from '@/presentation/features/vacancies/SkillsSummary'
 import { VacancyStatusBadge } from '@/presentation/features/vacancies/VacancyStatusBadge'
 
 export function VacancyDetailsPage() {
@@ -189,31 +190,6 @@ export function VacancyDetailsPage() {
         </div>
       </section>
     </>
-  )
-}
-
-function SkillsSummary({ skills }: { skills: SkillWeight[] }) {
-  const { t } = useI18n()
-  if (skills.length === 0) return null
-  const must = skills.filter((s) => s.mustHave).length
-  return (
-    <div className="mt-2 flex flex-col gap-3">
-      <p className="text-caption-strong text-muted uppercase">
-        {must > 0
-          ? t('details.skillsHeaderWithMust', { n: skills.length, m: must })
-          : t('details.skillsHeader', { n: skills.length })}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {skills.map((s) => (
-          <BadgePill key={s.name} tone={s.mustHave ? 'inverse' : 'default'}>
-            {s.name}
-            <span className="ml-1 opacity-70">
-              {s.weight ? s.weight.toFixed(2) : ''}
-            </span>
-          </BadgePill>
-        ))}
-      </div>
-    </div>
   )
 }
 

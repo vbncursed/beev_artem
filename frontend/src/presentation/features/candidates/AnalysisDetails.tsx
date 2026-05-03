@@ -1,22 +1,21 @@
-import { useEffect, useState } from 'react'
-import { useGateways } from '@/app/providers/GatewaysProvider'
 import { useI18n } from '@/app/providers/I18nProvider'
-import { ApiError } from '@/infrastructure/http/errors'
-import {
-  BadgePill,
-  Button,
-  Card,
-  DownloadIcon,
-  ErrorCard,
-  PriceCell,
-  Section,
-  Spinner,
-  TrashIcon,
-} from '@/presentation/ui'
+import { Card, ErrorCard, PriceCell, Section, Spinner } from '@/presentation/ui'
 import type { Analysis } from '@/domain/analysis/types'
 import { pluralKey } from '@/shared/i18n/dictionaries'
+import { formatYears } from '@/shared/lib/format'
+import { AnalysisActionBar } from './AnalysisActionBar'
 import { CandidateStatusBadge } from './CandidateStatusBadge'
+import { ProfileLine } from './ProfileLine'
+import { RecommendationBadge } from './RecommendationBadge'
+import { SkillCloud } from './SkillCloud'
+import { useAnalysisFetch } from './useAnalysisFetch'
 
+/**
+ * Right-hand panel on `/vacancies/:id`. Pure layout: data fetching is
+ * delegated to `useAnalysisFetch`, the download/delete actions to
+ * `AnalysisActionBar`, and each rendered sub-section to its own component.
+ * Adding a new section = a new <Section> block, nothing else.
+ */
 export function AnalysisDetails({
   analysisId,
   onDeleted,
@@ -25,84 +24,7 @@ export function AnalysisDetails({
   onDeleted?: () => void
 }) {
   const { t, locale } = useI18n()
-  const { analysis: gateway, resume: resumeGateway } = useGateways()
-  const [state, setState] = useState<
-    | { phase: 'loading' }
-    | { phase: 'ready'; analysis: Analysis }
-    | { phase: 'error'; message: string }
-  >({ phase: 'loading' })
-  const [downloadError, setDownloadError] = useState<string | null>(null)
-  const [downloading, setDownloading] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
-  const onDelete = async (candidateId: string) => {
-    if (!candidateId || deleting) return
-    setDeleteError(null)
-    setDeleting(true)
-    try {
-      await resumeGateway.deleteCandidate(candidateId)
-      onDeleted?.()
-    } catch (cause) {
-      const message =
-        cause instanceof ApiError ? cause.message : t('analysis.deleteFailed')
-      setDeleteError(message)
-      setDeleting(false)
-    }
-  }
-
-  const onDownload = async (resumeId: string) => {
-    if (!resumeId || downloading) return
-    setDownloadError(null)
-    setDownloading(true)
-    try {
-      const file = await resumeGateway.downloadResume(resumeId)
-      // ArrayBuffer is the universal Blob part — Uint8Array's `buffer` may be
-      // SharedArrayBuffer in modern TS lib. Slice copies into a fresh ABuf.
-      const buffer = file.data.slice().buffer as ArrayBuffer
-      const blob = new Blob([buffer], {
-        type: file.fileType || 'application/octet-stream',
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = file.fileName || 'resume'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      // Defer revoke so the browser actually uses the URL.
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch (cause) {
-      const message =
-        cause instanceof ApiError ? cause.message : t('analysis.downloadFailed')
-      setDownloadError(message)
-    } finally {
-      setDownloading(false)
-    }
-  }
-
-  useEffect(() => {
-    let cancelled = false
-    setState({ phase: 'loading' })
-    void (async () => {
-      try {
-        const a = await gateway.get(analysisId)
-        if (cancelled) return
-        setState({ phase: 'ready', analysis: a })
-      } catch (cause) {
-        if (cancelled) return
-        const message =
-          cause instanceof ApiError
-            ? cause.message
-            : t('analysis.error.load')
-        setState({ phase: 'error', message })
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [gateway, analysisId, t])
+  const state = useAnalysisFetch(analysisId)
 
   if (state.phase === 'loading') {
     return (
@@ -111,12 +33,12 @@ export function AnalysisDetails({
       </Card>
     )
   }
-
   if (state.phase === 'error') {
     return <ErrorCard message={state.message} />
   }
 
   const a = state.analysis
+  const score = a.matchScore
 
   return (
     <Card variant="feature" className="flex flex-col gap-6">
@@ -127,88 +49,21 @@ export function AnalysisDetails({
           </p>
           <p className="mt-1">
             <PriceCell
-              tone={
-                a.matchScore >= 70
-                  ? 'up'
-                  : a.matchScore < 40
-                    ? 'down'
-                    : 'neutral'
-              }
-              value={a.matchScore.toFixed(1)}
+              tone={score >= 70 ? 'up' : score < 40 ? 'down' : 'neutral'}
+              value={score.toFixed(1)}
               className="text-[44px] leading-none"
             />
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <CandidateStatusBadge status={a.status} />
-          {a.resumeId && (
-            <Button
-              variant="secondary-light"
-              size="md"
-              onClick={() => void onDownload(a.resumeId)}
-              loading={downloading}
-              iconLeft={<DownloadIcon />}
-            >
-              {t('analysis.downloadResume')}
-            </Button>
-          )}
-          {a.candidateId && !confirmingDelete && (
-            <Button
-              variant="text"
-              size="md"
-              onClick={() => {
-                setConfirmingDelete(true)
-                setDeleteError(null)
-              }}
-              iconLeft={<TrashIcon size={14} />}
-              className="text-body hover:text-semantic-down"
-            >
-              {t('analysis.deleteCandidate')}
-            </Button>
-          )}
+          <AnalysisActionBar
+            resumeId={a.resumeId}
+            candidateId={a.candidateId}
+            onDeleted={onDeleted}
+          />
         </div>
       </header>
-
-      {confirmingDelete && a.candidateId && (
-        <div
-          role="alertdialog"
-          aria-label={t('analysis.deleteConfirm')}
-          className="flex flex-wrap items-center justify-end gap-3 rounded-md bg-surface-soft px-4 py-3"
-        >
-          <span className="text-body-sm text-ink mr-auto">
-            {t('analysis.deleteConfirm')}
-          </span>
-          <Button
-            variant="secondary-light"
-            size="md"
-            onClick={() => setConfirmingDelete(false)}
-            disabled={deleting}
-          >
-            {t('analysis.deleteCancel')}
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => void onDelete(a.candidateId)}
-            loading={deleting}
-            className="bg-semantic-down hover:opacity-90"
-          >
-            {t('analysis.deleteConfirmCta')}
-          </Button>
-        </div>
-      )}
-
-      {deleteError && (
-        <p role="alert" className="text-caption text-semantic-down -mt-2">
-          {deleteError}
-        </p>
-      )}
-
-      {downloadError && (
-        <p role="alert" className="text-caption text-semantic-down -mt-2">
-          {downloadError}
-        </p>
-      )}
 
       {a.status === 'failed' && a.errorMessage && (
         <p
@@ -220,77 +75,15 @@ export function AnalysisDetails({
       )}
 
       {a.ai?.hrRecommendation && (
-        <Section title={t('analysis.recommendation')}>
-          <RecommendationBadge value={a.ai.hrRecommendation} />
-          {a.ai.hrRationale && (
-            <p className="text-body-md text-body mt-3 break-words whitespace-pre-line">
-              {a.ai.hrRationale}
-            </p>
-          )}
-        </Section>
+        <RecommendationSection ai={a.ai} />
       )}
 
       {a.breakdown && (
-        <Section title={t('analysis.breakdown')}>
-          {a.breakdown.matchedSkills.length > 0 && (
-            <SkillCloud
-              label={t('analysis.matched')}
-              tone="up"
-              skills={a.breakdown.matchedSkills}
-            />
-          )}
-          {a.breakdown.missingSkills.length > 0 && (
-            <SkillCloud
-              label={t('analysis.missing')}
-              tone="down"
-              skills={a.breakdown.missingSkills}
-            />
-          )}
-          {a.breakdown.extraSkills.length > 0 && (
-            <SkillCloud
-              label={t('analysis.extra')}
-              tone="neutral"
-              skills={a.breakdown.extraSkills}
-            />
-          )}
-          {a.breakdown.explanation && (
-            <p className="text-body-sm text-body mt-2">
-              {a.breakdown.explanation}
-            </p>
-          )}
-        </Section>
+        <BreakdownSection breakdown={a.breakdown} />
       )}
 
       {a.profile && (
-        <Section title={t('analysis.profile')}>
-          <ProfileLine
-            label={t('analysis.experience')}
-            value={formatYears(a.profile.yearsExperience, locale, t)}
-          />
-          {a.profile.positions.length > 0 && (
-            <ProfileLine
-              label={t('analysis.positions')}
-              value={a.profile.positions.join(' · ')}
-            />
-          )}
-          {a.profile.technologies.length > 0 && (
-            <ProfileLine
-              label={t('analysis.technologies')}
-              value={a.profile.technologies.join(', ')}
-            />
-          )}
-          {a.profile.education.length > 0 && (
-            <ProfileLine
-              label={t('analysis.education')}
-              value={a.profile.education.join(' · ')}
-            />
-          )}
-          {a.profile.summary && (
-            <p className="text-body-md text-body mt-3 break-words whitespace-pre-line">
-              {a.profile.summary}
-            </p>
-          )}
-        </Section>
+        <ProfileSection profile={a.profile} />
       )}
 
       {a.ai?.candidateFeedback && (
@@ -302,65 +95,90 @@ export function AnalysisDetails({
       )}
     </Card>
   )
-}
 
-function RecommendationBadge({ value }: { value: string }) {
-  const { t } = useI18n()
-  const v = value.toLowerCase()
-  if (v.includes('hire') || v === 'yes')
-    return <BadgePill tone="up">{t('rec.hire')}</BadgePill>
-  if (v.includes('no') || v.includes('reject'))
-    return <BadgePill tone="down">{t('rec.no')}</BadgePill>
-  return <BadgePill>{t('rec.maybe')}</BadgePill>
-}
+  function RecommendationSection({ ai }: { ai: NonNullable<Analysis['ai']> }) {
+    return (
+      <Section title={t('analysis.recommendation')}>
+        <RecommendationBadge value={ai.hrRecommendation} />
+        {ai.hrRationale && (
+          <p className="text-body-md text-body mt-3 break-words whitespace-pre-line">
+            {ai.hrRationale}
+          </p>
+        )}
+      </Section>
+    )
+  }
 
-function SkillCloud({
-  label,
-  tone,
-  skills,
-}: {
-  label: string
-  tone: 'up' | 'down' | 'neutral'
-  skills: string[]
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-caption text-muted">{label}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {skills.map((s) => (
-          <BadgePill key={s} tone={tone === 'neutral' ? 'default' : tone}>
-            {s}
-          </BadgePill>
-        ))}
-      </div>
-    </div>
-  )
-}
+  function BreakdownSection({
+    breakdown,
+  }: {
+    breakdown: NonNullable<Analysis['breakdown']>
+  }) {
+    return (
+      <Section title={t('analysis.breakdown')}>
+        {breakdown.matchedSkills.length > 0 && (
+          <SkillCloud
+            label={t('analysis.matched')}
+            tone="up"
+            skills={breakdown.matchedSkills}
+          />
+        )}
+        {breakdown.missingSkills.length > 0 && (
+          <SkillCloud
+            label={t('analysis.missing')}
+            tone="down"
+            skills={breakdown.missingSkills}
+          />
+        )}
+        {breakdown.extraSkills.length > 0 && (
+          <SkillCloud
+            label={t('analysis.extra')}
+            tone="neutral"
+            skills={breakdown.extraSkills}
+          />
+        )}
+        {breakdown.explanation && (
+          <p className="text-body-sm text-body mt-2">{breakdown.explanation}</p>
+        )}
+      </Section>
+    )
+  }
 
-function ProfileLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline gap-3">
-      <span className="text-caption text-muted w-28 shrink-0 uppercase">
-        {label}
-      </span>
-      <span className="text-body-md text-ink min-w-0 break-words">{value}</span>
-    </div>
-  )
+  function ProfileSection({
+    profile,
+  }: {
+    profile: NonNullable<Analysis['profile']>
+  }) {
+    return (
+      <Section title={t('analysis.profile')}>
+        <ProfileLine
+          label={t('analysis.experience')}
+          value={formatYears(profile.yearsExperience, locale, pluralKey, t)}
+        />
+        {profile.positions.length > 0 && (
+          <ProfileLine
+            label={t('analysis.positions')}
+            value={profile.positions.join(' · ')}
+          />
+        )}
+        {profile.technologies.length > 0 && (
+          <ProfileLine
+            label={t('analysis.technologies')}
+            value={profile.technologies.join(', ')}
+          />
+        )}
+        {profile.education.length > 0 && (
+          <ProfileLine
+            label={t('analysis.education')}
+            value={profile.education.join(' · ')}
+          />
+        )}
+        {profile.summary && (
+          <p className="text-body-md text-body mt-3 break-words whitespace-pre-line">
+            {profile.summary}
+          </p>
+        )}
+      </Section>
+    )
+  }
 }
-
-/**
- * Years experience copy. Russian uses 1/2-4/5+ form (год/года/лет);
- * English collapses to one/many. We pick the form by the integer floor of
- * the value so "3.5 года" works correctly (3 → "few" → "года" in RU).
- * The displayed number keeps one decimal when it's not an exact int.
- */
-function formatYears(
-  years: number,
-  locale: 'ru' | 'en',
-  t: (k: string, vars?: Record<string, string | number>) => string,
-): string {
-  const display = Number.isInteger(years) ? String(years) : years.toFixed(1)
-  const key = pluralKey('analysis.years', Math.floor(years), locale)
-  return t(key, { n: display })
-}
-

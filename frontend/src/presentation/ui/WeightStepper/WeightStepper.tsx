@@ -1,27 +1,19 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/shared/lib/cn'
+import { MinusIcon, PlusIcon } from './icons'
+import { formatWeight, parseWeight } from './weight'
 
 /**
  * Weighted-input control: `[−] 0.05 [+]` with the centre being a free-form
  * text field so users can type "0.06" or "0.1" without fighting browser
- * step validation.
- *
- * Why this exists vs <input type="number" step=...>:
- *   - the browser validates against `step` and rejects values that don't
- *     fit the grid (typing "0.06" with step=0.05 wipes the input);
- *   - the spinner UI on `type=number` is browser-themed; we need ours
- *     to match DESIGN.md geometry (rounded-md, hairline border).
- *
- * Local draft state holds the literal string the user is typing so
- * intermediate forms ("0.", "0.0") survive re-renders. We commit to the
- * parent on blur, Enter, or +/− clicks.
+ * step validation. Local draft state holds the literal string the user is
+ * typing so intermediate forms ("0.", "0.0") survive re-renders. We commit
+ * to the parent on blur, Enter, or +/− clicks.
  */
 type Props = {
   value: number
   onChange: (next: number) => void
-  /** Increment per click on +/−. Default 0.05. */
   step?: number
-  /** Inclusive bounds — defaults match the backend rule (0..1). */
   min?: number
   max?: number
   error?: string
@@ -45,11 +37,8 @@ export function WeightStepper({
 }: Props) {
   const [draft, setDraft] = useState(() => formatWeight(value))
 
-  // Keep the input in sync when the parent commits a new value (via +/−
-  // or because the row was cleared/replaced). Only resync if the parsed
-  // draft no longer matches — avoids stomping on mid-typing strings.
   useEffect(() => {
-    const parsed = parse(draft)
+    const parsed = parseWeight(draft)
     if (parsed === null || Math.abs(parsed - value) > 1e-9) {
       setDraft(formatWeight(value))
     }
@@ -60,7 +49,7 @@ export function WeightStepper({
   const round = (n: number) => Math.round(n * 100) / 100
 
   const commit = (raw: string) => {
-    const parsed = parse(raw)
+    const parsed = parseWeight(raw)
     if (parsed === null) {
       setDraft(formatWeight(value))
       return
@@ -70,14 +59,8 @@ export function WeightStepper({
     setDraft(formatWeight(next))
   }
 
-  const dec = () => {
-    const next = round(clamp(value - step))
-    onChange(next)
-  }
-  const inc = () => {
-    const next = round(clamp(value + step))
-    onChange(next)
-  }
+  const dec = () => onChange(round(clamp(value - step)))
+  const inc = () => onChange(round(clamp(value + step)))
 
   const invalid = Boolean(error)
 
@@ -100,7 +83,7 @@ export function WeightStepper({
           disabled={disabled || value <= min}
           ariaLabel="−"
         >
-          <Minus />
+          <MinusIcon />
         </StepperButton>
         <input
           type="text"
@@ -128,7 +111,7 @@ export function WeightStepper({
           disabled={disabled || value >= max}
           ariaLabel="+"
         >
-          <Plus />
+          <PlusIcon />
         </StepperButton>
       </div>
       {error && <p className="text-caption text-semantic-down">{error}</p>}
@@ -162,52 +145,4 @@ function StepperButton({
       {children}
     </button>
   )
-}
-
-function Minus() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <path d="M5 12h14" />
-    </svg>
-  )
-}
-
-function Plus() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      aria-hidden
-    >
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
-function parse(raw: string): number | null {
-  const trimmed = raw.trim().replace(',', '.')
-  if (!trimmed) return null
-  const n = Number(trimmed)
-  return Number.isFinite(n) ? n : null
-}
-
-function formatWeight(n: number): string {
-  if (!Number.isFinite(n)) return '0'
-  // Two decimals, then strip trailing zeros so "0.10" → "0.1" and "0" stays "0".
-  const s = n.toFixed(2)
-  return s.replace(/\.?0+$/, '') || '0'
 }

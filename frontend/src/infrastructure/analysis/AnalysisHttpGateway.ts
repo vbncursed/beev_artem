@@ -2,85 +2,18 @@ import type {
   AnalysisGateway,
   StartAnalysisInput,
 } from '@/application/analysis/ports'
-import {
-  parseAnalysisStatus,
-  type AIDecision,
-  type Analysis,
-  type AgentResult,
-  type CandidateProfile,
-  type CandidateWithAnalysis,
-  type ListCandidatesPage,
-  type ListCandidatesParams,
-  type ScoreBreakdown,
+import type {
+  Analysis,
+  ListCandidatesPage,
+  ListCandidatesParams,
 } from '@/domain/analysis/types'
 import type { HttpClient } from '@/infrastructure/http/client'
-
-type AgentResultDto = {
-  agentName?: string
-  summary?: string
-  structuredJson?: string
-  confidence?: number
-}
-
-type AIDecisionDto = {
-  hrRecommendation?: string
-  confidence?: number
-  hrRationale?: string
-  candidateFeedback?: string
-  softSkillsNotes?: string
-  agentResults?: AgentResultDto[]
-}
-
-type CandidateProfileDto = {
-  skills?: string[]
-  yearsExperience?: number
-  positions?: string[]
-  technologies?: string[]
-  education?: string[]
-  summary?: string
-}
-
-type ScoreBreakdownDto = {
-  matchedSkills?: string[]
-  missingSkills?: string[]
-  extraSkills?: string[]
-  baseScore?: number
-  mustHavePenalty?: number
-  niceToHaveBonus?: number
-  explanation?: string
-}
-
-type AnalysisDto = {
-  id: string
-  vacancyId?: string
-  candidateId?: string
-  resumeId?: string
-  vacancyVersion?: number
-  status?: number | string
-  matchScore?: number
-  profile?: CandidateProfileDto
-  breakdown?: ScoreBreakdownDto
-  ai?: AIDecisionDto
-  errorMessage?: string
-}
-
-type CandidateWithAnalysisDto = {
-  candidateId?: string
-  fullName?: string
-  email?: string
-  phone?: string
-  matchScore?: number
-  analysisId?: string
-  analysisStatus?: number | string
-  createdAt?: string
-}
-
-type StartAnalysisResponse = { analysisId: string; status?: number }
-type AnalysisResponse = { analysis: AnalysisDto }
-type ListCandidatesResponse = {
-  candidates?: CandidateWithAnalysisDto[]
-  page?: { limit?: number; offset?: number; total?: string }
-}
+import type {
+  AnalysisResponse,
+  ListCandidatesResponse,
+  StartAnalysisResponse,
+} from './dto'
+import { toAnalysis, toCandidateWithAnalysis } from './mappers'
 
 export class AnalysisHttpGateway implements AnalysisGateway {
   private readonly http: HttpClient
@@ -133,79 +66,5 @@ export class AnalysisHttpGateway implements AnalysisGateway {
       limit: dto.page?.limit ?? params.limit ?? 50,
       offset: dto.page?.offset ?? params.offset ?? 0,
     }
-  }
-}
-
-function toAnalysis(dto: AnalysisDto): Analysis {
-  return {
-    id: dto.id,
-    vacancyId: dto.vacancyId ?? '',
-    candidateId: dto.candidateId ?? '',
-    resumeId: dto.resumeId ?? '',
-    vacancyVersion: dto.vacancyVersion ?? 0,
-    status: parseAnalysisStatus(dto.status),
-    matchScore: dto.matchScore ?? 0,
-    profile: dto.profile ? toProfile(dto.profile) : undefined,
-    breakdown: dto.breakdown ? toBreakdown(dto.breakdown) : undefined,
-    ai: dto.ai ? toAi(dto.ai) : undefined,
-    errorMessage: dto.errorMessage,
-  }
-}
-
-function toProfile(dto: CandidateProfileDto): CandidateProfile {
-  return {
-    skills: dto.skills ?? [],
-    yearsExperience: dto.yearsExperience ?? 0,
-    positions: dto.positions ?? [],
-    technologies: dto.technologies ?? [],
-    education: dto.education ?? [],
-    summary: dto.summary ?? '',
-  }
-}
-
-function toBreakdown(dto: ScoreBreakdownDto): ScoreBreakdown {
-  return {
-    matchedSkills: dto.matchedSkills ?? [],
-    missingSkills: dto.missingSkills ?? [],
-    extraSkills: dto.extraSkills ?? [],
-    baseScore: dto.baseScore ?? 0,
-    mustHavePenalty: dto.mustHavePenalty ?? 0,
-    niceToHaveBonus: dto.niceToHaveBonus ?? 0,
-    explanation: dto.explanation ?? '',
-  }
-}
-
-function toAi(dto: AIDecisionDto): AIDecision {
-  return {
-    hrRecommendation: dto.hrRecommendation ?? '',
-    confidence: dto.confidence ?? 0,
-    hrRationale: dto.hrRationale ?? '',
-    candidateFeedback: dto.candidateFeedback ?? '',
-    softSkillsNotes: dto.softSkillsNotes ?? '',
-    agentResults: (dto.agentResults ?? []).map(toAgentResult),
-  }
-}
-
-function toAgentResult(dto: AgentResultDto): AgentResult {
-  return {
-    agentName: dto.agentName ?? '',
-    summary: dto.summary ?? '',
-    structuredJson: dto.structuredJson ?? '',
-    confidence: dto.confidence ?? 0,
-  }
-}
-
-function toCandidateWithAnalysis(
-  dto: CandidateWithAnalysisDto,
-): CandidateWithAnalysis {
-  return {
-    candidateId: dto.candidateId ?? '',
-    fullName: dto.fullName ?? '',
-    email: dto.email ?? '',
-    phone: dto.phone ?? '',
-    matchScore: dto.matchScore ?? 0,
-    analysisId: dto.analysisId ?? '',
-    analysisStatus: parseAnalysisStatus(dto.analysisStatus),
-    createdAt: dto.createdAt ?? '',
   }
 }
