@@ -17,6 +17,30 @@ export const ANALYSIS_STATUS_BY_CODE: Record<number, AnalysisStatus> = {
   4: 'failed',
 }
 
+/**
+ * grpc-gateway by default serializes proto enums as their **string name**
+ * (e.g. `"ANALYSIS_STATUS_DONE"`) — not as the integer code. We accept
+ * both shapes here so the frontend keeps working whether the gateway
+ * marshaler is reconfigured later or not.
+ */
+const ANALYSIS_STATUS_BY_NAME: Record<string, AnalysisStatus> = {
+  ANALYSIS_STATUS_UNSPECIFIED: 'unknown',
+  ANALYSIS_STATUS_QUEUED: 'queued',
+  ANALYSIS_STATUS_RUNNING: 'running',
+  ANALYSIS_STATUS_DONE: 'done',
+  ANALYSIS_STATUS_FAILED: 'failed',
+}
+
+export function parseAnalysisStatus(raw: unknown): AnalysisStatus {
+  if (typeof raw === 'number') {
+    return ANALYSIS_STATUS_BY_CODE[raw] ?? 'unknown'
+  }
+  if (typeof raw === 'string') {
+    return ANALYSIS_STATUS_BY_NAME[raw] ?? 'unknown'
+  }
+  return 'unknown'
+}
+
 export type CandidateProfile = {
   skills: string[]
   yearsExperience: number

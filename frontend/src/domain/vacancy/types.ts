@@ -14,6 +14,28 @@ export const VACANCY_STATUS_BY_CODE: Record<number, VacancyStatus> = {
 }
 
 /**
+ * grpc-gateway emits proto enums as their string name by default
+ * (e.g. `"VACANCY_STATUS_OPEN"`). Accept both shapes so the frontend
+ * survives any future marshaler tweak on the gateway.
+ */
+const VACANCY_STATUS_BY_NAME: Record<string, VacancyStatus> = {
+  VACANCY_STATUS_DRAFT: 'draft',
+  VACANCY_STATUS_OPEN: 'open',
+  VACANCY_STATUS_ARCHIVED: 'archived',
+  VACANCY_STATUS_UNSPECIFIED: 'unknown',
+}
+
+export function parseVacancyStatus(raw: unknown): VacancyStatus {
+  if (typeof raw === 'number') {
+    return VACANCY_STATUS_BY_CODE[raw] ?? 'unknown'
+  }
+  if (typeof raw === 'string') {
+    return VACANCY_STATUS_BY_NAME[raw] ?? 'unknown'
+  }
+  return 'unknown'
+}
+
+/**
  * Free-form role string. multiagent looks up `assets/prompts/<role>.txt`
  * and falls back to `default`. Known roles drive prompt selection but the
  * backend accepts any string.

@@ -1,6 +1,6 @@
 import type { VacancyGateway } from '@/application/vacancy/ports'
 import {
-  VACANCY_STATUS_BY_CODE,
+  parseVacancyStatus,
   type CreateVacancyInput,
   type ListVacanciesParams,
   type SkillWeight,
@@ -24,7 +24,7 @@ type VacancyDto = {
   description: string
   role?: string
   skills?: SkillWeightDto[]
-  status?: number
+  status?: number | string
   version?: number
   createdAt?: string
   updatedAt?: string
@@ -113,7 +113,7 @@ function toVacancy(dto: VacancyDto): Vacancy {
     description: dto.description,
     role: dto.role ?? 'default',
     skills: (dto.skills ?? []).map(toSkill),
-    status: VACANCY_STATUS_BY_CODE[dto.status ?? 0] ?? 'unknown',
+    status: parseVacancyStatus(dto.status),
     version: dto.version ?? 0,
     createdAt: dto.createdAt ?? '',
     updatedAt: dto.updatedAt ?? '',

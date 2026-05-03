@@ -3,7 +3,7 @@ import type {
   StartAnalysisInput,
 } from '@/application/analysis/ports'
 import {
-  ANALYSIS_STATUS_BY_CODE,
+  parseAnalysisStatus,
   type AIDecision,
   type Analysis,
   type AgentResult,
@@ -56,7 +56,7 @@ type AnalysisDto = {
   candidateId?: string
   resumeId?: string
   vacancyVersion?: number
-  status?: number
+  status?: number | string
   matchScore?: number
   profile?: CandidateProfileDto
   breakdown?: ScoreBreakdownDto
@@ -71,7 +71,7 @@ type CandidateWithAnalysisDto = {
   phone?: string
   matchScore?: number
   analysisId?: string
-  analysisStatus?: number
+  analysisStatus?: number | string
   createdAt?: string
 }
 
@@ -143,7 +143,7 @@ function toAnalysis(dto: AnalysisDto): Analysis {
     candidateId: dto.candidateId ?? '',
     resumeId: dto.resumeId ?? '',
     vacancyVersion: dto.vacancyVersion ?? 0,
-    status: ANALYSIS_STATUS_BY_CODE[dto.status ?? 0] ?? 'unknown',
+    status: parseAnalysisStatus(dto.status),
     matchScore: dto.matchScore ?? 0,
     profile: dto.profile ? toProfile(dto.profile) : undefined,
     breakdown: dto.breakdown ? toBreakdown(dto.breakdown) : undefined,
@@ -205,8 +205,7 @@ function toCandidateWithAnalysis(
     phone: dto.phone ?? '',
     matchScore: dto.matchScore ?? 0,
     analysisId: dto.analysisId ?? '',
-    analysisStatus:
-      ANALYSIS_STATUS_BY_CODE[dto.analysisStatus ?? 0] ?? 'unknown',
+    analysisStatus: parseAnalysisStatus(dto.analysisStatus),
     createdAt: dto.createdAt ?? '',
   }
 }
