@@ -9,6 +9,15 @@ import (
 
 	"github.com/artem13815/hr/gateway/config"
 	"github.com/artem13815/hr/gateway/internal/bootstrap"
+
+	// Blank-import errdetails so its protobuf types
+	// (google.rpc.ErrorInfo, BadRequest, RetryInfo, ...) register in
+	// protoregistry.GlobalTypes at init time. Without this import,
+	// grpc-gateway fails to marshal `google.protobuf.Any` payloads
+	// returned by backend services with:
+	//   "unable to resolve type.googleapis.com/google.rpc.ErrorInfo: not found"
+	// because the gateway binary itself never references the type.
+	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 )
 
 func main() {
