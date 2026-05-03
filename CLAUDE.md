@@ -361,8 +361,7 @@ For the `Inspect` callback, the function signature **must match the interface me
 - Cleanup hooks run **LIFO** in `bootstrap.AppRun`. Construction order matters: the auth-client conn must close after the gRPC server stops accepting requests, otherwise in-flight handlers calling `auth.ValidateAccessToken` would race the conn close.
 - Multiagent: prompts live in `internal/infrastructure/prompts/templates/<role>.txt`. Adding a new role = drop a new `.txt` file + rebuild. No proto/schema/storage changes. Roles are case-insensitive, fall back to `default.txt` on miss.
 - Multiagent does NOT carry an internal heuristic fallback. If the LLM fails (provider down, malformed JSON), the error propagates to analysis, which keeps its **heuristic AI** as the authoritative answer in the analysis row.
-- READMEs inside each service are written in Russian and are kept reasonably up to date — they're a good source of method-level intent.
-- Each service ships a `SPEC.md` (Russian) at its root with the full technical specification: ports, endpoints, domain model, dependencies, configuration, deployment notes. Frontend has the same at `frontend/SPEC.md`. When a service contract changes, update the corresponding SPEC.md in the same commit.
+- Each service (and `frontend/`) ships a Russian `README.md` at its root with the full technical specification: purpose, clean-arch layers, API contract, domain model, dependencies, configuration, deployment notes, known limitations. When a service contract changes, update the corresponding README in the same commit.
 
 ## Recent significant decisions
 
