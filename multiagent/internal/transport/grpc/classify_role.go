@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -27,6 +28,11 @@ import (
 func (a *MultiAgentServiceAPI) ClassifyRole(ctx context.Context, req *pb.ClassifyRoleRequest) (*pb.ClassifyRoleResponse, error) {
 	resp, err := a.svc.ClassifyRole(ctx, pbToDomainClassifyRequest(req))
 	if err != nil {
+		// Log the underlying error before mapping to a generic status —
+		// otherwise vacancy callers see only "LLM unavailable" and have
+		// no way to debug whether it's a 4xx, network blip, parse error,
+		// or rate limit. The wrapped chain is the only signal we keep.
+		slog.WarnContext(ctx, "ClassifyRole failed", "err", err)
 		switch {
 		case errors.Is(err, usecase.ErrInvalidArgument):
 			return nil, status.Error(codes.InvalidArgument, "Empty classify request.")

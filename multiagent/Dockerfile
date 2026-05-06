@@ -10,6 +10,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/multiagent-service ./
 
 FROM alpine:3.22
 
+RUN apk add --no-cache ca-certificates
+
 WORKDIR /app
 
 COPY --from=builder /out/multiagent-service /usr/local/bin/multiagent-service
