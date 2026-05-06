@@ -384,6 +384,105 @@ func (x *GenerateDecisionResponse) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+type ClassifyRoleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClassifyRoleRequest) Reset() {
+	*x = ClassifyRoleRequest{}
+	mi := &file_multiagent_api_multiagent_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClassifyRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClassifyRoleRequest) ProtoMessage() {}
+
+func (x *ClassifyRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_multiagent_api_multiagent_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClassifyRoleRequest.ProtoReflect.Descriptor instead.
+func (*ClassifyRoleRequest) Descriptor() ([]byte, []int) {
+	return file_multiagent_api_multiagent_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ClassifyRoleRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *ClassifyRoleRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+type ClassifyRoleResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// role is guaranteed by the server to be one of the registered prompt
+	// templates, or the literal "default" when the LLM is unsure. Callers can
+	// treat the value as opaque and pass it back to GenerateDecision.role.
+	Role          string `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClassifyRoleResponse) Reset() {
+	*x = ClassifyRoleResponse{}
+	mi := &file_multiagent_api_multiagent_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClassifyRoleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClassifyRoleResponse) ProtoMessage() {}
+
+func (x *ClassifyRoleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_multiagent_api_multiagent_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClassifyRoleResponse.ProtoReflect.Descriptor instead.
+func (*ClassifyRoleResponse) Descriptor() ([]byte, []int) {
+	return file_multiagent_api_multiagent_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ClassifyRoleResponse) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
 var File_multiagent_api_multiagent_proto protoreflect.FileDescriptor
 
 const file_multiagent_api_multiagent_proto_rawDesc = "" +
@@ -425,14 +524,20 @@ const file_multiagent_api_multiagent_proto_rawDesc = "" +
 	"\ragent_results\x18\x06 \x03(\v2\".multiagent.service.v1.AgentResultR\fagentResults\x12\x1b\n" +
 	"\traw_trace\x18\a \x01(\tR\brawTrace\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt*l\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"M\n" +
+	"\x13ClassifyRoleRequest\x12\x14\n" +
+	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\"*\n" +
+	"\x14ClassifyRoleResponse\x12\x12\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role*l\n" +
 	"\tAgentMode\x12\x1a\n" +
 	"\x16AGENT_MODE_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fAGENT_MODE_FAST\x10\x01\x12\x17\n" +
 	"\x13AGENT_MODE_BALANCED\x10\x02\x12\x15\n" +
-	"\x11AGENT_MODE_STRICT\x10\x032\x88\x01\n" +
+	"\x11AGENT_MODE_STRICT\x10\x032\xf1\x01\n" +
 	"\x11MultiAgentService\x12s\n" +
-	"\x10GenerateDecision\x12..multiagent.service.v1.GenerateDecisionRequest\x1a/.multiagent.service.v1.GenerateDecisionResponseB@Z>github.com/artem13815/hr/multiagent/internal/pb/multiagent_apib\x06proto3"
+	"\x10GenerateDecision\x12..multiagent.service.v1.GenerateDecisionRequest\x1a/.multiagent.service.v1.GenerateDecisionResponse\x12g\n" +
+	"\fClassifyRole\x12*.multiagent.service.v1.ClassifyRoleRequest\x1a+.multiagent.service.v1.ClassifyRoleResponseB@Z>github.com/artem13815/hr/multiagent/internal/pb/multiagent_apib\x06proto3"
 
 var (
 	file_multiagent_api_multiagent_proto_rawDescOnce sync.Once
@@ -447,22 +552,26 @@ func file_multiagent_api_multiagent_proto_rawDescGZIP() []byte {
 }
 
 var file_multiagent_api_multiagent_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_multiagent_api_multiagent_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_multiagent_api_multiagent_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_multiagent_api_multiagent_proto_goTypes = []any{
 	(AgentMode)(0),                   // 0: multiagent.service.v1.AgentMode
 	(*GenerateDecisionRequest)(nil),  // 1: multiagent.service.v1.GenerateDecisionRequest
 	(*AgentResult)(nil),              // 2: multiagent.service.v1.AgentResult
 	(*GenerateDecisionResponse)(nil), // 3: multiagent.service.v1.GenerateDecisionResponse
-	(*timestamppb.Timestamp)(nil),    // 4: google.protobuf.Timestamp
+	(*ClassifyRoleRequest)(nil),      // 4: multiagent.service.v1.ClassifyRoleRequest
+	(*ClassifyRoleResponse)(nil),     // 5: multiagent.service.v1.ClassifyRoleResponse
+	(*timestamppb.Timestamp)(nil),    // 6: google.protobuf.Timestamp
 }
 var file_multiagent_api_multiagent_proto_depIdxs = []int32{
 	0, // 0: multiagent.service.v1.GenerateDecisionRequest.mode:type_name -> multiagent.service.v1.AgentMode
 	2, // 1: multiagent.service.v1.GenerateDecisionResponse.agent_results:type_name -> multiagent.service.v1.AgentResult
-	4, // 2: multiagent.service.v1.GenerateDecisionResponse.created_at:type_name -> google.protobuf.Timestamp
+	6, // 2: multiagent.service.v1.GenerateDecisionResponse.created_at:type_name -> google.protobuf.Timestamp
 	1, // 3: multiagent.service.v1.MultiAgentService.GenerateDecision:input_type -> multiagent.service.v1.GenerateDecisionRequest
-	3, // 4: multiagent.service.v1.MultiAgentService.GenerateDecision:output_type -> multiagent.service.v1.GenerateDecisionResponse
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
+	4, // 4: multiagent.service.v1.MultiAgentService.ClassifyRole:input_type -> multiagent.service.v1.ClassifyRoleRequest
+	3, // 5: multiagent.service.v1.MultiAgentService.GenerateDecision:output_type -> multiagent.service.v1.GenerateDecisionResponse
+	5, // 6: multiagent.service.v1.MultiAgentService.ClassifyRole:output_type -> multiagent.service.v1.ClassifyRoleResponse
+	5, // [5:7] is the sub-list for method output_type
+	3, // [3:5] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
 	3, // [3:3] is the sub-list for extension extendee
 	0, // [0:3] is the sub-list for field type_name
@@ -479,7 +588,7 @@ func file_multiagent_api_multiagent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_multiagent_api_multiagent_proto_rawDesc), len(file_multiagent_api_multiagent_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

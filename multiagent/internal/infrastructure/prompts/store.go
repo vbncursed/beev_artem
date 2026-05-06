@@ -8,6 +8,7 @@ package prompts
 import (
 	"embed"
 	"path"
+	"slices"
 	"strings"
 )
 
@@ -75,4 +76,21 @@ func (s *Store) Get(role string) string {
 		return p
 	}
 	return s.defaultPrompt
+}
+
+// ListRoles returns the registered role names sorted alphabetically. The
+// "default" fallback is excluded — it's not a real classification target,
+// just the catch-all when no specific role applies. The classifier embeds
+// this list into its system prompt so adding a new templates/<role>.txt
+// is enough to extend the model's vocabulary.
+func (s *Store) ListRoles() []string {
+	roles := make([]string, 0, len(s.byRole))
+	for r := range s.byRole {
+		if r == "default" {
+			continue
+		}
+		roles = append(roles, r)
+	}
+	slices.Sort(roles)
+	return roles
 }

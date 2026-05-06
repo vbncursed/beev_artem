@@ -21,6 +21,13 @@ type PromptStoreMock struct {
 	afterGetCounter  uint64
 	beforeGetCounter uint64
 	GetMock          mPromptStoreMockGet
+
+	funcListRoles          func() (sa1 []string)
+	funcListRolesOrigin    string
+	inspectFuncListRoles   func()
+	afterListRolesCounter  uint64
+	beforeListRolesCounter uint64
+	ListRolesMock          mPromptStoreMockListRoles
 }
 
 // NewPromptStoreMock returns a mock for mm_usecase.PromptStore
@@ -33,6 +40,8 @@ func NewPromptStoreMock(t minimock.Tester) *PromptStoreMock {
 
 	m.GetMock = mPromptStoreMockGet{mock: m}
 	m.GetMock.callArgs = []*PromptStoreMockGetParams{}
+
+	m.ListRolesMock = mPromptStoreMockListRoles{mock: m}
 
 	t.Cleanup(m.MinimockFinish)
 
@@ -350,11 +359,199 @@ func (m *PromptStoreMock) MinimockGetInspect() {
 	}
 }
 
+type mPromptStoreMockListRoles struct {
+	optional           bool
+	mock               *PromptStoreMock
+	defaultExpectation *PromptStoreMockListRolesExpectation
+	expectations       []*PromptStoreMockListRolesExpectation
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// PromptStoreMockListRolesExpectation specifies expectation struct of the PromptStore.ListRoles
+type PromptStoreMockListRolesExpectation struct {
+	mock *PromptStoreMock
+
+	results      *PromptStoreMockListRolesResults
+	returnOrigin string
+	Counter      uint64
+}
+
+// PromptStoreMockListRolesResults contains results of the PromptStore.ListRoles
+type PromptStoreMockListRolesResults struct {
+	sa1 []string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmListRoles *mPromptStoreMockListRoles) Optional() *mPromptStoreMockListRoles {
+	mmListRoles.optional = true
+	return mmListRoles
+}
+
+// Expect sets up expected params for PromptStore.ListRoles
+func (mmListRoles *mPromptStoreMockListRoles) Expect() *mPromptStoreMockListRoles {
+	if mmListRoles.mock.funcListRoles != nil {
+		mmListRoles.mock.t.Fatalf("PromptStoreMock.ListRoles mock is already set by Set")
+	}
+
+	if mmListRoles.defaultExpectation == nil {
+		mmListRoles.defaultExpectation = &PromptStoreMockListRolesExpectation{}
+	}
+
+	return mmListRoles
+}
+
+// Inspect accepts an inspector function that has same arguments as the PromptStore.ListRoles
+func (mmListRoles *mPromptStoreMockListRoles) Inspect(f func()) *mPromptStoreMockListRoles {
+	if mmListRoles.mock.inspectFuncListRoles != nil {
+		mmListRoles.mock.t.Fatalf("Inspect function is already set for PromptStoreMock.ListRoles")
+	}
+
+	mmListRoles.mock.inspectFuncListRoles = f
+
+	return mmListRoles
+}
+
+// Return sets up results that will be returned by PromptStore.ListRoles
+func (mmListRoles *mPromptStoreMockListRoles) Return(sa1 []string) *PromptStoreMock {
+	if mmListRoles.mock.funcListRoles != nil {
+		mmListRoles.mock.t.Fatalf("PromptStoreMock.ListRoles mock is already set by Set")
+	}
+
+	if mmListRoles.defaultExpectation == nil {
+		mmListRoles.defaultExpectation = &PromptStoreMockListRolesExpectation{mock: mmListRoles.mock}
+	}
+	mmListRoles.defaultExpectation.results = &PromptStoreMockListRolesResults{sa1}
+	mmListRoles.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmListRoles.mock
+}
+
+// Set uses given function f to mock the PromptStore.ListRoles method
+func (mmListRoles *mPromptStoreMockListRoles) Set(f func() (sa1 []string)) *PromptStoreMock {
+	if mmListRoles.defaultExpectation != nil {
+		mmListRoles.mock.t.Fatalf("Default expectation is already set for the PromptStore.ListRoles method")
+	}
+
+	if len(mmListRoles.expectations) > 0 {
+		mmListRoles.mock.t.Fatalf("Some expectations are already set for the PromptStore.ListRoles method")
+	}
+
+	mmListRoles.mock.funcListRoles = f
+	mmListRoles.mock.funcListRolesOrigin = minimock.CallerInfo(1)
+	return mmListRoles.mock
+}
+
+// Times sets number of times PromptStore.ListRoles should be invoked
+func (mmListRoles *mPromptStoreMockListRoles) Times(n uint64) *mPromptStoreMockListRoles {
+	if n == 0 {
+		mmListRoles.mock.t.Fatalf("Times of PromptStoreMock.ListRoles mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmListRoles.expectedInvocations, n)
+	mmListRoles.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmListRoles
+}
+
+func (mmListRoles *mPromptStoreMockListRoles) invocationsDone() bool {
+	if len(mmListRoles.expectations) == 0 && mmListRoles.defaultExpectation == nil && mmListRoles.mock.funcListRoles == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmListRoles.mock.afterListRolesCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmListRoles.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// ListRoles implements mm_usecase.PromptStore
+func (mmListRoles *PromptStoreMock) ListRoles() (sa1 []string) {
+	mm_atomic.AddUint64(&mmListRoles.beforeListRolesCounter, 1)
+	defer mm_atomic.AddUint64(&mmListRoles.afterListRolesCounter, 1)
+
+	mmListRoles.t.Helper()
+
+	if mmListRoles.inspectFuncListRoles != nil {
+		mmListRoles.inspectFuncListRoles()
+	}
+
+	if mmListRoles.ListRolesMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmListRoles.ListRolesMock.defaultExpectation.Counter, 1)
+
+		mm_results := mmListRoles.ListRolesMock.defaultExpectation.results
+		if mm_results == nil {
+			mmListRoles.t.Fatal("No results are set for the PromptStoreMock.ListRoles")
+		}
+		return (*mm_results).sa1
+	}
+	if mmListRoles.funcListRoles != nil {
+		return mmListRoles.funcListRoles()
+	}
+	mmListRoles.t.Fatalf("Unexpected call to PromptStoreMock.ListRoles.")
+	return
+}
+
+// ListRolesAfterCounter returns a count of finished PromptStoreMock.ListRoles invocations
+func (mmListRoles *PromptStoreMock) ListRolesAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmListRoles.afterListRolesCounter)
+}
+
+// ListRolesBeforeCounter returns a count of PromptStoreMock.ListRoles invocations
+func (mmListRoles *PromptStoreMock) ListRolesBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmListRoles.beforeListRolesCounter)
+}
+
+// MinimockListRolesDone returns true if the count of the ListRoles invocations corresponds
+// the number of defined expectations
+func (m *PromptStoreMock) MinimockListRolesDone() bool {
+	if m.ListRolesMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.ListRolesMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.ListRolesMock.invocationsDone()
+}
+
+// MinimockListRolesInspect logs each unmet expectation
+func (m *PromptStoreMock) MinimockListRolesInspect() {
+	for _, e := range m.ListRolesMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Error("Expected call to PromptStoreMock.ListRoles")
+		}
+	}
+
+	afterListRolesCounter := mm_atomic.LoadUint64(&m.afterListRolesCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.ListRolesMock.defaultExpectation != nil && afterListRolesCounter < 1 {
+		m.t.Errorf("Expected call to PromptStoreMock.ListRoles at\n%s", m.ListRolesMock.defaultExpectation.returnOrigin)
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcListRoles != nil && afterListRolesCounter < 1 {
+		m.t.Errorf("Expected call to PromptStoreMock.ListRoles at\n%s", m.funcListRolesOrigin)
+	}
+
+	if !m.ListRolesMock.invocationsDone() && afterListRolesCounter > 0 {
+		m.t.Errorf("Expected %d calls to PromptStoreMock.ListRoles at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.ListRolesMock.expectedInvocations), m.ListRolesMock.expectedInvocationsOrigin, afterListRolesCounter)
+	}
+}
+
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *PromptStoreMock) MinimockFinish() {
 	m.finishOnce.Do(func() {
 		if !m.minimockDone() {
 			m.MinimockGetInspect()
+
+			m.MinimockListRolesInspect()
 		}
 	})
 }
@@ -378,5 +575,6 @@ func (m *PromptStoreMock) MinimockWait(timeout mm_time.Duration) {
 func (m *PromptStoreMock) minimockDone() bool {
 	done := true
 	return done &&
-		m.MinimockGetDone()
+		m.MinimockGetDone() &&
+		m.MinimockListRolesDone()
 }

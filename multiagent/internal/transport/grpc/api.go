@@ -17,6 +17,7 @@ import (
 // usecase package.
 type service interface {
 	GenerateDecision(ctx context.Context, req domain.DecisionRequest) (*domain.DecisionResponse, error)
+	ClassifyRole(ctx context.Context, req domain.RoleClassifyRequest) (*domain.RoleClassifyResponse, error)
 }
 
 type MultiAgentServiceAPI struct {

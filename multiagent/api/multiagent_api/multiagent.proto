@@ -8,6 +8,12 @@ import "google/protobuf/timestamp.proto";
 
 service MultiAgentService {
   rpc GenerateDecision(GenerateDecisionRequest) returns (GenerateDecisionResponse);
+  // ClassifyRole asks the LLM to map a vacancy title+description onto one of
+  // the prompt-template roles multiagent already serves (programmer, manager,
+  // accountant, …) plus the catch-all "default". The vacancy service calls
+  // this on Create/Update so the role downstream HR decisions key off is
+  // chosen by the same model that writes them, instead of a keyword table.
+  rpc ClassifyRole(ClassifyRoleRequest) returns (ClassifyRoleResponse);
 }
 
 enum AgentMode {
@@ -59,4 +65,16 @@ message GenerateDecisionResponse {
   string raw_trace = 7;
 
   google.protobuf.Timestamp created_at = 8;
+}
+
+message ClassifyRoleRequest {
+  string title = 1;
+  string description = 2;
+}
+
+message ClassifyRoleResponse {
+  // role is guaranteed by the server to be one of the registered prompt
+  // templates, or the literal "default" when the LLM is unsure. Callers can
+  // treat the value as opaque and pass it back to GenerateDecision.role.
+  string role = 1;
 }

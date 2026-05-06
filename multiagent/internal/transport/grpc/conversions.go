@@ -55,3 +55,20 @@ func domainToPBResponse(resp *domain.DecisionResponse) *pb.GenerateDecisionRespo
 		CreatedAt:         timestamppb.New(resp.CreatedAt),
 	}
 }
+
+func pbToDomainClassifyRequest(req *pb.ClassifyRoleRequest) domain.RoleClassifyRequest {
+	if req == nil {
+		return domain.RoleClassifyRequest{}
+	}
+	return domain.RoleClassifyRequest{
+		Title:       req.GetTitle(),
+		Description: req.GetDescription(),
+	}
+}
+
+func domainToPBClassifyResponse(resp *domain.RoleClassifyResponse) *pb.ClassifyRoleResponse {
+	if resp == nil {
+		return &pb.ClassifyRoleResponse{}
+	}
+	return &pb.ClassifyRoleResponse{Role: resp.Role}
+}

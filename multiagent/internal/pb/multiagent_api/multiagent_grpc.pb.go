@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	MultiAgentService_GenerateDecision_FullMethodName = "/multiagent.service.v1.MultiAgentService/GenerateDecision"
+	MultiAgentService_ClassifyRole_FullMethodName     = "/multiagent.service.v1.MultiAgentService/ClassifyRole"
 )
 
 // MultiAgentServiceClient is the client API for MultiAgentService service.
@@ -27,6 +28,12 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MultiAgentServiceClient interface {
 	GenerateDecision(ctx context.Context, in *GenerateDecisionRequest, opts ...grpc.CallOption) (*GenerateDecisionResponse, error)
+	// ClassifyRole asks the LLM to map a vacancy title+description onto one of
+	// the prompt-template roles multiagent already serves (programmer, manager,
+	// accountant, …) plus the catch-all "default". The vacancy service calls
+	// this on Create/Update so the role downstream HR decisions key off is
+	// chosen by the same model that writes them, instead of a keyword table.
+	ClassifyRole(ctx context.Context, in *ClassifyRoleRequest, opts ...grpc.CallOption) (*ClassifyRoleResponse, error)
 }
 
 type multiAgentServiceClient struct {
@@ -47,11 +54,27 @@ func (c *multiAgentServiceClient) GenerateDecision(ctx context.Context, in *Gene
 	return out, nil
 }
 
+func (c *multiAgentServiceClient) ClassifyRole(ctx context.Context, in *ClassifyRoleRequest, opts ...grpc.CallOption) (*ClassifyRoleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ClassifyRoleResponse)
+	err := c.cc.Invoke(ctx, MultiAgentService_ClassifyRole_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MultiAgentServiceServer is the server API for MultiAgentService service.
 // All implementations must embed UnimplementedMultiAgentServiceServer
 // for forward compatibility.
 type MultiAgentServiceServer interface {
 	GenerateDecision(context.Context, *GenerateDecisionRequest) (*GenerateDecisionResponse, error)
+	// ClassifyRole asks the LLM to map a vacancy title+description onto one of
+	// the prompt-template roles multiagent already serves (programmer, manager,
+	// accountant, …) plus the catch-all "default". The vacancy service calls
+	// this on Create/Update so the role downstream HR decisions key off is
+	// chosen by the same model that writes them, instead of a keyword table.
+	ClassifyRole(context.Context, *ClassifyRoleRequest) (*ClassifyRoleResponse, error)
 	mustEmbedUnimplementedMultiAgentServiceServer()
 }
 
@@ -64,6 +87,9 @@ type UnimplementedMultiAgentServiceServer struct{}
 
 func (UnimplementedMultiAgentServiceServer) GenerateDecision(context.Context, *GenerateDecisionRequest) (*GenerateDecisionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GenerateDecision not implemented")
+}
+func (UnimplementedMultiAgentServiceServer) ClassifyRole(context.Context, *ClassifyRoleRequest) (*ClassifyRoleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ClassifyRole not implemented")
 }
 func (UnimplementedMultiAgentServiceServer) mustEmbedUnimplementedMultiAgentServiceServer() {}
 func (UnimplementedMultiAgentServiceServer) testEmbeddedByValue()                           {}
@@ -104,6 +130,24 @@ func _MultiAgentService_GenerateDecision_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MultiAgentService_ClassifyRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClassifyRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MultiAgentServiceServer).ClassifyRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MultiAgentService_ClassifyRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MultiAgentServiceServer).ClassifyRole(ctx, req.(*ClassifyRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MultiAgentService_ServiceDesc is the grpc.ServiceDesc for MultiAgentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +158,10 @@ var MultiAgentService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateDecision",
 			Handler:    _MultiAgentService_GenerateDecision_Handler,
+		},
+		{
+			MethodName: "ClassifyRole",
+			Handler:    _MultiAgentService_ClassifyRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

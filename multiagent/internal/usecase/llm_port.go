@@ -25,6 +25,11 @@ type LLM interface {
 // come from.
 type PromptStore interface {
 	Get(role string) string
+	// ListRoles returns the registered role names, sorted, excluding the
+	// "default" fallback. The classifier renders this list into the
+	// system prompt so adding a new role (drop a templates/<role>.txt)
+	// extends the classifier vocabulary without code changes.
+	ListRoles() []string
 }
 
 // ErrLLMUnavailable is returned when the LLM provider is unreachable or
