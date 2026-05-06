@@ -11,3 +11,6 @@ server:
 
 auth:
   grpc_addr: "auth.internal:50050"
+
+multiagent:
+  grpc_addr: "multiagent.internal:50055"
