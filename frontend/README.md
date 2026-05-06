@@ -44,7 +44,8 @@ src/
 │   ├── auth/ports.ts             interface AuthGateway
 │   ├── auth/useCases.ts          loginUseCase / registerUseCase / logoutUseCase
 │   ├── vacancy/ports.ts          interface VacancyGateway
-│   ├── resume/ports.ts           interface ResumeGateway + ResumeFile
+│   ├── resume/ports.ts           interface ResumeGateway + ResumeFile +
+│   │                             IngestResumeBatchInput / BatchIngestResult
 │   ├── analysis/ports.ts         interface AnalysisGateway
 │   └── admin/ports.ts            interface AdminGateway
 ├── infrastructure/               адаптеры портов
@@ -55,6 +56,7 @@ src/
 │   ├── auth/AuthHttpGateway.ts
 │   ├── vacancy/VacancyHttpGateway.ts
 │   ├── resume/ResumeHttpGateway.ts (chunked btoa() для base64)
+│   │                             + ingestResumeBatch (POST /vacancies/{id}/resumes/batch)
 │   ├── analysis/AnalysisHttpGateway.ts
 │   └── storage/tokenStorage.ts   localStorage adapter (cadence:session)
 ├── presentation/

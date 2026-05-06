@@ -122,7 +122,9 @@ type DecisionResponse struct {
 6. parseDecision(completion):
    а. stripJSONFences — убрать ```json ... ``` обёртку (chatty модели)
    б. Unmarshal в llmDecision wire-shape
-   в. mapping → domain.DecisionResponse
+   в. clamp years_experience в [0, 60] — защита от галлюцинаций
+   г. trim candidate_summary
+   д. mapping → domain.DecisionResponse
 7. RawTrace = "yandex-llm-v1", CreatedAt = now
 8. storage.StoreDecision(ctx, req, resp) — аудит
 9. Возврат resp
@@ -247,3 +249,7 @@ cycle.
 - Yandex может вернуть JSON без обязательных полей — мы валидируем
   только `hr_recommendation` (без него `ErrLLMInvalidResponse`),
   остальные поля могут быть пустыми (UI это нормально обрабатывает).
+- `years_experience` и `candidate_summary` — опциональны (поля 9, 10 в
+  `GenerateDecisionResponse`). Промпт просит модель заполнить их, но
+  если она пропустит — analysis оставит свою эвристику. YOE клампится
+  парсером в `[0, 60]`, summary — `TrimSpace`.
