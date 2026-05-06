@@ -6,7 +6,7 @@ import { cn } from '@/shared/lib/cn'
 
 type Props = {
   busy: boolean
-  onPick: (file: File) => void
+  onPick: (files: File[]) => void
 }
 
 export function ResumeUploader({ busy, onPick }: Props) {
@@ -15,20 +15,22 @@ export function ResumeUploader({ busy, onPick }: Props) {
   const [over, setOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const accept = (file: File | undefined | null) => {
+  const accept = (list: FileList | null | undefined) => {
     setError(null)
-    if (!file) return
-    if (file.size > MAX_RESUME_BYTES) {
-      setError(t('upload.tooLarge'))
+    if (!list || list.length === 0) return
+    const files = Array.from(list)
+    const tooBig = files.find((f) => f.size > MAX_RESUME_BYTES)
+    if (tooBig) {
+      setError(t('upload.tooLarge', { name: tooBig.name }))
       return
     }
-    onPick(file)
+    onPick(files)
   }
 
   const onDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setOver(false)
-    accept(e.dataTransfer.files?.[0])
+    accept(e.dataTransfer.files)
   }
 
   return (
@@ -50,9 +52,13 @@ export function ResumeUploader({ busy, onPick }: Props) {
       <input
         ref={inputRef}
         type="file"
+        multiple
         accept={ACCEPTED_RESUME_TYPES}
         className="hidden"
-        onChange={(e) => accept(e.target.files?.[0])}
+        onChange={(e) => {
+          accept(e.target.files)
+          e.target.value = ''
+        }}
       />
       <div className="flex flex-col items-center gap-3 py-6 text-center">
         <UploadGlyph />

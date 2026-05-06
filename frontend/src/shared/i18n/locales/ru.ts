@@ -154,6 +154,9 @@ export const ru: Dict = {
   'details.skillsHeaderWithMust': 'Навыки · {n} (обяз. {m})',
   'details.uploadSuccess': '✓ {name} загружен — анализ запущен.',
   'details.uploadFailure': 'Не удалось загрузить резюме.',
+  'details.batchUploadSuccess':
+    '✓ Загружено резюме: {n}. Анализ запущен.',
+  'details.batchUploadItemError': '✗ {name}: {reason}',
   'details.candidates': 'Кандидаты',
   'details.candidatesSubtitle': 'отсортированы по match score',
   'details.empty.title': 'Загрузите первое резюме сверху.',
@@ -167,12 +170,12 @@ export const ru: Dict = {
   'details.error.loadCandidates': 'Не удалось загрузить кандидатов.',
 
   // Resume uploader
-  'upload.title': 'Перетащите резюме, чтобы добавить кандидата',
+  'upload.title': 'Перетащите одно или несколько резюме',
   'upload.subtitle':
-    'PDF, DOC, DOCX или TXT до 10 МБ. Cadence создаст кандидата, извлечёт профиль и запустит анализ автоматически.',
-  'upload.cta': 'Выбрать файл',
+    'PDF, DOC, DOCX или TXT до 10 МБ каждое. Cadence создаст кандидатов, извлечёт профили и запустит анализ автоматически.',
+  'upload.cta': 'Выбрать файлы',
   'upload.uploading': 'Загрузка',
-  'upload.tooLarge': 'Файл больше 10 МБ. Выберите PDF или DOCX поменьше.',
+  'upload.tooLarge': 'Файл «{name}» больше 10 МБ. Выберите PDF или DOCX поменьше.',
 
   // Analysis details
   'analysis.matchScore': 'Match score',

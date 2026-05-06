@@ -26,6 +26,19 @@ export type CandidateWithResume = {
   resume: Resume
 }
 
+export type BatchIngestItemResult = {
+  /** Echo of the external_id supplied in the request — index of the picked file as a string. */
+  externalId: string
+  candidate?: Candidate
+  resume?: Resume
+  /** Server-side error for this file. Empty when the item succeeded. */
+  error: string
+}
+
+export type BatchIngestResult = {
+  results: BatchIngestItemResult[]
+}
+
 /** Files we accept in the upload zone — extension hint, not validation. */
 export const ACCEPTED_RESUME_TYPES = '.pdf,.doc,.docx,.txt'
 export const MAX_RESUME_BYTES = 10 * 1024 * 1024 // 10 MB

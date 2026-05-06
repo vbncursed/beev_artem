@@ -21,30 +21,46 @@ export function VacancyDetailsPage() {
   const [uploadStatus, setUploadStatus] = useState<{
     busy: boolean
     error?: string
-    successName?: string
+    successCount?: number
+    failures?: { name: string; reason: string }[]
   }>({ busy: false })
   const [selectedAnalysisId, setSelectedAnalysisId] = useState<string | null>(
     null,
   )
   const { resume: resumeGateway, analysis: analysisGateway } = useGateways()
 
-  const onPickFile = async (file: File) => {
+  const onPickFiles = async (files: File[]) => {
+    if (files.length === 0) return
     setUploadStatus({ busy: true })
     try {
-      const { resume } = await resumeGateway.createCandidateFromResume({
+      const { results } = await resumeGateway.ingestResumeBatch({
         vacancyId: id,
-        file,
+        files,
       })
-      try {
-        await analysisGateway.start({
-          vacancyId: id,
-          resumeId: resume.id,
-          useLlm: true,
+      const succeeded = results.filter((r) => !r.error && r.resume)
+      const failures = results
+        .filter((r) => r.error || !r.resume)
+        .map((r) => {
+          const idx = Number(r.externalId)
+          const name = files[idx]?.name ?? '—'
+          return { name, reason: r.error || t('details.uploadFailure') }
         })
-      } catch {
-        // candidate created even if enqueue fails
-      }
-      setUploadStatus({ busy: false, successName: file.name })
+
+      // Fan out analysis starts in parallel — heuristic AI is the fallback,
+      // so swallowing per-resume failures is consistent with single upload.
+      await Promise.all(
+        succeeded.map((r) =>
+          analysisGateway
+            .start({ vacancyId: id, resumeId: r.resume!.id, useLlm: true })
+            .catch(() => undefined),
+        ),
+      )
+
+      setUploadStatus({
+        busy: false,
+        successCount: succeeded.length,
+        failures: failures.length > 0 ? failures : undefined,
+      })
       await refresh()
     } catch (cause) {
       const message =
@@ -102,11 +118,29 @@ export function VacancyDetailsPage() {
 
       <section className="bg-surface-soft">
         <div className="mx-auto max-w-[1200px] px-6 py-12">
-          <ResumeUploader busy={uploadStatus.busy} onPick={onPickFile} />
-          {uploadStatus.successName && (
-            <p role="status" className="text-caption text-semantic-up mt-3">
-              {t('details.uploadSuccess', { name: uploadStatus.successName })}
-            </p>
+          <ResumeUploader busy={uploadStatus.busy} onPick={onPickFiles} />
+          {uploadStatus.successCount !== undefined &&
+            uploadStatus.successCount > 0 && (
+              <p role="status" className="text-caption text-semantic-up mt-3">
+                {t('details.batchUploadSuccess', {
+                  n: String(uploadStatus.successCount),
+                })}
+              </p>
+            )}
+          {uploadStatus.failures && uploadStatus.failures.length > 0 && (
+            <ul role="alert" className="mt-3 flex flex-col gap-1">
+              {uploadStatus.failures.map((f, i) => (
+                <li
+                  key={`${f.name}-${i}`}
+                  className="text-caption text-semantic-down"
+                >
+                  {t('details.batchUploadItemError', {
+                    name: f.name,
+                    reason: f.reason,
+                  })}
+                </li>
+              ))}
+            </ul>
           )}
           {uploadStatus.error && (
             <p role="alert" className="text-caption text-semantic-down mt-3">

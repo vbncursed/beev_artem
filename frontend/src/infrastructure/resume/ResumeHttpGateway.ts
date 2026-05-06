@@ -1,9 +1,12 @@
 import type {
   CreateCandidateFromResumeInput,
+  IngestResumeBatchInput,
   ResumeFile,
   ResumeGateway,
 } from '@/application/resume/ports'
 import type {
+  BatchIngestItemResult,
+  BatchIngestResult,
   Candidate,
   CandidateWithResume,
   Resume,
@@ -40,6 +43,17 @@ type CandidateResumeResponse = {
 type CandidateResponse = { candidate: CandidateDto }
 type ResumeResponse = { resume: ResumeDto }
 
+type BatchIngestItemDto = {
+  externalId?: string
+  candidate?: CandidateDto
+  resume?: ResumeDto
+  error?: string
+}
+
+type BatchIngestResponse = {
+  results?: BatchIngestItemDto[]
+}
+
 export class ResumeHttpGateway implements ResumeGateway {
   private readonly http: HttpClient
 
@@ -59,6 +73,28 @@ export class ResumeHttpGateway implements ResumeGateway {
       candidate: toCandidate(dto.candidate),
       resume: toResume(dto.resume),
     }
+  }
+
+  async ingestResumeBatch(
+    input: IngestResumeBatchInput,
+  ): Promise<BatchIngestResult> {
+    const files = await Promise.all(
+      input.files.map(async (file, index) => ({
+        externalId: String(index),
+        fileData: await fileToBase64(file),
+      })),
+    )
+    const dto = await this.http.post<BatchIngestResponse>(
+      `/api/v1/vacancies/${encodeURIComponent(input.vacancyId)}/resumes/batch`,
+      { vacancyId: input.vacancyId, files },
+    )
+    const results: BatchIngestItemResult[] = (dto.results ?? []).map((item) => ({
+      externalId: item.externalId ?? '',
+      candidate: item.candidate ? toCandidate(item.candidate) : undefined,
+      resume: item.resume ? toResume(item.resume) : undefined,
+      error: item.error ?? '',
+    }))
+    return { results }
   }
 
   async getCandidate(candidateId: string): Promise<Candidate> {

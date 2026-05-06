@@ -151,6 +151,9 @@ export const en: Dict = {
   'details.skillsHeaderWithMust': 'Skills · {n} ({m} must)',
   'details.uploadSuccess': '✓ {name} uploaded — analysis started.',
   'details.uploadFailure': 'Could not upload resume.',
+  'details.batchUploadSuccess':
+    '✓ Uploaded {n} resume(s). Analysis started.',
+  'details.batchUploadItemError': '✗ {name}: {reason}',
   'details.candidates': 'Candidates',
   'details.candidatesSubtitle': 'ranked by match score',
   'details.empty.title': 'Upload the first resume above.',
@@ -164,12 +167,12 @@ export const en: Dict = {
   'details.error.loadCandidates': 'Could not load candidates.',
 
   // Resume uploader
-  'upload.title': 'Drop a resume to add a candidate',
+  'upload.title': 'Drop one or more resumes',
   'upload.subtitle':
-    'PDF, DOC, DOCX, or TXT up to 10 MB. Cadence will create the candidate, extract a profile, and run analysis automatically.',
-  'upload.cta': 'Choose file',
+    'PDF, DOC, DOCX, or TXT up to 10 MB each. Cadence will create candidates, extract profiles, and run analysis automatically.',
+  'upload.cta': 'Choose files',
   'upload.uploading': 'Uploading',
-  'upload.tooLarge': 'File is over 10 MB. Pick a smaller PDF or DOCX.',
+  'upload.tooLarge': '"{name}" is over 10 MB. Pick a smaller PDF or DOCX.',
 
   // Analysis details
   'analysis.matchScore': 'Match score',
