@@ -21,6 +21,15 @@ type AnalysisStorage interface {
 	GetAnalysis(ctx context.Context, analysisID string, requestUserID uint64, isAdmin bool) (*domain.Analysis, error)
 	ListCandidatesByVacancy(ctx context.Context, in domain.ListCandidatesByVacancyInput) (*domain.ListCandidatesByVacancyResult, error)
 	UpdateAIDecision(ctx context.Context, analysisID string, ai domain.AIDecision) error
+	// UpdateProfileYearsExperience overrides profile_json.years_experience
+	// after the LLM returns its own read of total experience. Separate from
+	// UpdateAIDecision because YOE is a profile attribute (extractor signal),
+	// not a decision attribute.
+	UpdateProfileYearsExperience(ctx context.Context, analysisID string, yoe float32) error
+	// UpdateProfileSummary overrides profile_json.summary with the LLM-written
+	// candidate blurb. Empty input means the model didn't write one — caller
+	// must skip the call instead of clearing the heuristic preview.
+	UpdateProfileSummary(ctx context.Context, analysisID string, summary string) error
 }
 
 // Scorer is the heuristic / LLM scoring port. Pure compute, no I/O.

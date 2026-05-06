@@ -294,6 +294,8 @@ type GenerateDecisionResponse struct {
 	AgentResults      []*AgentResult         `protobuf:"bytes,6,rep,name=agent_results,json=agentResults,proto3" json:"agent_results,omitempty"`
 	RawTrace          string                 `protobuf:"bytes,7,opt,name=raw_trace,json=rawTrace,proto3" json:"raw_trace,omitempty"`
 	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	YearsExperience   float32                `protobuf:"fixed32,9,opt,name=years_experience,json=yearsExperience,proto3" json:"years_experience,omitempty"`
+	CandidateSummary  string                 `protobuf:"bytes,10,opt,name=candidate_summary,json=candidateSummary,proto3" json:"candidate_summary,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -382,6 +384,20 @@ func (x *GenerateDecisionResponse) GetCreatedAt() *timestamppb.Timestamp {
 		return x.CreatedAt
 	}
 	return nil
+}
+
+func (x *GenerateDecisionResponse) GetYearsExperience() float32 {
+	if x != nil {
+		return x.YearsExperience
+	}
+	return 0
+}
+
+func (x *GenerateDecisionResponse) GetCandidateSummary() string {
+	if x != nil {
+		return x.CandidateSummary
+	}
+	return ""
 }
 
 type ClassifyRoleRequest struct {
@@ -509,7 +525,7 @@ const file_multiagent_api_multiagent_proto_rawDesc = "" +
 	"\x0fstructured_json\x18\x03 \x01(\tR\x0estructuredJson\x12\x1e\n" +
 	"\n" +
 	"confidence\x18\x04 \x01(\x02R\n" +
-	"confidence\"\x86\x03\n" +
+	"confidence\"\xde\x03\n" +
 	"\x18GenerateDecisionResponse\x12+\n" +
 	"\x11hr_recommendation\x18\x01 \x01(\tR\x10hrRecommendation\x12\x1e\n" +
 	"\n" +
@@ -521,7 +537,10 @@ const file_multiagent_api_multiagent_proto_rawDesc = "" +
 	"\ragent_results\x18\x06 \x03(\v2\".multiagent.service.v1.AgentResultR\fagentResults\x12\x1b\n" +
 	"\traw_trace\x18\a \x01(\tR\brawTrace\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"M\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12)\n" +
+	"\x10years_experience\x18\t \x01(\x02R\x0fyearsExperience\x12+\n" +
+	"\x11candidate_summary\x18\n" +
+	" \x01(\tR\x10candidateSummary\"M\n" +
 	"\x13ClassifyRoleRequest\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\"*\n" +

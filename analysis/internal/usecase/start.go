@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -11,8 +12,10 @@ import (
 
 // multiagentTimeout caps a GenerateDecision RPC. Keep separate from
 // resume/auth interceptor timeouts because LLM calls take longer than a
-// token-validation lookup.
-const multiagentTimeout = 5 * time.Second
+// token-validation lookup. Sized below the multiagent-side Yandex
+// request_timeout (60s) so analysis surfaces the deadline first with a
+// clear cancellation, instead of racing the upstream HTTP timeout.
+const multiagentTimeout = 45 * time.Second
 
 // StartAnalysis is the orchestrator: it loads the resume + vacancy slice,
 // runs the pure-compute scorer, persists the analysis row, and (if
@@ -70,7 +73,7 @@ func (s *AnalysisService) StartAnalysis(ctx context.Context, in domain.StartAnal
 	res := &domain.StartAnalysisResult{AnalysisID: analysisID, Status: domain.StatusQueued}
 
 	if in.UseLLM && s.multiAgentClient != nil {
-		s.refreshAIDecisionAsync(ctx, analysisID, rc.VacancyRole, payload)
+		s.refreshAIDecisionAsync(ctx, analysisID, rc.VacancyRole, rc.ResumeText, payload)
 	}
 
 	return res, nil
@@ -88,7 +91,30 @@ func (s *AnalysisService) StartAnalysis(ctx context.Context, in domain.StartAnal
 // Inlined into StartAnalysis flow synchronously today (not actually async)
 // because we want the freshly-saved row visible to the next read. If this
 // becomes too slow, lift it to a background worker fed by an outbox table.
-func (s *AnalysisService) refreshAIDecisionAsync(ctx context.Context, analysisID string, role string, payload domain.AnalysisPayload) {
+func (s *AnalysisService) refreshAIDecisionAsync(ctx context.Context, analysisID string, role string, resumeText string, payload domain.AnalysisPayload) {
+	// gRPC `string` fields must be valid UTF-8 — protobuf marshaling rejects
+	// otherwise. PDF extraction (pdftotext, ledongthuc fallback) occasionally
+	// emits stray bytes from glyphs without proper encoding. Sanitize every
+	// resume-derived string before sending so one bad PDF doesn't kill the
+	// LLM call.
+	clean := func(s string) string { return strings.ToValidUTF8(s, "") }
+	cleanSlice := func(in []string) []string {
+		out := make([]string, len(in))
+		for i, v := range in {
+			out[i] = clean(v)
+		}
+		return out
+	}
+	resumeText = clean(resumeText)
+	candidateSkills := cleanSlice(payload.Profile.Skills)
+	missingSkills := cleanSlice(payload.Breakdown.MissingSkills)
+	matchedSkills := cleanSlice(payload.Breakdown.MatchedSkills)
+	candidateSummary := clean(payload.Profile.Summary)
+	scoreExplanation := clean(payload.Breakdown.Explanation)
+	slog.InfoContext(ctx, "multiagent call start",
+		"analysis_id", analysisID,
+		"role", role,
+		"resume_len", len(resumeText))
 	maCtx, cancel := context.WithTimeout(ctx, multiagentTimeout)
 	defer cancel()
 
@@ -96,18 +122,23 @@ func (s *AnalysisService) refreshAIDecisionAsync(ctx context.Context, analysisID
 		Model:             "qwen-chat",
 		Mode:              pb_multiagent.AgentMode_AGENT_MODE_BALANCED,
 		Role:              role,
-		CandidateSkills:   payload.Profile.Skills,
-		MissingSkills:     payload.Breakdown.MissingSkills,
-		CandidateSummary:  payload.Profile.Summary,
-		ScoreExplanation:  payload.Breakdown.Explanation,
+		CandidateSkills:   candidateSkills,
+		MissingSkills:     missingSkills,
+		CandidateSummary:  candidateSummary,
+		ScoreExplanation:  scoreExplanation,
 		MatchScore:        payload.Score,
-		VacancyMustHave:   payload.Breakdown.MissingSkills,
-		VacancyNiceToHave: payload.Breakdown.MatchedSkills,
-		ResumeText:        payload.Profile.Summary,
+		VacancyMustHave:   missingSkills,
+		VacancyNiceToHave: matchedSkills,
+		// Full resume text — date ranges, durations, and other context
+		// regex extractors miss. Required for the model to compute
+		// years_experience accurately.
+		ResumeText:        resumeText,
 	})
 	if err != nil || maResp == nil {
+		slog.WarnContext(ctx, "multiagent call failed", "analysis_id", analysisID, "err", err, "resp_nil", maResp == nil)
 		return
 	}
+	slog.InfoContext(ctx, "multiagent call ok", "analysis_id", analysisID, "yoe", maResp.GetYearsExperience())
 
 	agentResults := make([]domain.AgentResult, 0, len(maResp.GetAgentResults()))
 	for _, item := range maResp.GetAgentResults() {
@@ -118,6 +149,19 @@ func (s *AnalysisService) refreshAIDecisionAsync(ctx context.Context, analysisID
 			Confidence:     item.GetConfidence(),
 		})
 	}
+	// Override the heuristic regex-based YOE with the LLM's read when the
+	// model returned a positive value. 0 means the LLM couldn't infer it —
+	// keep the heuristic in that case (better than nothing).
+	if yoe := maResp.GetYearsExperience(); yoe > 0 {
+		_ = s.storage.UpdateProfileYearsExperience(ctx, analysisID, yoe)
+	}
+	// Same idea for the candidate summary: the heuristic preview is the
+	// raw resume head truncated to 320 runes; the LLM writes a real
+	// 1–2 sentence profile blurb. Empty -> keep heuristic.
+	if summary := strings.TrimSpace(maResp.GetCandidateSummary()); summary != "" {
+		_ = s.storage.UpdateProfileSummary(ctx, analysisID, summary)
+	}
+
 	_ = s.storage.UpdateAIDecision(ctx, analysisID, domain.AIDecision{
 		HRRecommendation:  maResp.GetHrRecommendation(),
 		Confidence:        maResp.GetConfidence(),

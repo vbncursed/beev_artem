@@ -48,6 +48,18 @@ type DecisionResponse struct {
 	HRRationale       string
 	CandidateFeedback string
 	SoftSkillsNotes   string
+	// YearsExperience is the LLM's read of total professional experience
+	// extracted from the resume (date ranges, "11 МЕСЯЦЕВ", "since 2019",
+	// etc.) — anything regex-based extractors miss. 0 means the model
+	// could not infer a value. Analysis overrides the heuristic profile
+	// YOE with this when the LLM call succeeds.
+	YearsExperience   float32
+	// CandidateSummary is a 1–2 sentence LLM-written profile summary —
+	// who the candidate is, their seniority, primary stack/domain. Replaces
+	// the heuristic 320-rune truncation of the raw resume text in
+	// profile_json.summary on success. Empty means the model didn't write
+	// one — analysis keeps the heuristic preview as fallback.
+	CandidateSummary  string
 	AgentResults      []AgentResult
 	RawTrace          string
 	CreatedAt         time.Time

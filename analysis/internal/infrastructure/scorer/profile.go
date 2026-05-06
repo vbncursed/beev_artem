@@ -13,12 +13,16 @@ import (
 var yearsRe = regexp.MustCompile(`(?i)(\d{1,2})\s*\+?\s*-?\s*[xх]?\s*(?:год|лет|year)`)
 
 // summarize collapses whitespace and truncates to a JSON-friendly preview.
-// 320 chars roughly fits one tweet/elevator pitch — long enough to convey
-// context, short enough to render in a list view without expansion.
+// 320 runes roughly fits one tweet/elevator pitch — long enough to convey
+// context, short enough to render in a list view without expansion. We
+// truncate by runes (not bytes) so Cyrillic text never lands mid-codepoint
+// and ship a half-byte to gRPC marshaling or the UI.
 func summarize(text string) string {
 	text = strings.Join(strings.Fields(text), " ")
-	if len(text) > 320 {
-		return text[:320]
+	const maxRunes = 320
+	runes := []rune(text)
+	if len(runes) > maxRunes {
+		return string(runes[:maxRunes])
 	}
 	return text
 }

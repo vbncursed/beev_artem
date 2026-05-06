@@ -58,6 +58,8 @@ message GenerateDecisionResponse {
   repeated AgentResult agent_results = 6;
   string raw_trace = 7;
   google.protobuf.Timestamp created_at = 8;
+  float years_experience = 9;
+  string candidate_summary = 10;
 }
 
 message ClassifyRoleRequest {

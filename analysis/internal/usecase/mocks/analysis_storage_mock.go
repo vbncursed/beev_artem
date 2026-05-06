@@ -65,6 +65,20 @@ type AnalysisStorageMock struct {
 	afterUpdateAIDecisionCounter  uint64
 	beforeUpdateAIDecisionCounter uint64
 	UpdateAIDecisionMock          mAnalysisStorageMockUpdateAIDecision
+
+	funcUpdateProfileSummary          func(ctx context.Context, analysisID string, summary string) (err error)
+	funcUpdateProfileSummaryOrigin    string
+	inspectFuncUpdateProfileSummary   func(ctx context.Context, analysisID string, summary string)
+	afterUpdateProfileSummaryCounter  uint64
+	beforeUpdateProfileSummaryCounter uint64
+	UpdateProfileSummaryMock          mAnalysisStorageMockUpdateProfileSummary
+
+	funcUpdateProfileYearsExperience          func(ctx context.Context, analysisID string, yoe float32) (err error)
+	funcUpdateProfileYearsExperienceOrigin    string
+	inspectFuncUpdateProfileYearsExperience   func(ctx context.Context, analysisID string, yoe float32)
+	afterUpdateProfileYearsExperienceCounter  uint64
+	beforeUpdateProfileYearsExperienceCounter uint64
+	UpdateProfileYearsExperienceMock          mAnalysisStorageMockUpdateProfileYearsExperience
 }
 
 // NewAnalysisStorageMock returns a mock for mm_usecase.AnalysisStorage
@@ -94,6 +108,12 @@ func NewAnalysisStorageMock(t minimock.Tester) *AnalysisStorageMock {
 
 	m.UpdateAIDecisionMock = mAnalysisStorageMockUpdateAIDecision{mock: m}
 	m.UpdateAIDecisionMock.callArgs = []*AnalysisStorageMockUpdateAIDecisionParams{}
+
+	m.UpdateProfileSummaryMock = mAnalysisStorageMockUpdateProfileSummary{mock: m}
+	m.UpdateProfileSummaryMock.callArgs = []*AnalysisStorageMockUpdateProfileSummaryParams{}
+
+	m.UpdateProfileYearsExperienceMock = mAnalysisStorageMockUpdateProfileYearsExperience{mock: m}
+	m.UpdateProfileYearsExperienceMock.callArgs = []*AnalysisStorageMockUpdateProfileYearsExperienceParams{}
 
 	t.Cleanup(m.MinimockFinish)
 
@@ -2498,6 +2518,752 @@ func (m *AnalysisStorageMock) MinimockUpdateAIDecisionInspect() {
 	}
 }
 
+type mAnalysisStorageMockUpdateProfileSummary struct {
+	optional           bool
+	mock               *AnalysisStorageMock
+	defaultExpectation *AnalysisStorageMockUpdateProfileSummaryExpectation
+	expectations       []*AnalysisStorageMockUpdateProfileSummaryExpectation
+
+	callArgs []*AnalysisStorageMockUpdateProfileSummaryParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// AnalysisStorageMockUpdateProfileSummaryExpectation specifies expectation struct of the AnalysisStorage.UpdateProfileSummary
+type AnalysisStorageMockUpdateProfileSummaryExpectation struct {
+	mock               *AnalysisStorageMock
+	params             *AnalysisStorageMockUpdateProfileSummaryParams
+	paramPtrs          *AnalysisStorageMockUpdateProfileSummaryParamPtrs
+	expectationOrigins AnalysisStorageMockUpdateProfileSummaryExpectationOrigins
+	results            *AnalysisStorageMockUpdateProfileSummaryResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// AnalysisStorageMockUpdateProfileSummaryParams contains parameters of the AnalysisStorage.UpdateProfileSummary
+type AnalysisStorageMockUpdateProfileSummaryParams struct {
+	ctx        context.Context
+	analysisID string
+	summary    string
+}
+
+// AnalysisStorageMockUpdateProfileSummaryParamPtrs contains pointers to parameters of the AnalysisStorage.UpdateProfileSummary
+type AnalysisStorageMockUpdateProfileSummaryParamPtrs struct {
+	ctx        *context.Context
+	analysisID *string
+	summary    *string
+}
+
+// AnalysisStorageMockUpdateProfileSummaryResults contains results of the AnalysisStorage.UpdateProfileSummary
+type AnalysisStorageMockUpdateProfileSummaryResults struct {
+	err error
+}
+
+// AnalysisStorageMockUpdateProfileSummaryOrigins contains origins of expectations of the AnalysisStorage.UpdateProfileSummary
+type AnalysisStorageMockUpdateProfileSummaryExpectationOrigins struct {
+	origin           string
+	originCtx        string
+	originAnalysisID string
+	originSummary    string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Optional() *mAnalysisStorageMockUpdateProfileSummary {
+	mmUpdateProfileSummary.optional = true
+	return mmUpdateProfileSummary
+}
+
+// Expect sets up expected params for AnalysisStorage.UpdateProfileSummary
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Expect(ctx context.Context, analysisID string, summary string) *mAnalysisStorageMockUpdateProfileSummary {
+	if mmUpdateProfileSummary.mock.funcUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Set")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation == nil {
+		mmUpdateProfileSummary.defaultExpectation = &AnalysisStorageMockUpdateProfileSummaryExpectation{}
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.paramPtrs != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by ExpectParams functions")
+	}
+
+	mmUpdateProfileSummary.defaultExpectation.params = &AnalysisStorageMockUpdateProfileSummaryParams{ctx, analysisID, summary}
+	mmUpdateProfileSummary.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmUpdateProfileSummary.expectations {
+		if minimock.Equal(e.params, mmUpdateProfileSummary.defaultExpectation.params) {
+			mmUpdateProfileSummary.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmUpdateProfileSummary.defaultExpectation.params)
+		}
+	}
+
+	return mmUpdateProfileSummary
+}
+
+// ExpectCtxParam1 sets up expected param ctx for AnalysisStorage.UpdateProfileSummary
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) ExpectCtxParam1(ctx context.Context) *mAnalysisStorageMockUpdateProfileSummary {
+	if mmUpdateProfileSummary.mock.funcUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Set")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation == nil {
+		mmUpdateProfileSummary.defaultExpectation = &AnalysisStorageMockUpdateProfileSummaryExpectation{}
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.params != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Expect")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.paramPtrs == nil {
+		mmUpdateProfileSummary.defaultExpectation.paramPtrs = &AnalysisStorageMockUpdateProfileSummaryParamPtrs{}
+	}
+	mmUpdateProfileSummary.defaultExpectation.paramPtrs.ctx = &ctx
+	mmUpdateProfileSummary.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmUpdateProfileSummary
+}
+
+// ExpectAnalysisIDParam2 sets up expected param analysisID for AnalysisStorage.UpdateProfileSummary
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) ExpectAnalysisIDParam2(analysisID string) *mAnalysisStorageMockUpdateProfileSummary {
+	if mmUpdateProfileSummary.mock.funcUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Set")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation == nil {
+		mmUpdateProfileSummary.defaultExpectation = &AnalysisStorageMockUpdateProfileSummaryExpectation{}
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.params != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Expect")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.paramPtrs == nil {
+		mmUpdateProfileSummary.defaultExpectation.paramPtrs = &AnalysisStorageMockUpdateProfileSummaryParamPtrs{}
+	}
+	mmUpdateProfileSummary.defaultExpectation.paramPtrs.analysisID = &analysisID
+	mmUpdateProfileSummary.defaultExpectation.expectationOrigins.originAnalysisID = minimock.CallerInfo(1)
+
+	return mmUpdateProfileSummary
+}
+
+// ExpectSummaryParam3 sets up expected param summary for AnalysisStorage.UpdateProfileSummary
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) ExpectSummaryParam3(summary string) *mAnalysisStorageMockUpdateProfileSummary {
+	if mmUpdateProfileSummary.mock.funcUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Set")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation == nil {
+		mmUpdateProfileSummary.defaultExpectation = &AnalysisStorageMockUpdateProfileSummaryExpectation{}
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.params != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Expect")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation.paramPtrs == nil {
+		mmUpdateProfileSummary.defaultExpectation.paramPtrs = &AnalysisStorageMockUpdateProfileSummaryParamPtrs{}
+	}
+	mmUpdateProfileSummary.defaultExpectation.paramPtrs.summary = &summary
+	mmUpdateProfileSummary.defaultExpectation.expectationOrigins.originSummary = minimock.CallerInfo(1)
+
+	return mmUpdateProfileSummary
+}
+
+// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.UpdateProfileSummary
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Inspect(f func(ctx context.Context, analysisID string, summary string)) *mAnalysisStorageMockUpdateProfileSummary {
+	if mmUpdateProfileSummary.mock.inspectFuncUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.UpdateProfileSummary")
+	}
+
+	mmUpdateProfileSummary.mock.inspectFuncUpdateProfileSummary = f
+
+	return mmUpdateProfileSummary
+}
+
+// Return sets up results that will be returned by AnalysisStorage.UpdateProfileSummary
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Return(err error) *AnalysisStorageMock {
+	if mmUpdateProfileSummary.mock.funcUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Set")
+	}
+
+	if mmUpdateProfileSummary.defaultExpectation == nil {
+		mmUpdateProfileSummary.defaultExpectation = &AnalysisStorageMockUpdateProfileSummaryExpectation{mock: mmUpdateProfileSummary.mock}
+	}
+	mmUpdateProfileSummary.defaultExpectation.results = &AnalysisStorageMockUpdateProfileSummaryResults{err}
+	mmUpdateProfileSummary.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmUpdateProfileSummary.mock
+}
+
+// Set uses given function f to mock the AnalysisStorage.UpdateProfileSummary method
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Set(f func(ctx context.Context, analysisID string, summary string) (err error)) *AnalysisStorageMock {
+	if mmUpdateProfileSummary.defaultExpectation != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.UpdateProfileSummary method")
+	}
+
+	if len(mmUpdateProfileSummary.expectations) > 0 {
+		mmUpdateProfileSummary.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.UpdateProfileSummary method")
+	}
+
+	mmUpdateProfileSummary.mock.funcUpdateProfileSummary = f
+	mmUpdateProfileSummary.mock.funcUpdateProfileSummaryOrigin = minimock.CallerInfo(1)
+	return mmUpdateProfileSummary.mock
+}
+
+// When sets expectation for the AnalysisStorage.UpdateProfileSummary which will trigger the result defined by the following
+// Then helper
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) When(ctx context.Context, analysisID string, summary string) *AnalysisStorageMockUpdateProfileSummaryExpectation {
+	if mmUpdateProfileSummary.mock.funcUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileSummary mock is already set by Set")
+	}
+
+	expectation := &AnalysisStorageMockUpdateProfileSummaryExpectation{
+		mock:               mmUpdateProfileSummary.mock,
+		params:             &AnalysisStorageMockUpdateProfileSummaryParams{ctx, analysisID, summary},
+		expectationOrigins: AnalysisStorageMockUpdateProfileSummaryExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmUpdateProfileSummary.expectations = append(mmUpdateProfileSummary.expectations, expectation)
+	return expectation
+}
+
+// Then sets up AnalysisStorage.UpdateProfileSummary return parameters for the expectation previously defined by the When method
+func (e *AnalysisStorageMockUpdateProfileSummaryExpectation) Then(err error) *AnalysisStorageMock {
+	e.results = &AnalysisStorageMockUpdateProfileSummaryResults{err}
+	return e.mock
+}
+
+// Times sets number of times AnalysisStorage.UpdateProfileSummary should be invoked
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Times(n uint64) *mAnalysisStorageMockUpdateProfileSummary {
+	if n == 0 {
+		mmUpdateProfileSummary.mock.t.Fatalf("Times of AnalysisStorageMock.UpdateProfileSummary mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmUpdateProfileSummary.expectedInvocations, n)
+	mmUpdateProfileSummary.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmUpdateProfileSummary
+}
+
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) invocationsDone() bool {
+	if len(mmUpdateProfileSummary.expectations) == 0 && mmUpdateProfileSummary.defaultExpectation == nil && mmUpdateProfileSummary.mock.funcUpdateProfileSummary == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmUpdateProfileSummary.mock.afterUpdateProfileSummaryCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmUpdateProfileSummary.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// UpdateProfileSummary implements mm_usecase.AnalysisStorage
+func (mmUpdateProfileSummary *AnalysisStorageMock) UpdateProfileSummary(ctx context.Context, analysisID string, summary string) (err error) {
+	mm_atomic.AddUint64(&mmUpdateProfileSummary.beforeUpdateProfileSummaryCounter, 1)
+	defer mm_atomic.AddUint64(&mmUpdateProfileSummary.afterUpdateProfileSummaryCounter, 1)
+
+	mmUpdateProfileSummary.t.Helper()
+
+	if mmUpdateProfileSummary.inspectFuncUpdateProfileSummary != nil {
+		mmUpdateProfileSummary.inspectFuncUpdateProfileSummary(ctx, analysisID, summary)
+	}
+
+	mm_params := AnalysisStorageMockUpdateProfileSummaryParams{ctx, analysisID, summary}
+
+	// Record call args
+	mmUpdateProfileSummary.UpdateProfileSummaryMock.mutex.Lock()
+	mmUpdateProfileSummary.UpdateProfileSummaryMock.callArgs = append(mmUpdateProfileSummary.UpdateProfileSummaryMock.callArgs, &mm_params)
+	mmUpdateProfileSummary.UpdateProfileSummaryMock.mutex.Unlock()
+
+	for _, e := range mmUpdateProfileSummary.UpdateProfileSummaryMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.err
+		}
+	}
+
+	if mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.Counter, 1)
+		mm_want := mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.params
+		mm_want_ptrs := mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.paramPtrs
+
+		mm_got := AnalysisStorageMockUpdateProfileSummaryParams{ctx, analysisID, summary}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmUpdateProfileSummary.t.Errorf("AnalysisStorageMock.UpdateProfileSummary got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.analysisID != nil && !minimock.Equal(*mm_want_ptrs.analysisID, mm_got.analysisID) {
+				mmUpdateProfileSummary.t.Errorf("AnalysisStorageMock.UpdateProfileSummary got unexpected parameter analysisID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.expectationOrigins.originAnalysisID, *mm_want_ptrs.analysisID, mm_got.analysisID, minimock.Diff(*mm_want_ptrs.analysisID, mm_got.analysisID))
+			}
+
+			if mm_want_ptrs.summary != nil && !minimock.Equal(*mm_want_ptrs.summary, mm_got.summary) {
+				mmUpdateProfileSummary.t.Errorf("AnalysisStorageMock.UpdateProfileSummary got unexpected parameter summary, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.expectationOrigins.originSummary, *mm_want_ptrs.summary, mm_got.summary, minimock.Diff(*mm_want_ptrs.summary, mm_got.summary))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmUpdateProfileSummary.t.Errorf("AnalysisStorageMock.UpdateProfileSummary got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmUpdateProfileSummary.UpdateProfileSummaryMock.defaultExpectation.results
+		if mm_results == nil {
+			mmUpdateProfileSummary.t.Fatal("No results are set for the AnalysisStorageMock.UpdateProfileSummary")
+		}
+		return (*mm_results).err
+	}
+	if mmUpdateProfileSummary.funcUpdateProfileSummary != nil {
+		return mmUpdateProfileSummary.funcUpdateProfileSummary(ctx, analysisID, summary)
+	}
+	mmUpdateProfileSummary.t.Fatalf("Unexpected call to AnalysisStorageMock.UpdateProfileSummary. %v %v %v", ctx, analysisID, summary)
+	return
+}
+
+// UpdateProfileSummaryAfterCounter returns a count of finished AnalysisStorageMock.UpdateProfileSummary invocations
+func (mmUpdateProfileSummary *AnalysisStorageMock) UpdateProfileSummaryAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpdateProfileSummary.afterUpdateProfileSummaryCounter)
+}
+
+// UpdateProfileSummaryBeforeCounter returns a count of AnalysisStorageMock.UpdateProfileSummary invocations
+func (mmUpdateProfileSummary *AnalysisStorageMock) UpdateProfileSummaryBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpdateProfileSummary.beforeUpdateProfileSummaryCounter)
+}
+
+// Calls returns a list of arguments used in each call to AnalysisStorageMock.UpdateProfileSummary.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmUpdateProfileSummary *mAnalysisStorageMockUpdateProfileSummary) Calls() []*AnalysisStorageMockUpdateProfileSummaryParams {
+	mmUpdateProfileSummary.mutex.RLock()
+
+	argCopy := make([]*AnalysisStorageMockUpdateProfileSummaryParams, len(mmUpdateProfileSummary.callArgs))
+	copy(argCopy, mmUpdateProfileSummary.callArgs)
+
+	mmUpdateProfileSummary.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockUpdateProfileSummaryDone returns true if the count of the UpdateProfileSummary invocations corresponds
+// the number of defined expectations
+func (m *AnalysisStorageMock) MinimockUpdateProfileSummaryDone() bool {
+	if m.UpdateProfileSummaryMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.UpdateProfileSummaryMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.UpdateProfileSummaryMock.invocationsDone()
+}
+
+// MinimockUpdateProfileSummaryInspect logs each unmet expectation
+func (m *AnalysisStorageMock) MinimockUpdateProfileSummaryInspect() {
+	for _, e := range m.UpdateProfileSummaryMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileSummary at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterUpdateProfileSummaryCounter := mm_atomic.LoadUint64(&m.afterUpdateProfileSummaryCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.UpdateProfileSummaryMock.defaultExpectation != nil && afterUpdateProfileSummaryCounter < 1 {
+		if m.UpdateProfileSummaryMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileSummary at\n%s", m.UpdateProfileSummaryMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileSummary at\n%s with params: %#v", m.UpdateProfileSummaryMock.defaultExpectation.expectationOrigins.origin, *m.UpdateProfileSummaryMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcUpdateProfileSummary != nil && afterUpdateProfileSummaryCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileSummary at\n%s", m.funcUpdateProfileSummaryOrigin)
+	}
+
+	if !m.UpdateProfileSummaryMock.invocationsDone() && afterUpdateProfileSummaryCounter > 0 {
+		m.t.Errorf("Expected %d calls to AnalysisStorageMock.UpdateProfileSummary at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.UpdateProfileSummaryMock.expectedInvocations), m.UpdateProfileSummaryMock.expectedInvocationsOrigin, afterUpdateProfileSummaryCounter)
+	}
+}
+
+type mAnalysisStorageMockUpdateProfileYearsExperience struct {
+	optional           bool
+	mock               *AnalysisStorageMock
+	defaultExpectation *AnalysisStorageMockUpdateProfileYearsExperienceExpectation
+	expectations       []*AnalysisStorageMockUpdateProfileYearsExperienceExpectation
+
+	callArgs []*AnalysisStorageMockUpdateProfileYearsExperienceParams
+	mutex    sync.RWMutex
+
+	expectedInvocations       uint64
+	expectedInvocationsOrigin string
+}
+
+// AnalysisStorageMockUpdateProfileYearsExperienceExpectation specifies expectation struct of the AnalysisStorage.UpdateProfileYearsExperience
+type AnalysisStorageMockUpdateProfileYearsExperienceExpectation struct {
+	mock               *AnalysisStorageMock
+	params             *AnalysisStorageMockUpdateProfileYearsExperienceParams
+	paramPtrs          *AnalysisStorageMockUpdateProfileYearsExperienceParamPtrs
+	expectationOrigins AnalysisStorageMockUpdateProfileYearsExperienceExpectationOrigins
+	results            *AnalysisStorageMockUpdateProfileYearsExperienceResults
+	returnOrigin       string
+	Counter            uint64
+}
+
+// AnalysisStorageMockUpdateProfileYearsExperienceParams contains parameters of the AnalysisStorage.UpdateProfileYearsExperience
+type AnalysisStorageMockUpdateProfileYearsExperienceParams struct {
+	ctx        context.Context
+	analysisID string
+	yoe        float32
+}
+
+// AnalysisStorageMockUpdateProfileYearsExperienceParamPtrs contains pointers to parameters of the AnalysisStorage.UpdateProfileYearsExperience
+type AnalysisStorageMockUpdateProfileYearsExperienceParamPtrs struct {
+	ctx        *context.Context
+	analysisID *string
+	yoe        *float32
+}
+
+// AnalysisStorageMockUpdateProfileYearsExperienceResults contains results of the AnalysisStorage.UpdateProfileYearsExperience
+type AnalysisStorageMockUpdateProfileYearsExperienceResults struct {
+	err error
+}
+
+// AnalysisStorageMockUpdateProfileYearsExperienceOrigins contains origins of expectations of the AnalysisStorage.UpdateProfileYearsExperience
+type AnalysisStorageMockUpdateProfileYearsExperienceExpectationOrigins struct {
+	origin           string
+	originCtx        string
+	originAnalysisID string
+	originYoe        string
+}
+
+// Marks this method to be optional. The default behavior of any method with Return() is '1 or more', meaning
+// the test will fail minimock's automatic final call check if the mocked method was not called at least once.
+// Optional() makes method check to work in '0 or more' mode.
+// It is NOT RECOMMENDED to use this option unless you really need it, as default behaviour helps to
+// catch the problems when the expected method call is totally skipped during test run.
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Optional() *mAnalysisStorageMockUpdateProfileYearsExperience {
+	mmUpdateProfileYearsExperience.optional = true
+	return mmUpdateProfileYearsExperience
+}
+
+// Expect sets up expected params for AnalysisStorage.UpdateProfileYearsExperience
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Expect(ctx context.Context, analysisID string, yoe float32) *mAnalysisStorageMockUpdateProfileYearsExperience {
+	if mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Set")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation = &AnalysisStorageMockUpdateProfileYearsExperienceExpectation{}
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by ExpectParams functions")
+	}
+
+	mmUpdateProfileYearsExperience.defaultExpectation.params = &AnalysisStorageMockUpdateProfileYearsExperienceParams{ctx, analysisID, yoe}
+	mmUpdateProfileYearsExperience.defaultExpectation.expectationOrigins.origin = minimock.CallerInfo(1)
+	for _, e := range mmUpdateProfileYearsExperience.expectations {
+		if minimock.Equal(e.params, mmUpdateProfileYearsExperience.defaultExpectation.params) {
+			mmUpdateProfileYearsExperience.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmUpdateProfileYearsExperience.defaultExpectation.params)
+		}
+	}
+
+	return mmUpdateProfileYearsExperience
+}
+
+// ExpectCtxParam1 sets up expected param ctx for AnalysisStorage.UpdateProfileYearsExperience
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) ExpectCtxParam1(ctx context.Context) *mAnalysisStorageMockUpdateProfileYearsExperience {
+	if mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Set")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation = &AnalysisStorageMockUpdateProfileYearsExperienceExpectation{}
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.params != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Expect")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs = &AnalysisStorageMockUpdateProfileYearsExperienceParamPtrs{}
+	}
+	mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs.ctx = &ctx
+	mmUpdateProfileYearsExperience.defaultExpectation.expectationOrigins.originCtx = minimock.CallerInfo(1)
+
+	return mmUpdateProfileYearsExperience
+}
+
+// ExpectAnalysisIDParam2 sets up expected param analysisID for AnalysisStorage.UpdateProfileYearsExperience
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) ExpectAnalysisIDParam2(analysisID string) *mAnalysisStorageMockUpdateProfileYearsExperience {
+	if mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Set")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation = &AnalysisStorageMockUpdateProfileYearsExperienceExpectation{}
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.params != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Expect")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs = &AnalysisStorageMockUpdateProfileYearsExperienceParamPtrs{}
+	}
+	mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs.analysisID = &analysisID
+	mmUpdateProfileYearsExperience.defaultExpectation.expectationOrigins.originAnalysisID = minimock.CallerInfo(1)
+
+	return mmUpdateProfileYearsExperience
+}
+
+// ExpectYoeParam3 sets up expected param yoe for AnalysisStorage.UpdateProfileYearsExperience
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) ExpectYoeParam3(yoe float32) *mAnalysisStorageMockUpdateProfileYearsExperience {
+	if mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Set")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation = &AnalysisStorageMockUpdateProfileYearsExperienceExpectation{}
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.params != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Expect")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs = &AnalysisStorageMockUpdateProfileYearsExperienceParamPtrs{}
+	}
+	mmUpdateProfileYearsExperience.defaultExpectation.paramPtrs.yoe = &yoe
+	mmUpdateProfileYearsExperience.defaultExpectation.expectationOrigins.originYoe = minimock.CallerInfo(1)
+
+	return mmUpdateProfileYearsExperience
+}
+
+// Inspect accepts an inspector function that has same arguments as the AnalysisStorage.UpdateProfileYearsExperience
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Inspect(f func(ctx context.Context, analysisID string, yoe float32)) *mAnalysisStorageMockUpdateProfileYearsExperience {
+	if mmUpdateProfileYearsExperience.mock.inspectFuncUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("Inspect function is already set for AnalysisStorageMock.UpdateProfileYearsExperience")
+	}
+
+	mmUpdateProfileYearsExperience.mock.inspectFuncUpdateProfileYearsExperience = f
+
+	return mmUpdateProfileYearsExperience
+}
+
+// Return sets up results that will be returned by AnalysisStorage.UpdateProfileYearsExperience
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Return(err error) *AnalysisStorageMock {
+	if mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Set")
+	}
+
+	if mmUpdateProfileYearsExperience.defaultExpectation == nil {
+		mmUpdateProfileYearsExperience.defaultExpectation = &AnalysisStorageMockUpdateProfileYearsExperienceExpectation{mock: mmUpdateProfileYearsExperience.mock}
+	}
+	mmUpdateProfileYearsExperience.defaultExpectation.results = &AnalysisStorageMockUpdateProfileYearsExperienceResults{err}
+	mmUpdateProfileYearsExperience.defaultExpectation.returnOrigin = minimock.CallerInfo(1)
+	return mmUpdateProfileYearsExperience.mock
+}
+
+// Set uses given function f to mock the AnalysisStorage.UpdateProfileYearsExperience method
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Set(f func(ctx context.Context, analysisID string, yoe float32) (err error)) *AnalysisStorageMock {
+	if mmUpdateProfileYearsExperience.defaultExpectation != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("Default expectation is already set for the AnalysisStorage.UpdateProfileYearsExperience method")
+	}
+
+	if len(mmUpdateProfileYearsExperience.expectations) > 0 {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("Some expectations are already set for the AnalysisStorage.UpdateProfileYearsExperience method")
+	}
+
+	mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience = f
+	mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperienceOrigin = minimock.CallerInfo(1)
+	return mmUpdateProfileYearsExperience.mock
+}
+
+// When sets expectation for the AnalysisStorage.UpdateProfileYearsExperience which will trigger the result defined by the following
+// Then helper
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) When(ctx context.Context, analysisID string, yoe float32) *AnalysisStorageMockUpdateProfileYearsExperienceExpectation {
+	if mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("AnalysisStorageMock.UpdateProfileYearsExperience mock is already set by Set")
+	}
+
+	expectation := &AnalysisStorageMockUpdateProfileYearsExperienceExpectation{
+		mock:               mmUpdateProfileYearsExperience.mock,
+		params:             &AnalysisStorageMockUpdateProfileYearsExperienceParams{ctx, analysisID, yoe},
+		expectationOrigins: AnalysisStorageMockUpdateProfileYearsExperienceExpectationOrigins{origin: minimock.CallerInfo(1)},
+	}
+	mmUpdateProfileYearsExperience.expectations = append(mmUpdateProfileYearsExperience.expectations, expectation)
+	return expectation
+}
+
+// Then sets up AnalysisStorage.UpdateProfileYearsExperience return parameters for the expectation previously defined by the When method
+func (e *AnalysisStorageMockUpdateProfileYearsExperienceExpectation) Then(err error) *AnalysisStorageMock {
+	e.results = &AnalysisStorageMockUpdateProfileYearsExperienceResults{err}
+	return e.mock
+}
+
+// Times sets number of times AnalysisStorage.UpdateProfileYearsExperience should be invoked
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Times(n uint64) *mAnalysisStorageMockUpdateProfileYearsExperience {
+	if n == 0 {
+		mmUpdateProfileYearsExperience.mock.t.Fatalf("Times of AnalysisStorageMock.UpdateProfileYearsExperience mock can not be zero")
+	}
+	mm_atomic.StoreUint64(&mmUpdateProfileYearsExperience.expectedInvocations, n)
+	mmUpdateProfileYearsExperience.expectedInvocationsOrigin = minimock.CallerInfo(1)
+	return mmUpdateProfileYearsExperience
+}
+
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) invocationsDone() bool {
+	if len(mmUpdateProfileYearsExperience.expectations) == 0 && mmUpdateProfileYearsExperience.defaultExpectation == nil && mmUpdateProfileYearsExperience.mock.funcUpdateProfileYearsExperience == nil {
+		return true
+	}
+
+	totalInvocations := mm_atomic.LoadUint64(&mmUpdateProfileYearsExperience.mock.afterUpdateProfileYearsExperienceCounter)
+	expectedInvocations := mm_atomic.LoadUint64(&mmUpdateProfileYearsExperience.expectedInvocations)
+
+	return totalInvocations > 0 && (expectedInvocations == 0 || expectedInvocations == totalInvocations)
+}
+
+// UpdateProfileYearsExperience implements mm_usecase.AnalysisStorage
+func (mmUpdateProfileYearsExperience *AnalysisStorageMock) UpdateProfileYearsExperience(ctx context.Context, analysisID string, yoe float32) (err error) {
+	mm_atomic.AddUint64(&mmUpdateProfileYearsExperience.beforeUpdateProfileYearsExperienceCounter, 1)
+	defer mm_atomic.AddUint64(&mmUpdateProfileYearsExperience.afterUpdateProfileYearsExperienceCounter, 1)
+
+	mmUpdateProfileYearsExperience.t.Helper()
+
+	if mmUpdateProfileYearsExperience.inspectFuncUpdateProfileYearsExperience != nil {
+		mmUpdateProfileYearsExperience.inspectFuncUpdateProfileYearsExperience(ctx, analysisID, yoe)
+	}
+
+	mm_params := AnalysisStorageMockUpdateProfileYearsExperienceParams{ctx, analysisID, yoe}
+
+	// Record call args
+	mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.mutex.Lock()
+	mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.callArgs = append(mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.callArgs, &mm_params)
+	mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.mutex.Unlock()
+
+	for _, e := range mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.expectations {
+		if minimock.Equal(*e.params, mm_params) {
+			mm_atomic.AddUint64(&e.Counter, 1)
+			return e.results.err
+		}
+	}
+
+	if mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.Counter, 1)
+		mm_want := mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.params
+		mm_want_ptrs := mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.paramPtrs
+
+		mm_got := AnalysisStorageMockUpdateProfileYearsExperienceParams{ctx, analysisID, yoe}
+
+		if mm_want_ptrs != nil {
+
+			if mm_want_ptrs.ctx != nil && !minimock.Equal(*mm_want_ptrs.ctx, mm_got.ctx) {
+				mmUpdateProfileYearsExperience.t.Errorf("AnalysisStorageMock.UpdateProfileYearsExperience got unexpected parameter ctx, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.expectationOrigins.originCtx, *mm_want_ptrs.ctx, mm_got.ctx, minimock.Diff(*mm_want_ptrs.ctx, mm_got.ctx))
+			}
+
+			if mm_want_ptrs.analysisID != nil && !minimock.Equal(*mm_want_ptrs.analysisID, mm_got.analysisID) {
+				mmUpdateProfileYearsExperience.t.Errorf("AnalysisStorageMock.UpdateProfileYearsExperience got unexpected parameter analysisID, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.expectationOrigins.originAnalysisID, *mm_want_ptrs.analysisID, mm_got.analysisID, minimock.Diff(*mm_want_ptrs.analysisID, mm_got.analysisID))
+			}
+
+			if mm_want_ptrs.yoe != nil && !minimock.Equal(*mm_want_ptrs.yoe, mm_got.yoe) {
+				mmUpdateProfileYearsExperience.t.Errorf("AnalysisStorageMock.UpdateProfileYearsExperience got unexpected parameter yoe, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+					mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.expectationOrigins.originYoe, *mm_want_ptrs.yoe, mm_got.yoe, minimock.Diff(*mm_want_ptrs.yoe, mm_got.yoe))
+			}
+
+		} else if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
+			mmUpdateProfileYearsExperience.t.Errorf("AnalysisStorageMock.UpdateProfileYearsExperience got unexpected parameters, expected at\n%s:\nwant: %#v\n got: %#v%s\n",
+				mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.expectationOrigins.origin, *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+		}
+
+		mm_results := mmUpdateProfileYearsExperience.UpdateProfileYearsExperienceMock.defaultExpectation.results
+		if mm_results == nil {
+			mmUpdateProfileYearsExperience.t.Fatal("No results are set for the AnalysisStorageMock.UpdateProfileYearsExperience")
+		}
+		return (*mm_results).err
+	}
+	if mmUpdateProfileYearsExperience.funcUpdateProfileYearsExperience != nil {
+		return mmUpdateProfileYearsExperience.funcUpdateProfileYearsExperience(ctx, analysisID, yoe)
+	}
+	mmUpdateProfileYearsExperience.t.Fatalf("Unexpected call to AnalysisStorageMock.UpdateProfileYearsExperience. %v %v %v", ctx, analysisID, yoe)
+	return
+}
+
+// UpdateProfileYearsExperienceAfterCounter returns a count of finished AnalysisStorageMock.UpdateProfileYearsExperience invocations
+func (mmUpdateProfileYearsExperience *AnalysisStorageMock) UpdateProfileYearsExperienceAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpdateProfileYearsExperience.afterUpdateProfileYearsExperienceCounter)
+}
+
+// UpdateProfileYearsExperienceBeforeCounter returns a count of AnalysisStorageMock.UpdateProfileYearsExperience invocations
+func (mmUpdateProfileYearsExperience *AnalysisStorageMock) UpdateProfileYearsExperienceBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmUpdateProfileYearsExperience.beforeUpdateProfileYearsExperienceCounter)
+}
+
+// Calls returns a list of arguments used in each call to AnalysisStorageMock.UpdateProfileYearsExperience.
+// The list is in the same order as the calls were made (i.e. recent calls have a higher index)
+func (mmUpdateProfileYearsExperience *mAnalysisStorageMockUpdateProfileYearsExperience) Calls() []*AnalysisStorageMockUpdateProfileYearsExperienceParams {
+	mmUpdateProfileYearsExperience.mutex.RLock()
+
+	argCopy := make([]*AnalysisStorageMockUpdateProfileYearsExperienceParams, len(mmUpdateProfileYearsExperience.callArgs))
+	copy(argCopy, mmUpdateProfileYearsExperience.callArgs)
+
+	mmUpdateProfileYearsExperience.mutex.RUnlock()
+
+	return argCopy
+}
+
+// MinimockUpdateProfileYearsExperienceDone returns true if the count of the UpdateProfileYearsExperience invocations corresponds
+// the number of defined expectations
+func (m *AnalysisStorageMock) MinimockUpdateProfileYearsExperienceDone() bool {
+	if m.UpdateProfileYearsExperienceMock.optional {
+		// Optional methods provide '0 or more' call count restriction.
+		return true
+	}
+
+	for _, e := range m.UpdateProfileYearsExperienceMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			return false
+		}
+	}
+
+	return m.UpdateProfileYearsExperienceMock.invocationsDone()
+}
+
+// MinimockUpdateProfileYearsExperienceInspect logs each unmet expectation
+func (m *AnalysisStorageMock) MinimockUpdateProfileYearsExperienceInspect() {
+	for _, e := range m.UpdateProfileYearsExperienceMock.expectations {
+		if mm_atomic.LoadUint64(&e.Counter) < 1 {
+			m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileYearsExperience at\n%s with params: %#v", e.expectationOrigins.origin, *e.params)
+		}
+	}
+
+	afterUpdateProfileYearsExperienceCounter := mm_atomic.LoadUint64(&m.afterUpdateProfileYearsExperienceCounter)
+	// if default expectation was set then invocations count should be greater than zero
+	if m.UpdateProfileYearsExperienceMock.defaultExpectation != nil && afterUpdateProfileYearsExperienceCounter < 1 {
+		if m.UpdateProfileYearsExperienceMock.defaultExpectation.params == nil {
+			m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileYearsExperience at\n%s", m.UpdateProfileYearsExperienceMock.defaultExpectation.returnOrigin)
+		} else {
+			m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileYearsExperience at\n%s with params: %#v", m.UpdateProfileYearsExperienceMock.defaultExpectation.expectationOrigins.origin, *m.UpdateProfileYearsExperienceMock.defaultExpectation.params)
+		}
+	}
+	// if func was set then invocations count should be greater than zero
+	if m.funcUpdateProfileYearsExperience != nil && afterUpdateProfileYearsExperienceCounter < 1 {
+		m.t.Errorf("Expected call to AnalysisStorageMock.UpdateProfileYearsExperience at\n%s", m.funcUpdateProfileYearsExperienceOrigin)
+	}
+
+	if !m.UpdateProfileYearsExperienceMock.invocationsDone() && afterUpdateProfileYearsExperienceCounter > 0 {
+		m.t.Errorf("Expected %d calls to AnalysisStorageMock.UpdateProfileYearsExperience at\n%s but found %d calls",
+			mm_atomic.LoadUint64(&m.UpdateProfileYearsExperienceMock.expectedInvocations), m.UpdateProfileYearsExperienceMock.expectedInvocationsOrigin, afterUpdateProfileYearsExperienceCounter)
+	}
+}
+
 // MinimockFinish checks that all mocked methods have been called the expected number of times
 func (m *AnalysisStorageMock) MinimockFinish() {
 	m.finishOnce.Do(func() {
@@ -2515,6 +3281,10 @@ func (m *AnalysisStorageMock) MinimockFinish() {
 			m.MinimockSaveAnalysisInspect()
 
 			m.MinimockUpdateAIDecisionInspect()
+
+			m.MinimockUpdateProfileSummaryInspect()
+
+			m.MinimockUpdateProfileYearsExperienceInspect()
 		}
 	})
 }
@@ -2544,5 +3314,7 @@ func (m *AnalysisStorageMock) minimockDone() bool {
 		m.MinimockLoadVacancySkillsDone() &&
 		m.MinimockNewIDDone() &&
 		m.MinimockSaveAnalysisDone() &&
-		m.MinimockUpdateAIDecisionDone()
+		m.MinimockUpdateAIDecisionDone() &&
+		m.MinimockUpdateProfileSummaryDone() &&
+		m.MinimockUpdateProfileYearsExperienceDone()
 }

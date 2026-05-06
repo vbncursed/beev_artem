@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -37,6 +38,10 @@ var _ pb.MultiAgentServiceServer = (*MultiAgentServiceAPI)(nil)
 func (a *MultiAgentServiceAPI) GenerateDecision(ctx context.Context, req *pb.GenerateDecisionRequest) (*pb.GenerateDecisionResponse, error) {
 	resp, err := a.svc.GenerateDecision(ctx, pbToDomainRequest(req))
 	if err != nil {
+		// Preserve the wrapped error chain — analysis swallows the gRPC
+		// failure and keeps the heuristic AI as fallback, so this log is
+		// the only signal we have for diagnosing LLM/Yandex issues.
+		slog.WarnContext(ctx, "GenerateDecision failed", "err", err)
 		if errors.Is(err, usecase.ErrInvalidArgument) {
 			return nil, status.Error(codes.InvalidArgument, "Empty decision request.")
 		}

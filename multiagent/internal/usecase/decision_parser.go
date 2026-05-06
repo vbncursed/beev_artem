@@ -17,6 +17,12 @@ type llmDecision struct {
 	HRRationale       string         `json:"hr_rationale"`
 	CandidateFeedback string         `json:"candidate_feedback"`
 	SoftSkillsNotes   string         `json:"soft_skills_notes"`
+	// YearsExperience: 0 (or omitted) means the model couldn't infer it;
+	// analysis falls back to its heuristic in that case.
+	YearsExperience   float32        `json:"years_experience"`
+	// CandidateSummary: short LLM-written profile blurb. Empty falls back
+	// to the heuristic resume-text preview.
+	CandidateSummary  string         `json:"candidate_summary"`
 	AgentResults      []llmAgentItem `json:"agent_results"`
 }
 
@@ -49,12 +55,19 @@ func parseDecision(completion string) (*domain.DecisionResponse, error) {
 			Confidence:     a.Confidence,
 		})
 	}
+	yoe := d.YearsExperience
+	if yoe < 0 || yoe > 60 {
+		// Hard clamp — a hallucinated 200 or -5 isn't a real signal.
+		yoe = 0
+	}
 	return &domain.DecisionResponse{
 		HRRecommendation:  d.HRRecommendation,
 		Confidence:        d.Confidence,
 		HRRationale:       d.HRRationale,
 		CandidateFeedback: d.CandidateFeedback,
 		SoftSkillsNotes:   d.SoftSkillsNotes,
+		YearsExperience:   yoe,
+		CandidateSummary:  strings.TrimSpace(d.CandidateSummary),
 		AgentResults:      agents,
 	}, nil
 }

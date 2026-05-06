@@ -65,6 +65,16 @@ message GenerateDecisionResponse {
   string raw_trace = 7;
 
   google.protobuf.Timestamp created_at = 8;
+
+  // years_experience is the model's read of total professional experience.
+  // 0 means the model could not infer one — analysis falls back to its
+  // heuristic in that case.
+  float years_experience = 9;
+
+  // candidate_summary is a short LLM-written profile blurb that replaces
+  // the heuristic resume-text preview. Empty means analysis keeps its
+  // 320-rune fallback.
+  string candidate_summary = 10;
 }
 
 message ClassifyRoleRequest {

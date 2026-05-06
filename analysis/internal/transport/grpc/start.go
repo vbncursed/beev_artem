@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/artem13815/hr/analysis/internal/domain"
 	pb_models "github.com/artem13815/hr/analysis/internal/pb/models"
@@ -17,6 +18,10 @@ func (a *AnalysisServiceAPI) StartAnalysis(ctx context.Context, req *pb_models.S
 		return nil, newError(codes.Unauthenticated, ErrCodeUnauthorized, "Authentication required.")
 	}
 
+	slog.InfoContext(ctx, "StartAnalysis request",
+		"resume_id", req.GetResumeId(),
+		"vacancy_id", req.GetVacancyId(),
+		"use_llm", req.GetUseLlm())
 	res, err := a.analysisService.StartAnalysis(ctx, domain.StartAnalysisInput{
 		RequestUserID: userCtx.UserID,
 		IsAdmin:       userCtx.IsAdmin,

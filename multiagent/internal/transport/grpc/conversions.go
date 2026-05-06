@@ -53,6 +53,8 @@ func domainToPBResponse(resp *domain.DecisionResponse) *pb.GenerateDecisionRespo
 		AgentResults:      agents,
 		RawTrace:          resp.RawTrace,
 		CreatedAt:         timestamppb.New(resp.CreatedAt),
+		YearsExperience:   resp.YearsExperience,
+		CandidateSummary:  resp.CandidateSummary,
 	}
 }
 
