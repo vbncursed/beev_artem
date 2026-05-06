@@ -25,6 +25,7 @@ func (s *IngestResumeBatchSuite) TestSuccessAllFilesProcessed() {
 
 	in := domain.BatchIngestResumeInput{
 		RequestUserID: 1,
+		VacancyID:     "vac-1",
 		Files: []domain.ResumeIntakeFile{
 			{ExternalID: "ext-a", FileData: resumeText},
 			{ExternalID: "ext-b", FileData: resumeText},
@@ -47,6 +48,7 @@ func (s *IngestResumeBatchSuite) TestPartialFailureRecorded() {
 
 	in := domain.BatchIngestResumeInput{
 		RequestUserID: 1,
+		VacancyID:     "vac-1",
 		Files: []domain.ResumeIntakeFile{
 			// First file is unparseable garbage — extractor rejects it before
 			// storage is touched.
@@ -73,6 +75,31 @@ func (s *IngestResumeBatchSuite) TestPartialFailureRecorded() {
 	assert.Assert(t, out.Results[1].Candidate != nil)
 }
 
+func (s *IngestResumeBatchSuite) TestVacancyIDPropagatedToEveryItem() {
+	t := s.T()
+	ctx := t.Context()
+
+	var seen []string
+	s.storage.CreateCandidateWithResumeMock.Set(func(_ context.Context, in domain.CreateCandidateInput, _ domain.NewResumeData) (*domain.Candidate, *domain.Resume, error) {
+		seen = append(seen, in.VacancyID)
+		return &domain.Candidate{ID: "c"}, &domain.Resume{ID: "r"}, nil
+	})
+
+	in := domain.BatchIngestResumeInput{
+		RequestUserID: 1,
+		VacancyID:     "vac-42",
+		Files: []domain.ResumeIntakeFile{
+			{ExternalID: "a", FileData: resumeText},
+			{ExternalID: "b", FileData: resumeText},
+		},
+	}
+
+	out, err := s.svc.IngestResumeBatch(ctx, in)
+	assert.NilError(t, err)
+	assert.Equal(t, len(out.Results), 2)
+	assert.DeepEqual(t, seen, []string{"vac-42", "vac-42"})
+}
+
 func (s *IngestResumeBatchSuite) TestExternalIDFallback() {
 	t := s.T()
 	ctx := t.Context()
@@ -83,6 +110,7 @@ func (s *IngestResumeBatchSuite) TestExternalIDFallback() {
 
 	in := domain.BatchIngestResumeInput{
 		RequestUserID: 1,
+		VacancyID:     "vac-1",
 		Files: []domain.ResumeIntakeFile{
 			{FileData: resumeText}, // empty ExternalID → service synthesizes "item-1"
 			{FileData: resumeText},
@@ -98,7 +126,19 @@ func (s *IngestResumeBatchSuite) TestExternalIDFallback() {
 func (s *IngestResumeBatchSuite) TestInvalidArgumentZeroUser() {
 	t := s.T()
 	out, err := s.svc.IngestResumeBatch(t.Context(), domain.BatchIngestResumeInput{
-		Files: []domain.ResumeIntakeFile{{FileData: resumeText}},
+		VacancyID: "vac-1",
+		Files:     []domain.ResumeIntakeFile{{FileData: resumeText}},
+	})
+	assert.ErrorIs(t, err, ErrInvalidArgument)
+	assert.Assert(t, out == nil)
+}
+
+func (s *IngestResumeBatchSuite) TestInvalidArgumentMissingVacancy() {
+	t := s.T()
+	out, err := s.svc.IngestResumeBatch(t.Context(), domain.BatchIngestResumeInput{
+		RequestUserID: 1,
+		VacancyID:     "   ", // whitespace-only is treated as missing
+		Files:         []domain.ResumeIntakeFile{{FileData: resumeText}},
 	})
 	assert.ErrorIs(t, err, ErrInvalidArgument)
 	assert.Assert(t, out == nil)
@@ -108,6 +148,7 @@ func (s *IngestResumeBatchSuite) TestInvalidArgumentEmptyBatch() {
 	t := s.T()
 	out, err := s.svc.IngestResumeBatch(t.Context(), domain.BatchIngestResumeInput{
 		RequestUserID: 1,
+		VacancyID:     "vac-1",
 	})
 	assert.ErrorIs(t, err, ErrInvalidArgument)
 	assert.Assert(t, out == nil)
@@ -118,6 +159,7 @@ func (s *IngestResumeBatchSuite) TestInvalidArgumentBatchTooLarge() {
 	files := make([]domain.ResumeIntakeFile, 51)
 	out, err := s.svc.IngestResumeBatch(t.Context(), domain.BatchIngestResumeInput{
 		RequestUserID: 1,
+		VacancyID:     "vac-1",
 		Files:         files,
 	})
 	assert.ErrorIs(t, err, ErrInvalidArgument)

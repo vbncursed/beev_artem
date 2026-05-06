@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/artem13815/hr/resume/internal/domain"
 )
@@ -16,9 +17,11 @@ import (
 const MaxBatchFiles = 50
 
 func (s *ResumeService) IngestResumeBatch(ctx context.Context, in domain.BatchIngestResumeInput) (*domain.BatchIngestResumeResult, error) {
-	if in.RequestUserID == 0 || len(in.Files) == 0 || len(in.Files) > MaxBatchFiles {
+	vacancyID := strings.TrimSpace(in.VacancyID)
+	if in.RequestUserID == 0 || vacancyID == "" || len(in.Files) == 0 || len(in.Files) > MaxBatchFiles {
 		return nil, ErrInvalidArgument
 	}
+	in.VacancyID = vacancyID
 
 	results := make([]domain.BatchIngestResumeItemResult, 0, len(in.Files))
 	for i, file := range in.Files {
@@ -29,7 +32,7 @@ func (s *ResumeService) IngestResumeBatch(ctx context.Context, in domain.BatchIn
 
 		one, err := s.CreateCandidateFromResume(ctx, domain.CreateCandidateFromResumeInput{
 			RequestUserID: in.RequestUserID,
-			VacancyID:     "",
+			VacancyID:     in.VacancyID,
 			FileData:      file.FileData,
 		})
 		if err != nil {

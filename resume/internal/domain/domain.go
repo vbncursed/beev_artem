@@ -109,6 +109,7 @@ type CandidateResumeResult struct {
 
 type BatchIngestResumeInput struct {
 	RequestUserID uint64
+	VacancyID     string
 	Files         []ResumeIntakeFile
 }
 

@@ -27,7 +27,7 @@ var File_resume_api_resume_proto protoreflect.FileDescriptor
 
 const file_resume_api_resume_proto_rawDesc = "" +
 	"\n" +
-	"\x17resume_api/resume.proto\x12\x11resume.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x19models/resume_model.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\xdb\v\n" +
+	"\x17resume_api/resume.proto\x12\x11resume.service.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x19models/resume_model.proto\x1a.protoc-gen-openapiv2/options/annotations.proto2\xeb\v\n" +
 	"\rResumeService\x12\xab\x01\n" +
 	"\x0fCreateCandidate\x12(.resume.models.v1.CreateCandidateRequest\x1a#.resume.models.v1.CandidateResponse\"I\x92A\x12b\x10\n" +
 	"\x0e\n" +
@@ -44,11 +44,11 @@ const file_resume_api_resume_proto_rawDesc = "" +
 	"\fIngestResume\x122.resume.models.v1.CreateCandidateFromResumeRequest\x1a).resume.models.v1.CandidateResumeResponse\"6\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/api/v1/resumes/intake\x12\xaa\x01\n" +
-	"\x11IngestResumeBatch\x12*.resume.models.v1.BatchIngestResumeRequest\x1a+.resume.models.v1.BatchIngestResumeResponse\"<\x92A\x12b\x10\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/api/v1/resumes/intake\x12\xba\x01\n" +
+	"\x11IngestResumeBatch\x12*.resume.models.v1.BatchIngestResumeRequest\x1a+.resume.models.v1.BatchIngestResumeResponse\"L\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +
-	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/resumes/intake/batch\x12v\n" +
+	"BearerAuth\x12\x00\x82\xd3\xe4\x93\x021:\x01*\",/api/v1/vacancies/{vacancy_id}/resumes/batch\x12v\n" +
 	"\fUploadResume\x12%.resume.models.v1.UploadResumeRequest\x1a&.resume.models.v1.UploadResumeResponse\"\x15\x92A\x12b\x10\n" +
 	"\x0e\n" +
 	"\n" +

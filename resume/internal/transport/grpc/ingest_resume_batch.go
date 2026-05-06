@@ -20,6 +20,10 @@ func (a *ResumeServiceAPI) IngestResumeBatch(ctx context.Context, req *pb_models
 	// Boundary checks before service-layer work: empty / oversized batch and
 	// per-file size are all caller-provided and cheap to verify here. Service
 	// still re-checks (defense in depth).
+	if req.GetVacancyId() == "" {
+		return nil, newError(codes.InvalidArgument, ErrCodeInvalidInput, "Vacancy ID is required.")
+	}
+
 	pbFiles := req.GetFiles()
 	if len(pbFiles) == 0 || len(pbFiles) > usecase.MaxBatchFiles {
 		return nil, newError(codes.InvalidArgument, ErrCodeInvalidInput, "Batch size out of range.")
@@ -40,6 +44,7 @@ func (a *ResumeServiceAPI) IngestResumeBatch(ctx context.Context, req *pb_models
 
 	res, err := a.resumeService.IngestResumeBatch(ctx, domain.BatchIngestResumeInput{
 		RequestUserID: userCtx.UserID,
+		VacancyID:     req.GetVacancyId(),
 		Files:         files,
 	})
 	if err != nil {

@@ -70,7 +70,7 @@ service ResumeService {
 
   rpc IngestResumeBatch(resume.models.v1.BatchIngestResumeRequest) returns (resume.models.v1.BatchIngestResumeResponse) {
     option (google.api.http) = {
-      post: "/api/v1/resumes/intake/batch"
+      post: "/api/v1/vacancies/{vacancy_id}/resumes/batch"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {

@@ -77,30 +77,6 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
-    /api/v1/resumes/intake/batch:
-        post:
-            tags:
-                - ResumeService
-            operationId: ResumeService_IngestResumeBatch
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BatchIngestResumeRequest'
-                required: true
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/BatchIngestResumeResponse'
-                default:
-                    description: Default error response
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/Status'
     /api/v1/resumes/{resumeId}:
         get:
             tags:
@@ -209,6 +185,36 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/vacancies/{vacancyId}/resumes/batch:
+        post:
+            tags:
+                - ResumeService
+            operationId: ResumeService_IngestResumeBatch
+            parameters:
+                - name: vacancyId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BatchIngestResumeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BatchIngestResumeResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
 components:
     schemas:
         BatchIngestResumeItemResult:
@@ -229,6 +235,8 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/ResumeIntakeFile'
+                vacancyId:
+                    type: string
         BatchIngestResumeResponse:
             type: object
             properties:

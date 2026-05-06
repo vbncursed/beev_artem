@@ -553,6 +553,7 @@ func (x *ResumeIntakeFile) GetFileData() []byte {
 type BatchIngestResumeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Files         []*ResumeIntakeFile    `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	VacancyId     string                 `protobuf:"bytes,2,opt,name=vacancy_id,json=vacancyId,proto3" json:"vacancy_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -592,6 +593,13 @@ func (x *BatchIngestResumeRequest) GetFiles() []*ResumeIntakeFile {
 		return x.Files
 	}
 	return nil
+}
+
+func (x *BatchIngestResumeRequest) GetVacancyId() string {
+	if x != nil {
+		return x.VacancyId
+	}
+	return ""
 }
 
 type BatchIngestResumeItemResult struct {
@@ -1256,9 +1264,11 @@ const file_models_resume_model_proto_rawDesc = "" +
 	"\x10ResumeIntakeFile\x12\x1f\n" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
 	"externalId\x12\x1b\n" +
-	"\tfile_data\x18\x02 \x01(\fR\bfileData\"T\n" +
+	"\tfile_data\x18\x02 \x01(\fR\bfileData\"s\n" +
 	"\x18BatchIngestResumeRequest\x128\n" +
-	"\x05files\x18\x01 \x03(\v2\".resume.models.v1.ResumeIntakeFileR\x05files\"\xc1\x01\n" +
+	"\x05files\x18\x01 \x03(\v2\".resume.models.v1.ResumeIntakeFileR\x05files\x12\x1d\n" +
+	"\n" +
+	"vacancy_id\x18\x02 \x01(\tR\tvacancyId\"\xc1\x01\n" +
 	"\x1bBatchIngestResumeItemResult\x12\x1f\n" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
 	"externalId\x129\n" +

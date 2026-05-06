@@ -62,6 +62,7 @@ message ResumeIntakeFile {
 
 message BatchIngestResumeRequest {
   repeated ResumeIntakeFile files = 1;
+  string vacancy_id = 2;
 }
 
 message BatchIngestResumeItemResult {
