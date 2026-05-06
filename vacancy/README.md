@@ -4,8 +4,10 @@
 
 CRUD-сервис вакансий. Хранит позицию (название + описание + взвешенные
 навыки) и владеет полем `role` — ключом, по которому multiagent выбирает
-промпт для AI-оценки кандидата. Авто-определяет роль по тексту вакансии
-через локальный keyword-table — пользователь не задаёт её руками.
+промпт для AI-оценки кандидата. Роль определяется LLM через
+`multiagent.ClassifyRole` (та же модель, что и пишет HR-вердикты);
+keyword-табличный `DetectRole` остаётся как детерминированный fallback
+на случай недоступности LLM.
 
 ## Архитектура
 
@@ -16,12 +18,14 @@ vacancy/internal/
 ├── domain/                       Vacancy, SkillWeight, ListInput, ...
 ├── usecase/                      бизнес-логика
 │   ├── vacancy_service.go        ports + service struct
-│   ├── create.go                 CreateVacancy (с DetectRole + normalize)
+│   ├── create.go                 CreateVacancy (validate → resolveRole → store)
 │   ├── get.go                    GetVacancy (owner-only / admin-bypass)
 │   ├── list.go                   ListVacancies (с pagination + query)
 │   ├── update.go                 UpdateVacancy (versioned, optimistic)
 │   ├── archive.go                ArchiveVacancy
-│   ├── role_detector.go          keyword-based DetectRole
+│   ├── role_classifier.go        порт RoleClassifier (LLM-based)
+│   ├── resolve_role.go           wrapper: LLM with timeout → DetectRole fallback
+│   ├── role_detector.go          keyword-based DetectRole (deterministic fallback)
 │   ├── validate.go               правила валидации (см. ниже)
 │   └── *_test.go                 unit-тесты, 100% coverage
 ├── infrastructure/
@@ -30,6 +34,9 @@ vacancy/internal/
 │   │   ├── migrations/00001_*    initial schema
 │   │   ├── migrations/00002_*    add_role
 │   │   └── *.go                  по одному методу на файл
+│   ├── multiagent_client/        gRPC client → multiagent.ClassifyRole
+│   │   ├── client.go             dial + cleanup hook
+│   │   └── classifier.go         RoleClassifier impl (wraps RPC errors as ErrLLMUnavailable)
 │   └── auth_client/              gRPC client → auth.ValidateAccessToken
 └── transport/
     ├── grpc/                     handlers + errdetails.ErrorInfo
@@ -40,7 +47,7 @@ vacancy/internal/
 
 | RPC | HTTP | Описание |
 |---|---|---|
-| `CreateVacancy` | `POST /api/v1/vacancies` | Создаёт вакансию. Бэкенд авто-нормализует веса (если все 0 → 1/N) и определяет роль через `DetectRole`. |
+| `CreateVacancy` | `POST /api/v1/vacancies` | Создаёт вакансию. Бэкенд авто-нормализует веса (если все 0 → 1/N) и определяет роль через `multiagent.ClassifyRole` (с fallback на `DetectRole`). |
 | `GetVacancy` | `GET /api/v1/vacancies/{vacancy_id}` | Только владелец или admin. |
 | `ListVacancies` | `GET /api/v1/vacancies` | Page-based pagination + опциональный `query` для full-text по title+description. |
 | `UpdateVacancy` | `PATCH /api/v1/vacancies/{vacancy_id}` | Обновляет; роль пересчитывается на каждом update. Optimistic concurrency через `version`. |
@@ -88,7 +95,34 @@ type SkillWeight struct {
 чтобы скоринг работал без ручной разметки. UI отдельно подсказывает
 пользователю про это поведение.
 
-## DetectRole (`usecase/role_detector.go`)
+## Определение роли
+
+Роль выбирается из закрытого набора имён prompt-шаблонов, лежащих в
+`multiagent/internal/infrastructure/prompts/templates/`:
+
+```
+accountant / analyst / doctor / electrician / manager / programmer / default
+```
+
+### Основной путь — LLM (`usecase/resolve_role.go`)
+
+`resolveRole(ctx, title, description)`:
+
+1. оборачивает контекст 5-секундным `WithTimeout` — мы не блокируем CRUD
+   ради классификатора;
+2. вызывает `RoleClassifier.Classify` (порт), реализованный в
+   `infrastructure/multiagent_client/classifier.go` поверх gRPC RPC
+   `multiagent.ClassifyRole`;
+3. multiagent шлёт LLM-запрос с `temperature=0`, валидирует JSON-ответ
+   `{"role": "<one>"}` против `PromptStore.ListRoles() ∪ {"default"}` и
+   отсекает галлюцинации;
+4. при любой ошибке (`Unavailable`, `DeadlineExceeded`, парсер,
+   неизвестная роль) или пустом ответе — fallback на `DetectRole`.
+
+Контракт: `resolveRole` всегда возвращает валидное имя из набора —
+вакансия никогда не сохраняется с пустым или неизвестным `role`.
+
+### Fallback — `DetectRole` (`usecase/role_detector.go`)
 
 Keyword-table приоритезирована (специфичные роли — раньше generic'а):
 
@@ -103,13 +137,19 @@ Keyword-table приоритезирована (специфичные роли 
 default         — если ни одно ключевое слово не сработало
 ```
 
-`DetectRole(title, description)` лоуэркейсит haystack и возвращает первое
-совпадение. Multiagent использует возвращённое значение для подгрузки
-`assets/prompts/<role>.txt` с fallback'ом на `default.txt`.
+Используется только когда LLM недоступен. Сохранять синхронизацию с
+`templates/` имеет смысл, но критичность ниже — happy-path уходит в LLM.
 
-Добавление новой роли: дополнить `roleKeywords` + положить новый файл
-промпта в `multiagent/internal/infrastructure/prompts/templates/`.
-Frontend `KNOWN_ROLES` тоже обновить (`frontend/src/domain/vacancy/types.ts`).
+### Добавление новой роли
+
+1. положить файл промпта в
+   `multiagent/internal/infrastructure/prompts/templates/<role>.txt` —
+   `PromptStore.ListRoles()` подхватит автоматически, классификатор
+   увидит новую роль на следующем запросе без сборки;
+2. (опционально, для оффлайн-fallback) дополнить `roleKeywords` в
+   `vacancy/internal/usecase/role_detector.go`;
+3. обновить `KNOWN_ROLES` на фронте
+   (`frontend/src/domain/vacancy/types.ts`).
 
 ## Зависимости
 
@@ -118,6 +158,9 @@ Frontend `KNOWN_ROLES` тоже обновить (`frontend/src/domain/vacancy/t
   колонка).
 - **auth** (gRPC) — каждый запрос проверяется через
   `auth.ValidateAccessToken` в auth-interceptor'е.
+- **multiagent** (gRPC) — `ClassifyRole` для определения роли вакансии.
+  Soft-зависимость: при недоступности vacancy продолжает работать через
+  `DetectRole`-fallback.
 - **Redis не используется**.
 
 ## Конфигурация
@@ -126,7 +169,8 @@ Frontend `KNOWN_ROLES` тоже обновить (`frontend/src/domain/vacancy/t
 database: { host, port, username, password, name, ssl_mode }
 auth:
   grpc_addr: "auth:50050"
-  insecure: true
+multiagent:
+  grpc_addr: "multiagent:50055"
 server:
   grpc_addr: ":50051"
   tls: { cert_file, key_file }
@@ -142,7 +186,7 @@ make race
 make cov
 ```
 
-mocks: `VacancyStorage` (через minimock).
+mocks: `VacancyStorage`, `RoleClassifier` (через minimock).
 
 ## Известные ограничения
 

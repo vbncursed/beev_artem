@@ -50,6 +50,7 @@ multiagent/internal/
 | RPC | Описание |
 |---|---|
 | `GenerateDecision` | Принимает `DecisionRequest`, возвращает `DecisionResponse`. Записывает аудит в `multiagent_decisions`. |
+| `ClassifyRole` | Принимает `ClassifyRoleRequest{title, description}`, возвращает `ClassifyRoleResponse{role}` — одна из ролей из `PromptStore.ListRoles()` или `"default"`. Используется vacancy-сервисом на Create/Update. Не персистится — классификация дёшева и идемпотентна. |
 
 ## Domain model
 
@@ -78,6 +79,32 @@ type DecisionResponse struct {
     CreatedAt         time.Time
 }
 ```
+
+## Поток `ClassifyRole`
+
+```
+1. usecase.ClassifyRole(ctx, req)
+2. trim(title) == "" && trim(description) == ""? → ErrInvalidArgument
+3. roles = prompts.ListRoles()  // все шаблоны кроме default.txt
+4. instructions = system-prompt с интерполированным списком roles + "default"
+5. input = "Заголовок: ...\n\nОписание: ..."
+6. llm.Complete(ctx, CompletionRequest{
+     Instructions, Input,
+     Temperature: 0.0,             // детерминизм критичнее креативности
+     MaxOutputTokens: 64,           // ожидаем `{"role": "<one>"}`
+   })
+7. parseRoleClassification(completion, roles):
+   а. stripJSONFences
+   б. Unmarshal в {"role": string}
+   в. lower + trim
+   г. валидация: role ∈ roles ∪ {"default"} → иначе ErrLLMInvalidResponse
+8. Возврат RoleClassifyResponse{Role: role}
+```
+
+Ошибки:
+- `ErrInvalidArgument` → `codes.InvalidArgument`
+- `ErrLLMUnavailable` → `codes.Unavailable` (vacancy fallback'ится на keyword-detector)
+- `ErrLLMInvalidResponse` → `codes.Internal`
 
 ## Поток `GenerateDecision`
 
