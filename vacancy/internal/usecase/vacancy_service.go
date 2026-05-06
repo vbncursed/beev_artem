@@ -1,6 +1,6 @@
 package usecase
 
-//go:generate go run github.com/gojuno/minimock/v3/cmd/minimock@v3.4.7 -i VacancyStorage -o ./mocks -s _mock.go -g
+//go:generate go run github.com/gojuno/minimock/v3/cmd/minimock@v3.4.7 -i VacancyStorage,RoleClassifier -o ./mocks -s _mock.go -g
 
 import (
 	"context"
@@ -17,9 +17,14 @@ type VacancyStorage interface {
 }
 
 type VacancyService struct {
-	storage VacancyStorage
+	storage    VacancyStorage
+	classifier RoleClassifier
 }
 
-func NewVacancyService(storage VacancyStorage) *VacancyService {
-	return &VacancyService{storage: storage}
+// NewVacancyService wires the storage with the role classifier. Both are
+// required — when the LLM stack is intentionally absent (e.g. some test
+// harness), pass a stub classifier that returns ErrLLMUnavailable so the
+// usecase falls back to the keyword detector cleanly.
+func NewVacancyService(storage VacancyStorage, classifier RoleClassifier) *VacancyService {
+	return &VacancyService{storage: storage, classifier: classifier}
 }

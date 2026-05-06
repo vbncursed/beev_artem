@@ -34,6 +34,56 @@ func (s *CreateVacancySuite) TestSuccess() {
 	expected.Role = "programmer"
 	want := &domain.Vacancy{ID: "v-1", OwnerUserID: 1, Title: in.Title}
 
+	s.classifier.ClassifyMock.Return("programmer", nil)
+	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(want, nil)
+
+	got, err := s.svc.CreateVacancy(ctx, in)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, got, want)
+}
+
+// TestClassifierFallsBackToKeywords pins the soft-failure contract: when
+// the LLM is unavailable the resolver MUST silently fall back to the
+// deterministic keyword detector, and CRUD MUST succeed. "Backend Engineer"
+// hits the "engineer" keyword -> "programmer".
+func (s *CreateVacancySuite) TestClassifierFallsBackToKeywords() {
+	t := s.T()
+	ctx := t.Context()
+	in := domain.CreateVacancyInput{
+		OwnerUserID: 1,
+		Title:       "Backend Engineer",
+		Description: "We build things.",
+		Skills:      validSkills(),
+	}
+	expected := in
+	expected.Role = "programmer"
+	want := &domain.Vacancy{ID: "v-1"}
+
+	s.classifier.ClassifyMock.Return("", ErrLLMUnavailable)
+	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(want, nil)
+
+	got, err := s.svc.CreateVacancy(ctx, in)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, got, want)
+}
+
+// TestEmptyClassifierResponseFallsBack: a classifier that returns "" with
+// no error is misbehaving — fall back to keyword detection rather than
+// persisting an empty role.
+func (s *CreateVacancySuite) TestEmptyClassifierResponseFallsBack() {
+	t := s.T()
+	ctx := t.Context()
+	in := domain.CreateVacancyInput{
+		OwnerUserID: 1,
+		Title:       "Backend Engineer",
+		Description: "We build things.",
+		Skills:      validSkills(),
+	}
+	expected := in
+	expected.Role = "programmer"
+	want := &domain.Vacancy{ID: "v-1"}
+
+	s.classifier.ClassifyMock.Return("", nil)
 	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(want, nil)
 
 	got, err := s.svc.CreateVacancy(ctx, in)
@@ -70,6 +120,7 @@ func (s *CreateVacancySuite) TestNormalizesZeroWeightedSkills() {
 	}
 	want := &domain.Vacancy{ID: "v-2"}
 
+	s.classifier.ClassifyMock.Return("default", nil)
 	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(want, nil)
 
 	got, err := s.svc.CreateVacancy(ctx, in)
@@ -165,6 +216,7 @@ func (s *CreateVacancySuite) TestStorageError() {
 	expected.Role = "default"
 	storageErr := errors.New("pgx: connection refused")
 
+	s.classifier.ClassifyMock.Return("default", nil)
 	s.storage.CreateVacancyMock.Expect(ctx, expected).Return(nil, storageErr)
 
 	got, err := s.svc.CreateVacancy(ctx, in)

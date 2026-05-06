@@ -12,12 +12,14 @@ import (
 // AssertExpectations.
 type baseSuite struct {
 	suite.Suite
-	storage *mocks.VacancyStorageMock
-	svc     *VacancyService
+	storage    *mocks.VacancyStorageMock
+	classifier *mocks.RoleClassifierMock
+	svc        *VacancyService
 }
 
 func (s *baseSuite) SetupTest() {
 	t := s.T()
 	s.storage = mocks.NewVacancyStorageMock(t)
-	s.svc = NewVacancyService(s.storage)
+	s.classifier = mocks.NewRoleClassifierMock(t)
+	s.svc = NewVacancyService(s.storage, s.classifier)
 }

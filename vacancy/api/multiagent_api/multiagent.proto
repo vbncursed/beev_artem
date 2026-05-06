@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package multiagent.service.v1;
 
-option go_package = "github.com/artem13815/hr/analysis/internal/pb/multiagent_api";
+option go_package = "github.com/artem13815/hr/vacancy/internal/pb/multiagent_api";
 
 import "google/protobuf/timestamp.proto";
 
@@ -26,15 +26,19 @@ enum AgentMode {
 message GenerateDecisionRequest {
   string model = 1;
   AgentMode mode = 2;
+
   string vacancy_title = 3;
   string vacancy_description = 4;
   repeated string vacancy_must_have = 5;
   repeated string vacancy_nice_to_have = 6;
+
   repeated string candidate_skills = 7;
   repeated string missing_skills = 8;
   string candidate_summary = 9;
+
   string score_explanation = 10;
   float match_score = 11;
+
   string resume_text = 12;
 
   // role selects the prompt template multiagent uses for this vacancy.
@@ -53,10 +57,13 @@ message GenerateDecisionResponse {
   string hr_recommendation = 1;
   float confidence = 2;
   string hr_rationale = 3;
+
   string candidate_feedback = 4;
   string soft_skills_notes = 5;
+
   repeated AgentResult agent_results = 6;
   string raw_trace = 7;
+
   google.protobuf.Timestamp created_at = 8;
 }
 
@@ -66,5 +73,8 @@ message ClassifyRoleRequest {
 }
 
 message ClassifyRoleResponse {
+  // role is guaranteed by the server to be one of the registered prompt
+  // templates, or the literal "default" when the LLM is unsure. Callers can
+  // treat the value as opaque and pass it back to GenerateDecision.role.
   string role = 1;
 }

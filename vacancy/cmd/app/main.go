@@ -30,18 +30,28 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	service := bootstrap.InitVacancyService(storage)
-	api := bootstrap.InitVacancyServiceAPI(service)
 
-	authClient, authCleanup, err := auth_client.New(cfg)
+	maClient, maCleanup, err := bootstrap.InitMultiAgentClient(cfg)
 	if err != nil {
 		storage.Close()
 		return err
 	}
 
-	// Hooks run LIFO during shutdown — close the auth conn before the
-	// pgxpool, mirroring construction order.
-	return bootstrap.AppRun(api, authClient, cfg, storage.Close, authCleanup)
+	service := bootstrap.InitVacancyService(storage, maClient)
+	api := bootstrap.InitVacancyServiceAPI(service)
+
+	authClient, authCleanup, err := auth_client.New(cfg)
+	if err != nil {
+		maCleanup()
+		storage.Close()
+		return err
+	}
+
+	// Hooks run LIFO during shutdown — close auth and multiagent conns
+	// before the pgxpool, mirroring construction order. multiagent goes
+	// before auth in this list because it was constructed earlier;
+	// runShutdown reverses the slice so auth tears down first.
+	return bootstrap.AppRun(api, authClient, cfg, storage.Close, maCleanup, authCleanup)
 }
 
 func defaultConfigPathByEnv(appEnv string) string {

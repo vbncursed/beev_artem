@@ -8,9 +8,19 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig `yaml:"database"`
-	Server   ServerConfig   `yaml:"server"`
-	Auth     AuthConfig     `yaml:"auth"`
+	Database   DatabaseConfig   `yaml:"database"`
+	Server     ServerConfig     `yaml:"server"`
+	Auth       AuthConfig       `yaml:"auth"`
+	MultiAgent MultiAgentConfig `yaml:"multiagent"`
+}
+
+// MultiAgentConfig points at the multiagent gRPC service. Vacancy calls
+// multiagent.ClassifyRole on Create/Update so the role is chosen by the
+// LLM instead of a keyword table. Failures are soft — the usecase falls
+// back to the deterministic keyword detector — so an outage of multiagent
+// degrades classification quality but does not break vacancy CRUD.
+type MultiAgentConfig struct {
+	GRPCAddr string `yaml:"grpc_addr"`
 }
 
 // AuthConfig points at the auth gRPC service. Vacancy calls
@@ -82,6 +92,8 @@ func (c *Config) validate() error {
 		return fmt.Errorf("server.grpc_addr is required")
 	case c.Auth.GRPCAddr == "":
 		return fmt.Errorf("auth.grpc_addr is required")
+	case c.MultiAgent.GRPCAddr == "":
+		return fmt.Errorf("multiagent.grpc_addr is required")
 	case c.Database.Host == "":
 		return fmt.Errorf("database.host is required")
 	case c.Database.Port == 0:

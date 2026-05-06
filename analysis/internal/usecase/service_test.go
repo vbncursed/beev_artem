@@ -52,3 +52,11 @@ func (m *multiagentClientStub) GenerateDecision(_ context.Context, in *pb_multia
 	m.capturedReq = in
 	return m.resp, m.err
 }
+
+// ClassifyRole is required by pb.MultiAgentServiceClient but never invoked
+// by analysis usecase (only vacancy calls it). The stub keeps the interface
+// satisfied; if analysis ever starts using it, tests will need to assert on
+// the captured request like GenerateDecision does.
+func (m *multiagentClientStub) ClassifyRole(_ context.Context, _ *pb_multiagent.ClassifyRoleRequest, _ ...grpc.CallOption) (*pb_multiagent.ClassifyRoleResponse, error) {
+	return nil, nil
+}

@@ -437,8 +437,11 @@ func (x *ClassifyRoleRequest) GetDescription() string {
 }
 
 type ClassifyRoleResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Role          string                 `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// role is guaranteed by the server to be one of the registered prompt
+	// templates, or the literal "default" when the LLM is unsure. Callers can
+	// treat the value as opaque and pass it back to GenerateDecision.role.
+	Role          string `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -534,7 +537,7 @@ const file_multiagent_api_multiagent_proto_rawDesc = "" +
 	"\x11AGENT_MODE_STRICT\x10\x032\xf1\x01\n" +
 	"\x11MultiAgentService\x12s\n" +
 	"\x10GenerateDecision\x12..multiagent.service.v1.GenerateDecisionRequest\x1a/.multiagent.service.v1.GenerateDecisionResponse\x12g\n" +
-	"\fClassifyRole\x12*.multiagent.service.v1.ClassifyRoleRequest\x1a+.multiagent.service.v1.ClassifyRoleResponseB>Z<github.com/artem13815/hr/analysis/internal/pb/multiagent_apib\x06proto3"
+	"\fClassifyRole\x12*.multiagent.service.v1.ClassifyRoleRequest\x1a+.multiagent.service.v1.ClassifyRoleResponseB=Z;github.com/artem13815/hr/vacancy/internal/pb/multiagent_apib\x06proto3"
 
 var (
 	file_multiagent_api_multiagent_proto_rawDescOnce sync.Once

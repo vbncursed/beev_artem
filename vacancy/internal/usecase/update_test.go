@@ -26,6 +26,31 @@ func (s *UpdateVacancySuite) TestSuccess() {
 	expected.Role = "programmer"
 	want := &domain.Vacancy{ID: "v-1", Title: in.Title}
 
+	s.classifier.ClassifyMock.Return("programmer", nil)
+	s.storage.UpdateVacancyMock.Expect(ctx, expected).Return(want, nil)
+
+	got, err := s.svc.UpdateVacancy(ctx, in)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, got, want)
+}
+
+// TestClassifierFallsBackToKeywords mirrors Create's contract for Update:
+// LLM unavailable -> deterministic keyword detector -> CRUD succeeds.
+func (s *UpdateVacancySuite) TestClassifierFallsBackToKeywords() {
+	t := s.T()
+	ctx := t.Context()
+	in := domain.UpdateVacancyInput{
+		VacancyID:   "v-1",
+		OwnerUserID: 1,
+		Title:       "Senior Backend",
+		Description: "updated",
+		Skills:      []domain.SkillWeight{{Name: "Go", Weight: 0.7}},
+	}
+	expected := in
+	expected.Role = "programmer"
+	want := &domain.Vacancy{ID: "v-1"}
+
+	s.classifier.ClassifyMock.Return("", ErrLLMUnavailable)
 	s.storage.UpdateVacancyMock.Expect(ctx, expected).Return(want, nil)
 
 	got, err := s.svc.UpdateVacancy(ctx, in)
@@ -59,6 +84,7 @@ func (s *UpdateVacancySuite) TestNormalizesZeroWeightedSkills() {
 	}
 	want := &domain.Vacancy{ID: "v-1"}
 
+	s.classifier.ClassifyMock.Return("default", nil)
 	s.storage.UpdateVacancyMock.Expect(ctx, expected).Return(want, nil)
 
 	got, err := s.svc.UpdateVacancy(ctx, in)
@@ -126,6 +152,7 @@ func (s *UpdateVacancySuite) TestNotFoundOnNilStorageResult() {
 	expected := in
 	expected.Role = "default"
 
+	s.classifier.ClassifyMock.Return("default", nil)
 	s.storage.UpdateVacancyMock.Expect(ctx, expected).Return(nil, nil)
 
 	got, err := s.svc.UpdateVacancy(ctx, in)
@@ -146,6 +173,7 @@ func (s *UpdateVacancySuite) TestStorageError() {
 	expected.Role = "default"
 	storageErr := errors.New("pgx: connection refused")
 
+	s.classifier.ClassifyMock.Return("default", nil)
 	s.storage.UpdateVacancyMock.Expect(ctx, expected).Return(nil, storageErr)
 
 	got, err := s.svc.UpdateVacancy(ctx, in)
